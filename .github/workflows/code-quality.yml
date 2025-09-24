@@ -33,18 +33,12 @@ jobs:
       run: flake8 . --exit-zero --max-line-length=120 --extend-ignore=E203,W503,E501,F541,F401,F811,F841,E722,E402,E712,F402,F601
     
     - name: Security check with Bandit
-      run: bandit -r . -x tests/ -f json -o bandit-report.json || true
+      run: |
+        bandit -r . -x tests/ || true
+        echo "Bandit安全检查完成"
     
     - name: Check dependencies for security vulnerabilities
       run: |
         pip install -r requirements.txt
-        safety check --json --output safety-report.json || true
-    
-    - name: Upload code quality artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: code-quality-reports
-        path: |
-          bandit-report.json
-          safety-report.json
+        safety check || true
+        echo "依赖安全检查完成"
