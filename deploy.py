@@ -34,6 +34,7 @@ sys.path.insert(0, backend_dir)
 # 导入并运行应用
 try:
     from backend.app import app, db
+
     print("✅ Flask应用导入成功")
     print(f"🗄️  数据库路径: {os.getenv('DATABASE_URL')}")
 except ImportError as e:
