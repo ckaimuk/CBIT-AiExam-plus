@@ -35,7 +35,7 @@ RUN mkdir -p instance && \
     mkdir -p static/uploads
 
 # 复制现有数据库（如果存在）
-COPY instance/exam.db instance/exam.db 2>/dev/null || true
+COPY instance/ instance/
 
 # 设置权限
 RUN chmod +x run.py && chmod +x docker_run.py
