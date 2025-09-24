@@ -42,6 +42,25 @@ fi
 PROJECT_DIR=$(pwd)
 log_info "项目目录: $PROJECT_DIR"
 
+# 1. 更新代码和重新构建镜像
+log_info "更新项目代码..."
+if [ -d ".git" ]; then
+    git pull origin main
+    log_success "代码更新完成"
+else
+    log_warning "不是Git仓库，跳过代码更新"
+fi
+
+# 2. 重新构建Docker镜像
+log_info "重新构建Docker镜像..."
+docker build -f docker/Dockerfile -t cbit-autoexam:latest .
+if [ $? -eq 0 ]; then
+    log_success "Docker镜像构建完成"
+else
+    log_error "Docker镜像构建失败"
+    exit 1
+fi
+
 # 1. 停止容器（如果正在运行）
 log_info "停止现有容器..."
 if docker ps -q -f name=cbit-autoexam | grep -q .; then

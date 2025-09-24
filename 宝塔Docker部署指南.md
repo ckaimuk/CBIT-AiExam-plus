@@ -168,12 +168,19 @@ tar -czf /www/backup/uploads_$(date +%Y%m%d_%H%M%S).tar.gz /www/wwwroot/cbit-aut
 
 **解决方案：**
 ```bash
-# 方法1：使用自动修复脚本（推荐）
+# 方法1：快速修复（最推荐）
 cd /www/wwwroot/cbit-autoexam
+git pull origin main
+chmod +x quick_fix.sh
+./quick_fix.sh
+
+# 方法2：使用权限修复脚本
+cd /www/wwwroot/cbit-autoexam
+git pull origin main
 chmod +x fix_database_permissions.sh
 ./fix_database_permissions.sh
 
-# 方法2：手动修复
+# 方法3：手动修复
 # 停止容器
 docker stop cbit-autoexam && docker rm cbit-autoexam
 
