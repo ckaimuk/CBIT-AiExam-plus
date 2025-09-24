@@ -161,25 +161,69 @@ tar -czf /www/backup/uploads_$(date +%Y%m%d_%H%M%S).tar.gz /www/wwwroot/cbit-aut
 
 ### 常见问题
 
-1. **容器启动失败**
+1. **SQLite数据库权限错误**
+```
+错误：sqlite3.OperationalError) unable to open database file
+```
+
+**解决方案：**
+```bash
+# 方法1：使用自动修复脚本（推荐）
+cd /www/wwwroot/cbit-autoexam
+chmod +x fix_database_permissions.sh
+./fix_database_permissions.sh
+
+# 方法2：手动修复
+# 停止容器
+docker stop cbit-autoexam && docker rm cbit-autoexam
+
+# 修复权限
+chown -R www:www /www/wwwroot/cbit-autoexam/instance/
+chmod 755 /www/wwwroot/cbit-autoexam/instance/
+chmod 664 /www/wwwroot/cbit-autoexam/instance/exam.db
+
+# 初始化数据库（如果需要）
+cd /www/wwwroot/cbit-autoexam
+PYTHONPATH=".:backend" python3 database/init_db.py
+
+# 重新启动（使用用户映射）
+USER_ID=$(id -u www)
+GROUP_ID=$(id -g www)
+docker run -d \
+  --name cbit-autoexam \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -e FLASK_ENV=production \
+  -e SECRET_KEY=your-secret-key \
+  -e DATABASE_URL=sqlite:///instance/exam.db \
+  -u "$USER_ID:$GROUP_ID" \
+  -v /www/wwwroot/cbit-autoexam/instance:/app/instance:rw \
+  -v /www/wwwroot/cbit-autoexam/static/uploads:/app/static/uploads:rw \
+  cbit-autoexam:latest
+```
+
+2. **容器启动失败**
 ```bash
 # 查看详细错误日志
 docker logs cbit-autoexam --tail 50
 
 # 检查端口占用
 netstat -tlnp | grep 8080
+
+# 检查Docker镜像
+docker images | grep cbit-autoexam
 ```
 
-2. **无法访问应用**
+3. **无法访问应用**
 - 检查防火墙是否开放8080端口
 - 检查反向代理配置是否正确
-- 确认容器正在运行
+- 确认容器正在运行：`docker ps | grep cbit`
 
-3. **数据库权限问题**
+4. **文件上传失败**
 ```bash
-# 修复数据库文件权限
-chown -R www:www /www/wwwroot/cbit-autoexam/instance/
-chmod 644 /www/wwwroot/cbit-autoexam/instance/exam.db
+# 修复上传目录权限
+chown -R www:www /www/wwwroot/cbit-autoexam/static/uploads/
+chmod -R 755 /www/wwwroot/cbit-autoexam/static/uploads/
 ```
 
 4. **内存不足**

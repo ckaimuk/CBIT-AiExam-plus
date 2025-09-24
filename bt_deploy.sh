@@ -125,13 +125,27 @@ create_directories() {
 set_permissions() {
     log_info "设置文件权限..."
     
-    chown -R www:www "$PROJECT_DIR"
+    # 设置基础权限
+    chown -R www:www "$PROJECT_DIR" 2>/dev/null || chown -R 1000:1000 "$PROJECT_DIR"
     chmod -R 755 "$PROJECT_DIR"
-    chmod +x bt_deploy.sh deploy_test.sh security_scan.sh
+    chmod +x bt_deploy.sh deploy_test.sh security_scan.sh fix_database_permissions.sh
+    
+    # 特别设置数据库相关权限
+    chmod 755 instance
+    chmod 755 static/uploads
+    chmod 755 frontend/static/uploads
+    
+    # 初始化数据库文件（如果不存在）
+    if [ ! -f "instance/exam.db" ]; then
+        log_info "初始化数据库文件..."
+        touch instance/exam.db
+        PYTHONPATH=".:backend" python3 database/init_db.py || log_warning "数据库初始化遇到问题"
+    fi
     
     # 设置数据库文件权限
     if [ -f "instance/exam.db" ]; then
-        chmod 644 instance/exam.db
+        chmod 664 instance/exam.db
+        chown www:www instance/exam.db 2>/dev/null || chown 1000:1000 instance/exam.db
     fi
     
     log_success "权限设置完成"
@@ -165,6 +179,12 @@ stop_existing_container() {
 start_container() {
     log_info "启动新容器..."
     
+    # 获取www用户的ID，如果不存在则使用1000
+    USER_ID=$(id -u www 2>/dev/null || echo "1000")
+    GROUP_ID=$(id -g www 2>/dev/null || echo "1000")
+    
+    log_info "使用用户ID: $USER_ID, 组ID: $GROUP_ID"
+    
     docker run -d \
         --name cbit-autoexam \
         --restart unless-stopped \
@@ -173,17 +193,36 @@ start_container() {
         -e SECRET_KEY=cbit-prod-secret-key-$(date +%s) \
         -e DATABASE_URL=sqlite:///instance/exam.db \
         -e TZ=Asia/Shanghai \
-        -v "$PROJECT_DIR/instance:/app/instance" \
-        -v "$PROJECT_DIR/static/uploads:/app/static/uploads" \
-        -v "$PROJECT_DIR/frontend/static/uploads:/app/frontend/static/uploads" \
-        -v "$PROJECT_DIR/logs:/app/logs" \
+        -u "$USER_ID:$GROUP_ID" \
+        -v "$PROJECT_DIR/instance:/app/instance:rw" \
+        -v "$PROJECT_DIR/static/uploads:/app/static/uploads:rw" \
+        -v "$PROJECT_DIR/frontend/static/uploads:/app/frontend/static/uploads:rw" \
+        -v "$PROJECT_DIR/logs:/app/logs:rw" \
         cbit-autoexam:latest
     
     if [ $? -eq 0 ]; then
         log_success "容器启动成功"
     else
-        log_error "容器启动失败"
-        exit 1
+        log_warning "用户映射启动失败，尝试默认方式..."
+        # 备用方案：不指定用户ID
+        docker run -d \
+            --name cbit-autoexam \
+            --restart unless-stopped \
+            -p 8080:8080 \
+            -e FLASK_ENV=production \
+            -e SECRET_KEY=cbit-prod-secret-key-$(date +%s) \
+            -e DATABASE_URL=sqlite:///instance/exam.db \
+            -e TZ=Asia/Shanghai \
+            -v "$PROJECT_DIR/instance:/app/instance:rw" \
+            -v "$PROJECT_DIR/static/uploads:/app/static/uploads:rw" \
+            -v "$PROJECT_DIR/frontend/static/uploads:/app/frontend/static/uploads:rw" \
+            -v "$PROJECT_DIR/logs:/app/logs:rw" \
+            cbit-autoexam:latest
+        
+        if [ $? -ne 0 ]; then
+            log_error "容器启动失败"
+            exit 1
+        fi
     fi
 }
 
