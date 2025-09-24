@@ -17,8 +17,11 @@ os.environ['DATABASE_URL'] = f'sqlite:///{os.path.join(os.path.dirname(__file__)
 os.environ['FLASK_ENV'] = 'development'
 os.environ['FLASK_DEBUG'] = 'True'
 
-# 添加backend目录到Python路径
-sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
+# 添加项目根目录和backend目录到Python路径
+project_root = os.path.dirname(__file__)
+backend_dir = os.path.join(project_root, 'backend')
+sys.path.insert(0, project_root)
+sys.path.insert(0, backend_dir)
 
 # 导入并运行应用
 try:

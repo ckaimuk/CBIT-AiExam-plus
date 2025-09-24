@@ -45,10 +45,14 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
     - name: Test database initialization
+      env:
+        PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/backend
       run: |
         python database/init_db.py
     
     - name: Test application startup
+      env:
+        PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/backend
       run: |
         # 启动应用在后台
         python run.py &

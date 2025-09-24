@@ -39,9 +39,6 @@ def to_china_time(dt):
         dt = pytz.utc.localize(dt)
     return dt.astimezone(CHINA_TZ)
 
-# 导入评分系统
-from scoring import ScoringSystem
-
 # 创建Flask应用
 app = Flask(__name__, 
            template_folder='../frontend',
@@ -67,12 +64,31 @@ CORS(app)
 # 导入AI引擎
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from ai_engine.generator import QuestionGenerator
-from ai_engine.validator import QuestionValidator
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
+sys.path.append(os.path.join(project_root, 'backend'))
+
+try:
+    from ai_engine.generator import QuestionGenerator
+    from ai_engine.validator import QuestionValidator
+except ImportError:
+    # 如果导入失败，创建空的类以避免错误
+    class QuestionGenerator:
+        def __init__(self):
+            pass
+    
+    class QuestionValidator:
+        def __init__(self):
+            pass
 
 # 导入评分系统
-from scoring import ScoringSystem
+try:
+    from .scoring import ScoringSystem
+except ImportError:
+    try:
+        from backend.scoring import ScoringSystem
+    except ImportError:
+        from scoring import ScoringSystem
 
 # 初始化AI引擎（延迟初始化）
 question_generator = None
