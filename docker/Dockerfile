@@ -30,15 +30,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制应用代码
 COPY . .
 
-# 创建必要的目录
+# 创建必要的目录并设置最高权限
 RUN mkdir -p instance && \
     mkdir -p frontend/static/uploads && \
-    mkdir -p static/uploads
+    mkdir -p static/uploads && \
+    mkdir -p logs && \
+    chmod 777 instance && \
+    chmod 777 frontend/static/uploads && \
+    chmod 777 static/uploads && \
+    chmod 777 logs
 
-# 复制现有数据库（如果存在）
-COPY instance/ instance/
+# 确保数据库文件有最高权限（如果存在）
+RUN if [ -f instance/exam.db ]; then chmod 777 instance/exam.db; fi
 
-# 设置权限
+# 设置脚本权限
 RUN chmod +x run.py && chmod +x docker_run.py
 
 # 暴露端口
