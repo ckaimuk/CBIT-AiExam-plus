@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>考试成绩 - IMBA 智能考试系统</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#1A237E',
+secondary: '#3F51B5'
+},
+fontFamily: {
+'sans': ['Inter', 'system-ui', 'sans-serif']
+}
+}
+}
+}
+</script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.grade-circle {
+width: 140px;
+height: 140px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 2.5rem;
+font-weight: bold;
+color: white;
+position: relative;
+}
+
+.grade-a { background: linear-gradient(135deg, #10b981, #059669); }
+.grade-b { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.grade-c { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.grade-d { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.grade-f { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+.score-card {
+transition: all 0.3s ease;
+background: white;
+border-radius: 16px;
+}
+
+.score-card:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.fade-in {
+animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+0% { opacity: 0; transform: translateY(20px); }
+100% { opacity: 1; transform: translateY(0); }
+}
+
+.score-animation {
+animation: scoreCount 1.5s ease-out;
+}
+
+@keyframes scoreCount {
+0% { transform: scale(0.8); opacity: 0; }
+100% { transform: scale(1); opacity: 1; }
+}
+
+.progress-bar {
+height: 8px;
+background: #e5e7eb;
+border-radius: 4px;
+overflow: hidden;
+}
+
+.progress-fill {
+height: 100%;
+background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+border-radius: 4px;
+transition: width 1.5s ease-out;
+}
+</style>
+</head>
+
+<body class="min-h-screen">
+<!-- Header -->
+<div class="bg-white shadow-sm border-b">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<div class="flex items-center space-x-3">
+<img src="https://static.readdy.ai/image/3c1ff9a008dc8b425236e4faed5d7924/c0ad19844b74c75ecb76a8cc5a6f9bd3.jfif" alt="IMBA Logo" class="w-8 h-8 object-contain">
+<div class="font-bold text-lg text-primary">IMBA 智能考试</div>
+</div>
+<div class="flex items-center space-x-4">
+<a href="/" class="text-gray-600 hover:text-primary transition-colors">
+<i class="ri-home-line mr-2"></i>返回首页
+</a>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<!-- Loading State -->
+<div id="loadingState" class="text-center">
+<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+<p class="text-gray-600">正在加载成绩...</p>
+</div>
+
+<!-- Error State -->
+<div id="errorState" class="hidden text-center">
+<div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+<i class="ri-error-warning-line text-red-600 text-2xl"></i>
+</div>
+<h2 class="text-2xl font-bold text-gray-900 mb-2">加载失败</h2>
+<p class="text-gray-600 mb-6">无法加载考试成绩，请稍后重试。</p>
+<button onclick="window.location.reload()" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors">
+重新加载
+</button>
+</div>
+
+<!-- Results Content -->
+<div id="resultsContent" class="hidden">
+<!-- Overall Score -->
+<div class="text-center mb-12 fade-in">
+<div class="inline-block mb-6">
+<div id="gradeCircle" class="grade-circle grade-a mx-auto score-animation">
+A+
+</div>
+</div>
+<h1 class="text-4xl font-bold text-gray-900 mb-4">考试成绩</h1>
+<p class="text-xl text-gray-600 mb-8">恭喜您完成考试！以下是您的成绩详情</p>
+
+<!-- Score Summary -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<div class="score-card p-8">
+<div class="text-4xl font-bold text-primary mb-2 score-animation" id="totalScore">85</div>
+<div class="text-gray-600 mb-4">总分</div>
+<div class="progress-bar">
+<div class="progress-fill" id="totalProgressFill" style="width: 0%"></div>
+</div>
+</div>
+<div class="score-card p-8">
+<div class="text-4xl font-bold text-green-600 mb-2 score-animation" id="percentageScore">85%</div>
+<div class="text-gray-600 mb-4">正确率</div>
+<div class="progress-bar">
+<div class="progress-fill bg-gradient-to-r from-green-500 to-green-600" id="percentageProgressFill" style="width: 0%"></div>
+</div>
+</div>
+<div class="score-card p-8">
+<div class="text-4xl font-bold text-blue-600 mb-2 score-animation" id="grade">A</div>
+<div class="text-gray-600">等级</div>
+<div class="text-sm text-gray-500 mt-2" id="gradeDescription">优秀</div>
+</div>
+</div>
+</div>
+
+<!-- Question Analysis -->
+<div class="score-card p-8 mb-8 fade-in">
+<h3 class="text-2xl font-bold text-gray-900 mb-6">答题分析</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+<div class="text-center">
+<div class="text-3xl font-bold text-gray-900" id="totalQuestions">5</div>
+<div class="text-sm text-gray-600">总题数</div>
+</div>
+<div class="text-center">
+<div class="text-3xl font-bold text-green-600" id="correctAnswers">4</div>
+<div class="text-sm text-gray-600">答对</div>
+</div>
+<div class="text-center">
+<div class="text-3xl font-bold text-red-600" id="wrongAnswers">1</div>
+<div class="text-sm text-gray-600">答错</div>
+</div>
+<div class="text-center">
+<div class="text-3xl font-bold text-blue-600" id="timeSpent">45分</div>
+<div class="text-sm text-gray-600">用时</div>
+</div>
+</div>
+
+<!-- Question Details -->
+<div id="questionDetails" class="space-y-4">
+<!-- 动态生成题目详情 -->
+</div>
+</div>
+
+<!-- Performance Summary -->
+<div class="score-card p-8 mb-8 fade-in">
+<h3 class="text-2xl font-bold text-gray-900 mb-6">成绩总结</h3>
+<div class="bg-blue-50 rounded-xl p-6 mb-6">
+<div class="flex items-start">
+<i class="ri-lightbulb-line text-blue-600 text-2xl mr-4 flex-shrink-0 mt-1"></i>
+<div>
+<h4 class="font-semibold text-blue-900 mb-2">总体评价</h4>
+<p id="overallSummary" class="text-blue-800">您在本次考试中表现优秀，展现了扎实的基础知识和良好的应用能力。</p>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-green-50 rounded-xl p-6">
+<h4 class="font-semibold text-green-900 mb-3 flex items-center">
+<i class="ri-thumb-up-line mr-2"></i>表现优异
+</h4>
+<div id="strengths" class="space-y-2">
+<!-- 动态生成优势 -->
+</div>
+</div>
+<div class="bg-yellow-50 rounded-xl p-6">
+<h4 class="font-semibold text-yellow-900 mb-3 flex items-center">
+<i class="ri-lightbulb-line mr-2"></i>改进建议
+</h4>
+<div id="improvements" class="space-y-2">
+<!-- 动态生成建议 -->
+</div>
+</div>
+</div>
+</div>
+
+<!-- Actions -->
+<div class="text-center fade-in">
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button onclick="window.print()" class="bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-800 transition-colors">
+<i class="ri-printer-line mr-2"></i>打印成绩单
+</button>
+<button onclick="window.location.href='/'" class="bg-gray-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors">
+<i class="ri-home-line mr-2"></i>返回首页
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+class ResultsDisplay {
+constructor() {
+this.examData = null;
+this.scores = null;
+this.init();
+}
+
+async init() {
+try {
+await this.loadResults();
+this.hideLoading();
+this.showResults();
+this.renderResults();
+this.animateProgress();
+} catch (error) {
+this.hideLoading();
+this.showError();
+}
+}
+
+async loadResults() {
+// 从URL获取考试ID
+const pathParts = window.location.pathname.split('/');
+const examId = pathParts[pathParts.length - 1];
+console.log('加载考试结果，考试ID:', examId);
+
+// 加载考试结果 (添加缓存破坏参数)
+const timestamp = new Date().getTime();
+const response = await fetch(`/api/exam-results/${examId}?t=${timestamp}`, {
+cache: 'no-cache',
+headers: {
+'Cache-Control': 'no-cache',
+'Pragma': 'no-cache'
+}
+});
+
+if (!response.ok) {
+throw new Error(`加载结果失败: ${response.status}`);
+}
+
+const data = await response.json();
+console.log('API返回数据:', data);
+
+if (!data.success) {
+throw new Error(`API返回错误: ${data.message}`);
+}
+
+this.examData = data.exam;
+this.scores = data.scores;
+console.log('✅ 成功加载真实评分数据:', this.scores);
+
+// 检查是否有有效的分数数据
+if (!this.scores || Object.keys(this.scores).length === 0) {
+throw new Error('没有分数数据');
+}
+}
+
+hideLoading() {
+document.getElementById('loadingState').classList.add('hidden');
+}
+
+showError() {
+document.getElementById('errorState').classList.remove('hidden');
+}
+
+showResults() {
+document.getElementById('resultsContent').classList.remove('hidden');
+}
+
+renderResults() {
+const totalScore = this.scores.total_score || 0;
+const maxScore = this.scores.max_score || 1;
+const percentageScore = this.scores.percentage_score || 0;
+const grade = this.scores.grade || 'N/A';
+
+console.log(`📊 渲染分数: 总分=${totalScore}, 百分比=${percentageScore}%, 等级=${grade}`);
+
+// 更新总体分数
+document.getElementById('totalScore').textContent = `${totalScore}/${maxScore}`;
+document.getElementById('percentageScore').textContent = percentageScore + '%';
+document.getElementById('grade').textContent = grade;
+
+// 更新等级圆圈
+const gradeCircle = document.getElementById('gradeCircle');
+gradeCircle.textContent = grade;
+const gradeClass = grade ? grade.charAt(0).toLowerCase() : 'f';
+gradeCircle.className = `grade-circle grade-${gradeClass} mx-auto score-animation`;
+
+// 更新等级描述
+document.getElementById('gradeDescription').textContent = this.getGradeDescription(grade);
+
+// 更新答题分析
+this.updateQuestionAnalysis();
+
+// 更新成绩总结
+this.updateSummary();
+}
+
+getGradeDescription(grade) {
+const descriptions = {
+'A+': '卓越', 'A': '优秀', 'A-': '优良',
+'B+': '良好', 'B': '良好', 'B-': '中上',
+'C+': '中等', 'C': '中等', 'C-': '中下',
+'D': '及格', 'F': '不及格'
+};
+return descriptions[grade] || '未知';
+}
+
+updateQuestionAnalysis() {
+const questionScores = this.scores.question_scores || [];
+const totalQuestions = questionScores.length;
+const correctAnswers = questionScores.filter(q => q.percentage >= 80).length;
+const wrongAnswers = totalQuestions - correctAnswers;
+
+document.getElementById('totalQuestions').textContent = totalQuestions;
+document.getElementById('correctAnswers').textContent = correctAnswers;
+document.getElementById('wrongAnswers').textContent = wrongAnswers;
+document.getElementById('timeSpent').textContent = this.calculateTimeSpent();
+
+// 生成题目详情
+const detailsContainer = document.getElementById('questionDetails');
+detailsContainer.innerHTML = '';
+
+questionScores.forEach((question, index) => {
+const isCorrect = question.percentage >= 80;
+const isPartial = question.percentage >= 40 && question.percentage < 80;
+
+const statusIcon = isCorrect ? 'ri-check-circle-fill text-green-500' : 
+                   isPartial ? 'ri-checkbox-circle-fill text-yellow-500' : 
+                   'ri-close-circle-fill text-red-500';
+
+const statusText = isCorrect ? '正确' : 
+                   isPartial ? '部分正确' : 
+                   '错误';
+
+const statusColor = isCorrect ? 'text-green-600' : 
+                    isPartial ? 'text-yellow-600' : 
+                    'text-red-600';
+
+const questionDiv = document.createElement('div');
+questionDiv.className = 'bg-gray-50 rounded-lg p-4';
+questionDiv.innerHTML = `
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-3">
+<i class="${statusIcon} text-xl"></i>
+<div>
+<span class="font-medium text-gray-900">第 ${index + 1} 题</span>
+<span class="text-sm text-gray-500 ml-2">${question.question_type}</span>
+</div>
+</div>
+<div class="text-right">
+<div class="font-semibold ${statusColor}">${question.score.toFixed(1)}/${question.max_score.toFixed(1)}</div>
+<div class="text-sm text-gray-500">${question.percentage.toFixed(0)}%</div>
+</div>
+</div>
+`;
+detailsContainer.appendChild(questionDiv);
+});
+}
+
+updateSummary() {
+const percentageScore = this.scores.percentage_score || 0;
+let summary = '';
+
+if (percentageScore >= 90) {
+summary = '您在本次考试中表现卓越，展现了深厚的知识功底和优秀的应用能力。';
+} else if (percentageScore >= 80) {
+summary = '您在本次考试中表现优秀，基础知识扎实，具备良好的分析和解决问题的能力。';
+} else if (percentageScore >= 70) {
+summary = '您在本次考试中表现良好，掌握了大部分知识点，还有进一步提升的空间。';
+} else if (percentageScore >= 60) {
+summary = '您在本次考试中达到了基本要求，建议继续加强学习和练习。';
+} else {
+summary = '建议您系统性地复习相关知识点，加强基础训练，争取更好的成绩。';
+}
+
+document.getElementById('overallSummary').textContent = summary;
+
+// 生成优势和建议
+this.generateStrengthsAndImprovements();
+}
+
+generateStrengthsAndImprovements() {
+const questionScores = this.scores.question_scores || [];
+const correctQuestions = questionScores.filter(q => q.percentage >= 80);
+const incorrectQuestions = questionScores.filter(q => q.percentage < 60);
+
+const strengthsContainer = document.getElementById('strengths');
+const improvementsContainer = document.getElementById('improvements');
+
+// 生成优势
+if (correctQuestions.length > 0) {
+const strengthsList = [
+`正确完成了 ${correctQuestions.length} 道题目`,
+'展现了良好的知识基础',
+'答题思路清晰准确'
+];
+strengthsContainer.innerHTML = strengthsList.map(item => 
+`<div class="flex items-center text-green-800">
+<i class="ri-check-line mr-2 text-green-600"></i>
+<span>${item}</span>
+</div>`
+).join('');
+} else {
+strengthsContainer.innerHTML = '<div class="text-green-800">继续努力，保持学习热情</div>';
+}
+
+// 生成改进建议
+if (incorrectQuestions.length > 0) {
+const improvementsList = [
+`需要加强 ${incorrectQuestions.length} 道题目相关的知识点`,
+'建议多做类似题目进行练习',
+'可以寻求老师或同学的帮助'
+];
+improvementsContainer.innerHTML = improvementsList.map(item => 
+`<div class="flex items-center text-yellow-800">
+<i class="ri-arrow-right-circle-line mr-2 text-yellow-600"></i>
+<span>${item}</span>
+</div>`
+).join('');
+} else {
+improvementsContainer.innerHTML = '<div class="text-yellow-800">继续保持当前的学习状态</div>';
+}
+}
+
+calculateTimeSpent() {
+// 简化处理，返回默认用时
+return '45分';
+}
+
+animateProgress() {
+// 延迟执行动画以获得更好的视觉效果
+setTimeout(() => {
+const percentageScore = this.scores.percentage_score || 0;
+const totalScore = this.scores.total_score || 0;
+const maxScore = this.scores.max_score || 1;
+const totalPercentage = (totalScore / maxScore) * 100;
+
+document.getElementById('totalProgressFill').style.width = `${totalPercentage}%`;
+document.getElementById('percentageProgressFill').style.width = `${percentageScore}%`;
+}, 500);
+}
+}
+
+// 初始化结果展示
+document.addEventListener('DOMContentLoaded', function() {
+new ResultsDisplay();
+});
+</script>
+</body>
+</html>

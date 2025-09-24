@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="question.management.title">题库管理 - IMBA 智能考试系统</title>
+<link rel="icon" type="image/x-icon" id="faviconLink" href="/favicon.ico">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<!-- MathJax for mathematical formula rendering -->
+<script>
+// 配置 MathJax
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true,
+    processEnvironments: true
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    ignoreHtmlClass: 'tex2jax_ignore',
+    processHtmlClass: 'tex2jax_process'
+  },
+  startup: {
+    ready: () => {
+      // MathJax is loaded and ready in question management
+      // MathJax 对象检查完成
+      
+      MathJax.startup.defaultReady();
+      
+      // 等待一小段时间确保所有方法都可用
+      setTimeout(() => {
+        // 延迟检查 MathJax 方法可用性
+        
+        // 设置全局标志表示 MathJax 已准备就绪
+        window.mathJaxReady = true;
+        
+        // 触发自定义事件
+        window.dispatchEvent(new CustomEvent('mathjax-ready'));
+        
+        // MathJax 初始化完成
+      }, 100);
+    }
+  }
+};
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="/static/js/i18n.js"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#2563eb',
+secondary: '#3b82f6',
+success: '#10b981',
+warning: '#f59e0b',
+danger: '#ef4444'
+},
+fontFamily: {
+'sans': ['Inter', 'system-ui', 'sans-serif']
+}
+}
+}
+}
+</script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.card {
+background: white;
+border-radius: 12px;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+transition: all 0.3s ease;
+}
+
+.card:hover {
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.question-card {
+transition: all 0.3s ease;
+border-left: 4px solid transparent;
+}
+
+.question-card:hover {
+border-left-color: #2563eb;
+transform: translateX(4px);
+}
+
+.filter-chip {
+transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+transform: translateY(-1px);
+}
+</style>
+</head>
+
+<body class="min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-16">
+<div class="flex items-center space-x-4">
+<a href="/admin/dashboard" class="flex items-center space-x-3">
+<img src="https://static.readdy.ai/image/3c1ff9a008dc8b425236e4faed5d7924/c0ad19844b74c75ecb76a8cc5a6f9bd3.jfif" 
+alt="IMBA Logo" class="w-8 h-8 object-contain">
+<span class="font-bold text-xl text-primary" data-i18n="question.management.title_short">题库管理</span>
+</a>
+</div>
+<div class="flex items-center space-x-4">
+<!-- Language Toggle -->
+<button id="languageToggle" class="text-gray-600 hover:text-primary transition-colors px-3 py-2 rounded-lg border border-gray-200">
+<i class="ri-global-line mr-1"></i>
+<span class="language-display">中</span>
+</button>
+<a href="/admin/dashboard" class="text-gray-600 hover:text-primary transition-colors">
+<i class="ri-dashboard-line mr-1"></i><span data-i18n="nav.admin_panel">管理面板</span>
+</a>
+<a href="/exam_config_management.html" class="text-gray-600 hover:text-primary transition-colors">
+<i class="ri-settings-3-line mr-1"></i><span data-i18n="nav.exam_config">考试配置</span>
+</a>
+<button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+<i class="ri-logout-box-line mr-1"></i><span data-i18n="nav.logout">退出登录</span>
+</button>
+</div>
+</div>
+</div>
+</nav>
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Page Header -->
+<div class="mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+<div>
+<h1 class="text-3xl font-bold text-gray-900 mb-2" data-i18n="question.management.title_short">题库管理</h1>
+<p class="text-gray-600" data-i18n="question.management.description">管理考试题目，配置全局题目参数</p>
+</div>
+                <div class="flex space-x-3 mt-4 sm:mt-0">
+                    <button id="bulkActionBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="ri-checkbox-multiple-line mr-2"></i><span data-i18n="question.bulk_operations">批量操作</span>
+                        <span id="selectedCount" class="ml-1 bg-purple-400 px-2 py-1 rounded-full text-xs">0</span>
+                    </button>
+                    <button id="clearAllBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="ri-delete-bin-2-line mr-2"></i><span data-i18n="question.clear_all">清空所有</span>
+                    </button>
+                    <button id="aiGenerateBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="ri-robot-line mr-2"></i><span data-i18n="question.ai_generate">AI生成</span>
+                    </button>
+                    <button id="addQuestionBtn" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="ri-add-line mr-2"></i><span data-i18n="question.add_question">添加题目</span>
+                    </button>
+                </div>
+</div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+<i class="ri-question-line text-blue-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="question.stats.total_questions">总题目</p>
+<p class="text-2xl font-bold text-gray-900" id="totalQuestions">-</p>
+</div>
+</div>
+</div>
+
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+<i class="ri-checkbox-circle-line text-green-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="question.stats.active_questions">已激活</p>
+<p class="text-2xl font-bold text-gray-900" id="activeQuestions">-</p>
+</div>
+</div>
+</div>
+
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+<i class="ri-bookmark-line text-purple-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="question.stats.subject_count">学科数</p>
+<p class="text-2xl font-bold text-gray-900" id="subjectCount">-</p>
+</div>
+</div>
+</div>
+
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+<i class="ri-star-line text-orange-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="question.stats.avg_difficulty">平均难度</p>
+<p class="text-2xl font-bold text-gray-900" id="avgDifficulty">-</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card p-6 mb-6">
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+<!-- Search -->
+<div class="flex-1 max-w-md">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<i class="ri-search-line text-gray-400"></i>
+</div>
+<input type="text" id="searchInput" placeholder="搜索题目内容..." 
+class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+</div>
+</div>
+
+<!-- Filters -->
+<div class="flex flex-wrap gap-2">
+<select id="subjectFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+<option value="" data-i18n="question.filter.all_subjects">所有学科</option>
+<option value="数学">数学</option>
+<option value="统计学">统计学</option>
+<option value="计算机科学">计算机科学</option>
+<option value="工程">工程</option>
+</select>
+
+                <select id="difficultyFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                    <option value="" data-i18n="question.filter.all_difficulties">所有难度</option>
+                    
+                    <!-- 基础教育 -->
+                    <optgroup label="━━━ 基础教育 ━━━">
+                        <option value="High School Level">高中水平</option>
+                        <option value="本科基础">本科基础</option>
+                        <option value="Undergraduate Basic">本科基础 (Undergraduate Basic)</option>
+                        <option value="Undergraduate Advanced">本科高级</option>
+                    </optgroup>
+                    
+                    <!-- 标准化考试 -->
+                    <optgroup label="━━━ 标准化考试 ━━━">
+                        <option value="GRE Level">GRE水平</option>
+                        <option value="GRE难度">GRE难度</option>
+                    </optgroup>
+                    
+                    <!-- 学术研究 -->
+                    <optgroup label="━━━ 学术研究 ━━━">
+                        <option value="Graduate Study Level">研究生水平</option>
+                    </optgroup>
+                </select>
+
+<select id="typeFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+<option value="" data-i18n="question.filter.all_types">所有题型</option>
+<option value="multiple_choice">选择题</option>
+<option value="short_answer">简答题</option>
+<option value="programming">编程题</option>
+</select>
+
+<select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+<option value="" data-i18n="question.filter.all_status">所有状态</option>
+<option value="true">已激活</option>
+<option value="false">未激活</option>
+</select>
+</div>
+</div>
+</div>
+
+<!-- Questions List -->
+<div class="card p-6">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-lg font-semibold text-gray-900" data-i18n="question.list.title">题目列表</h2>
+<div class="flex items-center space-x-2 text-sm text-gray-500">
+<span data-i18n="question.list.total_count">共</span> <span id="totalCount">0</span> <span data-i18n="question.list.questions_unit">题</span>
+<span>·</span>
+<span data-i18n="question.list.page_number">第</span> <span id="currentPage">1</span> <span data-i18n="question.list.page_unit">页</span>
+</div>
+</div>
+
+<!-- Questions Grid -->
+<div id="questionsContainer" class="space-y-4">
+<!-- 动态加载题目 -->
+</div>
+
+<!-- Pagination -->
+<div class="flex items-center justify-between mt-6 pt-6 border-t">
+<div class="text-sm text-gray-500">
+<span data-i18n="question.pagination.showing">显示第</span> <span id="showingStart">1</span>-<span id="showingEnd">10</span> <span data-i18n="question.pagination.items_of">项，共</span> <span id="showingTotal">0</span> <span data-i18n="question.pagination.items_total">项</span>
+</div>
+<div class="flex items-center space-x-2">
+<button id="prevPageBtn" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50" disabled>
+<i class="ri-arrow-left-line"></i>
+</button>
+<div id="pageNumbers" class="flex space-x-1">
+<!-- 动态生成页码 -->
+</div>
+<button id="nextPageBtn" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+<i class="ri-arrow-right-line"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Add/Edit Question Modal -->
+<div id="questionModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-semibold text-gray-900" id="modalTitle" data-i18n="question.add_question">添加题目</h3>
+<button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+
+<form id="questionForm" class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- 基本信息 -->
+<div class="space-y-4">
+<h4 class="text-lg font-medium text-gray-900 border-b pb-2">基本信息</h4>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">学科 *</label>
+<select id="questionSubject" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="">选择学科</option>
+<option value="数学">数学</option>
+<option value="统计学">统计学</option>
+<option value="计算机科学">计算机科学</option>
+<option value="工程">工程</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">子标签</label>
+<input type="text" id="questionSubTag" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="如：微积分、语法等">
+</div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">难度 *</label>
+                    <select id="questionDifficulty" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">选择难度</option>
+                        
+                        <!-- 基础教育 -->
+                        <optgroup label="━━━ 基础教育 ━━━">
+                            <option value="High School Level">高中水平</option>
+                            <option value="本科基础">本科基础</option>
+                            <option value="Undergraduate Basic">本科基础 (Undergraduate Basic)</option>
+                            <option value="Undergraduate Advanced">本科高级</option>
+                        </optgroup>
+                        
+                        <!-- 标准化考试 -->
+                        <optgroup label="━━━ 标准化考试 ━━━">
+                            <option value="GRE Level">GRE水平</option>
+                            <option value="GRE难度">GRE难度</option>
+                        </optgroup>
+                        
+                        <!-- 学术研究 -->
+                        <optgroup label="━━━ 学术研究 ━━━">
+                            <option value="Graduate Study Level">研究生水平</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">认知层次</label>
+<select id="questionCognitive" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="理解">理解</option>
+<option value="应用">应用</option>
+<option value="分析">分析</option>
+<option value="综合">综合</option>
+<option value="评价">评价</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">题型 *</label>
+<select id="questionType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="">选择题型</option>
+<option value="multiple_choice">选择题</option>
+<option value="short_answer">简答题</option>
+<option value="programming">编程题</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">分值</label>
+<input type="number" id="questionPoints" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="1" min="1" max="10">
+</div>
+
+<div>
+<label class="flex items-center">
+<input type="checkbox" id="questionActive" class="rounded text-primary" checked>
+<span class="ml-2 text-sm text-gray-700">激活状态</span>
+</label>
+</div>
+</div>
+
+<!-- 题目内容 -->
+<div class="space-y-4">
+<h4 class="text-lg font-medium text-gray-900 border-b pb-2">题目内容</h4>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">题目内容 *</label>
+<textarea id="questionContent" required rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="输入题目内容..."></textarea>
+</div>
+
+<!-- 选择题选项 -->
+<div id="optionsContainer" class="hidden">
+<label class="block text-sm font-medium text-gray-700 mb-2">选项</label>
+<div class="space-y-2" id="optionsList">
+<div class="flex items-center space-x-2">
+<span class="w-6 text-center font-medium">A</span>
+<input type="text" class="option-input flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="选项A">
+</div>
+<div class="flex items-center space-x-2">
+<span class="w-6 text-center font-medium">B</span>
+<input type="text" class="option-input flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="选项B">
+</div>
+<div class="flex items-center space-x-2">
+<span class="w-6 text-center font-medium">C</span>
+<input type="text" class="option-input flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="选项C">
+</div>
+<div class="flex items-center space-x-2">
+<span class="w-6 text-center font-medium">D</span>
+<input type="text" class="option-input flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="选项D">
+</div>
+</div>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">正确答案 *</label>
+<textarea id="questionAnswer" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="输入正确答案..."></textarea>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">解析</label>
+<textarea id="questionExplanation" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="输入题目解析..."></textarea>
+</div>
+</div>
+</div>
+
+<div class="flex justify-end space-x-3 pt-6 border-t">
+<button type="button" id="cancelBtn" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+取消
+</button>
+<button type="submit" id="saveBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">
+<span id="saveText">保存题目</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- AI Generate Modal -->
+<div id="aiGenerateModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-semibold text-gray-900 flex items-center">
+<i class="ri-robot-line text-blue-600 mr-2"></i>
+<span data-i18n="ai_generate.title">智能AI生题助手</span>
+</h3>
+<button id="closeAIModalBtn" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+
+<form id="aiGenerateForm" class="space-y-6">
+<!-- 基础设置 -->
+<div class="bg-gray-50 rounded-lg p-4">
+<h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+<i class="ri-settings-3-line text-blue-600 mr-2"></i>
+<span data-i18n="ai_generate.basic_settings">基础设置</span>
+</h4>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.question_count">题目数量</label>
+<input type="number" id="aiQuestionCount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="5" min="1" max="20">
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.question_language">题目语言</label>
+<select id="aiLanguage" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="zh">🇨🇳 中文</option>
+<option value="en">🇺🇸 English</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.points_per_question">每题分值</label>
+<input type="number" id="aiPointsPerQuestion" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="1" min="1" max="10">
+</div>
+</div>
+</div>
+
+<!-- 学科与领域 -->
+<div class="bg-blue-50 rounded-lg p-4">
+<h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+<i class="ri-book-line text-blue-600 mr-2"></i>
+<span data-i18n="ai_generate.subject_and_domain">学科与领域</span>
+</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.main_subject">主要学科</label>
+<select id="aiSubject" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="数学" data-en="Mathematics">📐 数学 (Mathematics)</option>
+<option value="物理" data-en="Physics">⚛️ 物理 (Physics)</option>
+<option value="统计学" data-en="Statistics">📊 统计学 (Statistics)</option>
+<option value="计算机科学" data-en="Computer Science">💻 计算机科学 (Computer Science)</option>
+<option value="工程" data-en="Engineering">⚙️ 工程 (Engineering)</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.sub_domain">子领域 (可选)</label>
+<select id="aiSubDomain" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="" data-i18n="ai_generate.select_subject_first">请先选择主要学科</option>
+</select>
+</div>
+</div>
+</div>
+
+<!-- 难度与题型 -->
+<div class="bg-green-50 rounded-lg p-4">
+<h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+<i class="ri-bar-chart-line text-green-600 mr-2"></i>
+<span data-i18n="ai_generate.difficulty_and_type">难度与题型</span>
+</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.difficulty_level">难度等级</label>
+<select id="aiDifficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<!-- 基础难度 -->
+<optgroup data-i18n="ai_generate.basic_education" label="━━━ 基础教育 ━━━">
+<option value="high_school" data-i18n="ai_generate.high_school">🎓 高中水平</option>
+<option value="undergraduate_basic" data-i18n="ai_generate.undergraduate_basic" selected>📚 本科基础</option>
+<option value="undergraduate_advanced" data-i18n="ai_generate.undergraduate_advanced">🎯 本科高级</option>
+</optgroup>
+
+<!-- 标准化考试 -->
+<optgroup data-i18n="ai_generate.standardized_tests" label="━━━ 标准化考试 ━━━">
+<option value="gre_level" data-i18n="ai_generate.gre_level">🎯 GRE难度</option>
+</optgroup>
+
+<!-- 学术研究 -->
+<optgroup data-i18n="ai_generate.academic_research" label="━━━ 学术研究 ━━━">
+<option value="graduate_study" data-i18n="ai_generate.graduate_study">🏛️ 研究生水平</option>
+<option value="doctoral_research" data-i18n="ai_generate.doctoral_research">🔬 博士研究</option>
+</optgroup>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.question_type">题目类型</label>
+<select id="aiQuestionType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="multiple_choice" data-i18n="ai_generate.multiple_choice">📝 选择题</option>
+<option value="short_answer" data-i18n="ai_generate.short_answer">📄 简答题</option>
+<option value="programming" data-i18n="ai_generate.programming">💻 编程题</option>
+<option value="true_false" data-i18n="ai_generate.true_false">✅ 判断题</option>
+<option value="fill_blank" data-i18n="ai_generate.fill_blank">📝 填空题</option>
+<option value="essay" data-i18n="ai_generate.essay">📖 论述题</option>
+</select>
+</div>
+</div>
+</div>
+
+<!-- 场景设置 -->
+<div class="bg-purple-50 rounded-lg p-4">
+<h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+<i class="ri-landscape-line text-purple-600 mr-2"></i>
+<span data-i18n="ai_generate.scenario_settings">场景设置</span>
+</h4>
+<div class="space-y-4">
+<div class="flex items-center space-x-3">
+<input type="checkbox" id="aiUseScenarios" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+<label for="aiUseScenarios" class="text-sm text-gray-700" data-i18n="ai_generate.use_real_scenarios">使用真实应用场景题目</label>
+<span class="text-xs text-gray-500" data-i18n="ai_generate.rich_background">（提供丰富的背景环境描述）</span>
+</div>
+
+<div id="scenarioExamples" class="hidden mt-3">
+<p class="text-sm text-gray-600 mb-2" data-i18n="ai_generate.scenario_examples">场景类型示例：</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs" data-i18n="ai_generate.engineering_project">🏭 工程项目</span>
+<span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs" data-i18n="ai_generate.scientific_research">🔬 科学研究</span>
+<span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs" data-i18n="ai_generate.business_decision">💼 商业决策</span>
+<span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs" data-i18n="ai_generate.laboratory_environment">🎯 实验室环境</span>
+</div>
+</div>
+</div>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai_generate.custom_prompt">自定义提示词（可选）</label>
+
+<textarea id="aiCustomPrompt" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-i18n-placeholder="ai_generate.custom_prompt_placeholder" placeholder="输入额外的题目要求..."></textarea>
+</div>
+
+<div class="flex justify-end space-x-3 pt-4">
+<button type="button" id="cancelAIBtn" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" data-i18n="common.cancel">
+取消
+</button>
+<button type="submit" id="generateBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+<i class="ri-robot-line mr-2"></i>
+<span id="generateText" data-i18n="ai_generate.generate_questions">生成题目</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- Bulk Actions Modal -->
+<div id="bulkModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-md">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-semibold text-gray-900" data-i18n="question.bulk_operations">批量操作</h3>
+<button id="closeBulkModalBtn" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+
+<div class="space-y-4">
+<p class="text-sm text-gray-600">已选择 <span id="selectedCount">0</span> 个题目</p>
+
+<div class="space-y-2">
+<button id="bulkActivateBtn" class="w-full text-left px-4 py-3 border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors">
+<i class="ri-checkbox-circle-line text-green-600 mr-2"></i>
+批量激活
+</button>
+
+<button id="bulkDeactivateBtn" class="w-full text-left px-4 py-3 border border-gray-300 rounded-lg hover:bg-yellow-50 hover:border-yellow-300 transition-colors">
+<i class="ri-close-circle-line text-yellow-600 mr-2"></i>
+批量禁用
+</button>
+
+                        <button id="bulkDeleteBtn" class="w-full text-left px-4 py-3 border border-gray-300 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors">
+                            <i class="ri-delete-bin-line text-red-600 mr-2"></i>
+<span data-i18n="question.bulk_delete">批量删除</span>
+                        </button>
+</div>
+
+<div class="flex justify-end space-x-3 pt-4 border-t">
+<button id="cancelBulkBtn" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+取消
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+// 全局变量
+let currentPage = 1;
+let totalPages = 1;
+let currentQuestions = [];
+let selectedQuestions = new Set();
+let editingQuestionId = null;
+
+// 页面初始化
+document.addEventListener('DOMContentLoaded', async function() {
+// 页面初始化开始
+
+// 等待多语言初始化完成
+if (window.i18n && !window.i18n.initialized) {
+await new Promise(resolve => {
+document.addEventListener('i18n:initialized', resolve, { once: true });
+});
+}
+
+// 先初始化事件监听器（包括语言切换按钮）
+initEventListeners();
+
+// 然后检查管理员状态
+try {
+const statusResponse = await fetch('/api/admin/status');
+const statusResult = await statusResponse.json();
+
+if (statusResult.is_admin) {
+loadQuestions();
+loadStatistics();
+} else {
+console.log('❌ 管理员未登录，重定向到登录页');
+alert('请先登录管理员账户');
+window.location.href = '/admin/login';
+return;
+}
+} catch (error) {
+console.error('检查管理员状态失败:', error);
+// 尝试加载数据，如果失败会显示相应错误
+loadQuestions();
+loadStatistics();
+}
+
+// 额外的 MathJax 渲染触发器
+setTimeout(() => {
+    if (typeof renderMathJaxForQuestions === 'function') {
+        renderMathJaxForQuestions();
+    }
+}, 1000);
+
+// 监听 MathJax 就绪事件
+window.addEventListener('mathjax-ready', () => {
+    setTimeout(() => {
+        if (typeof renderMathJaxForQuestions === 'function') {
+            renderMathJaxForQuestions();
+        }
+    }, 200);
+});
+
+// 如果 MathJax 已经就绪，立即触发
+if (window.mathJaxReady) {
+    setTimeout(() => {
+        if (typeof renderMathJaxForQuestions === 'function') {
+            renderMathJaxForQuestions();
+        }
+    }, 200);
+}
+
+// 页面初始化完成
+});
+
+// 初始化事件监听器
+function initEventListeners() {
+// 语言切换按钮由 i18n.js 自动处理，无需手动绑定
+
+// 多语言变化事件监听
+        document.addEventListener('i18n:languageChanged', () => {
+            console.log('Language changed in question management page');
+            // 语言切换按钮的文本更新现在由 i18n.js 自动处理
+            // 重新加载题目列表以应用新语言
+            loadQuestions();
+        });
+
+// 搜索和筛选
+document.getElementById('searchInput').addEventListener('input', debounce(loadQuestions, 300));
+document.getElementById('subjectFilter').addEventListener('change', loadQuestions);
+document.getElementById('difficultyFilter').addEventListener('change', loadQuestions);
+document.getElementById('typeFilter').addEventListener('change', loadQuestions);
+document.getElementById('statusFilter').addEventListener('change', loadQuestions);
+
+// 分页
+document.getElementById('prevPageBtn').addEventListener('click', () => changePage(currentPage - 1));
+document.getElementById('nextPageBtn').addEventListener('click', () => changePage(currentPage + 1));
+
+// 模态框
+document.getElementById('addQuestionBtn').addEventListener('click', showAddQuestionModal);
+document.getElementById('closeModalBtn').addEventListener('click', hideQuestionModal);
+document.getElementById('cancelBtn').addEventListener('click', hideQuestionModal);
+document.getElementById('questionForm').addEventListener('submit', handleSaveQuestion);
+
+// AI生成
+document.getElementById('aiGenerateBtn').addEventListener('click', showAIGenerateModal);
+document.getElementById('closeAIModalBtn').addEventListener('click', hideAIGenerateModal);
+document.getElementById('cancelAIBtn').addEventListener('click', hideAIGenerateModal);
+document.getElementById('aiGenerateForm').addEventListener('submit', handleAIGenerate);
+
+// 预设标签点击事件
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('preset-tag-btn')) {
+        const prompt = e.target.getAttribute('data-prompt');
+        const textarea = document.getElementById('aiCustomPrompt');
+        
+        // 如果是专业级别按钮，同时设置难度
+        if (e.target.classList.contains('preset-difficulty-btn')) {
+            const difficulty = e.target.getAttribute('data-difficulty');
+            const difficultySelect = document.getElementById('aiDifficulty');
+            if (difficulty && difficultySelect) {
+                difficultySelect.value = difficulty;
+                
+                // 添加闪烁效果提示用户难度已更改
+                difficultySelect.style.backgroundColor = '#e0f2fe';
+                setTimeout(() => {
+                    difficultySelect.style.backgroundColor = '';
+                }, 1000);
+            }
+        }
+        
+        // 设置提示词
+        if (!textarea.value.trim()) {
+            textarea.value = prompt;
+        } else {
+            textarea.value += '\n\n' + prompt;
+        }
+        
+        // 添加视觉反馈
+        e.target.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            e.target.style.transform = 'scale(1)';
+        }, 150);
+        
+        // 聚焦到文本框
+        textarea.focus();
+    }
+});
+
+// 批量操作
+document.getElementById('bulkActionBtn').addEventListener('click', showBulkModal);
+document.getElementById('closeBulkModalBtn').addEventListener('click', hideBulkModal);
+document.getElementById('cancelBulkBtn').addEventListener('click', hideBulkModal);
+document.getElementById('bulkActivateBtn').addEventListener('click', () => handleBulkAction('activate'));
+document.getElementById('bulkDeactivateBtn').addEventListener('click', () => handleBulkAction('deactivate'));
+document.getElementById('bulkDeleteBtn').addEventListener('click', () => handleBulkAction('delete'));
+// 移除批量操作中的清空功能，单独绑定清空按钮
+document.getElementById('clearAllBtn').addEventListener('click', handleClearAll);
+
+// 题目详情模态框
+document.getElementById('closeDetailModalBtn').addEventListener('click', hideQuestionDetailModal);
+document.getElementById('closeDetailBtn').addEventListener('click', hideQuestionDetailModal);
+
+// 题型变化时显示/隐藏选项
+document.getElementById('questionType').addEventListener('change', function() {
+const optionsContainer = document.getElementById('optionsContainer');
+if (this.value === 'multiple_choice') {
+optionsContainer.classList.remove('hidden');
+} else {
+optionsContainer.classList.add('hidden');
+}
+});
+
+// 登出
+document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+}
+
+// 加载题目列表
+async function loadQuestions() {
+try {
+showLoading(true);
+
+// 安全获取筛选参数
+const searchInput = document.getElementById('searchInput');
+const subjectFilter = document.getElementById('subjectFilter');
+const difficultyFilter = document.getElementById('difficultyFilter');
+const typeFilter = document.getElementById('typeFilter');
+const statusFilter = document.getElementById('statusFilter');
+
+const params = new URLSearchParams({
+page: currentPage,
+per_page: 10
+});
+
+// 只添加非空的筛选参数
+if (searchInput && searchInput.value) {
+    params.append('search', searchInput.value);
+}
+if (subjectFilter && subjectFilter.value) {
+    params.append('subject', subjectFilter.value);
+}
+if (difficultyFilter && difficultyFilter.value) {
+    params.append('difficulty', difficultyFilter.value);
+}
+if (typeFilter && typeFilter.value) {
+    params.append('type', typeFilter.value);
+}
+if (statusFilter && statusFilter.value) {
+    params.append('is_active', statusFilter.value);
+}
+
+const fullUrl = `/api/questions?${params.toString()}`;
+const response = await fetch(fullUrl);
+const result = await response.json();
+
+if (result.success) {
+currentQuestions = result.questions;
+updateQuestionsList(result.questions);
+updatePagination(result.pagination);
+} else {
+console.error('❌ API返回失败:', result.message);
+if (result.message && result.message.includes('管理员权限')) {
+showError('需要管理员权限访问，正在重定向...');
+setTimeout(() => {
+window.location.href = '/';
+}, 2000);
+} else {
+showError('加载题目失败: ' + result.message);
+}
+}
+} catch (error) {
+console.error('加载题目失败:', error);
+showError('加载题目失败，请重试');
+} finally {
+showLoading(false);
+}
+}
+
+// 更新题目列表
+function updateQuestionsList(questions) {
+const container = document.getElementById('questionsContainer');
+
+if (!container) {
+console.error('❌ 找不到questionsContainer元素！');
+return;
+}
+
+if (!questions) {
+console.error('❌ 题目数据为空！');
+container.innerHTML = '<div class="text-center py-12 text-red-500">题目数据为空</div>';
+return;
+}
+
+if (questions.length === 0) {
+container.innerHTML = `
+<div class="text-center py-12">
+<i class="ri-inbox-line text-4xl text-gray-400 mb-4"></i>
+<p class="text-gray-500" data-i18n="question.no_questions">暂无题目数据</p>
+</div>
+`;
+return;
+}
+
+try {
+// 完整渲染题目列表（包含复选框和操作按钮）
+container.innerHTML = questions.map((question, index) => {
+return `
+<div class="question-card bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm hover:shadow-md transition-all">
+    <div class="flex items-start justify-between">
+        <div class="flex-1">
+            <div class="flex items-center space-x-2 mb-2">
+                <input type="checkbox" class="question-checkbox rounded text-primary" value="${question.id}" 
+                       ${selectedQuestions.has(parseInt(question.id)) ? 'checked' : ''}>
+                <span class="px-2 py-1 text-xs font-medium rounded-full ${getSubjectColor(question.subject)} text-white">
+                    ${getSubjectName(question.subject)}
+                </span>
+                <span class="px-2 py-1 text-xs rounded-full ${getDifficultyColor(question.difficulty)}">
+                    ${getDifficultyName(question.difficulty)}
+                </span>
+                <span class="px-2 py-1 text-xs rounded-full ${getTypeColor(question.type)}">
+                    ${getTypeName(question.type)}
+                </span>
+                <span class="px-2 py-1 text-xs rounded-full ${question.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                    ${question.is_active ? 
+                        (window.i18n && window.i18n.initialized ? window.i18n.translate('question.status.active', '已激活') : '已激活') : 
+                        (window.i18n && window.i18n.initialized ? window.i18n.translate('question.status.inactive', '未激活') : '未激活')
+                    }
+                </span>
+            </div>
+            <h3 class="font-medium text-gray-900 mb-2 math-content">${question.content || '题目内容缺失'}</h3>
+            <div class="flex items-center text-sm text-gray-500 space-x-4">
+                <span><i class="ri-star-line mr-1"></i>${question.points || 1}分</span>
+                <span><i class="ri-time-line mr-1"></i>${formatDate(question.created_at || question.updated_at)}</span>
+                ${question.sub_tag ? `<span><i class="ri-bookmark-line mr-1"></i>${question.sub_tag}</span>` : ''}
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 ml-4">
+            <button class="detail-btn p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" data-id="${question.id}" title="查看详情">
+                <i class="ri-eye-line"></i>
+            </button>
+            <button class="edit-btn p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" data-id="${question.id}" title="编辑">
+                <i class="ri-edit-line"></i>
+            </button>
+            <button class="toggle-btn p-2 ${question.is_active ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'} rounded-lg transition-colors" data-id="${question.id}" data-active="${question.is_active}" title="${question.is_active ? '禁用' : '启用'}">
+                <i class="${question.is_active ? 'ri-pause-circle-line' : 'ri-play-circle-line'}"></i>
+            </button>
+            <button class="delete-btn p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" data-id="${question.id}" title="删除">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+    </div>
+</div>
+`;
+}).join('');
+
+// 重新添加事件监听器
+addQuestionEventListeners();
+
+// 渲染数学公式
+renderMathJaxForQuestions();
+
+} catch (error) {
+console.error('❌ 渲染题目列表时出错:', error);
+container.innerHTML = `<div class="text-center py-12 text-red-500">
+<p>渲染出错: ${error.message}</p>
+</div>`;
+}
+}
+
+// 添加题目事件监听器
+function addQuestionEventListeners() {
+// 查看详情按钮
+document.querySelectorAll('.detail-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+const questionId = parseInt(e.currentTarget.dataset.id);
+showQuestionDetail(questionId);
+});
+});
+
+// 编辑按钮
+document.querySelectorAll('.edit-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+const questionId = parseInt(e.currentTarget.dataset.id);
+showEditQuestionModal(questionId);
+});
+});
+
+// 切换状态按钮
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+const questionId = parseInt(e.currentTarget.dataset.id);
+const isActive = e.currentTarget.dataset.active === 'true';
+toggleQuestionStatus(questionId, !isActive);
+});
+});
+
+// 删除按钮
+document.querySelectorAll('.delete-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+const questionId = parseInt(e.currentTarget.dataset.id);
+deleteQuestion(questionId);
+});
+});
+
+// 多选框
+document.querySelectorAll('.question-checkbox').forEach(checkbox => {
+checkbox.addEventListener('change', (e) => {
+const questionId = parseInt(e.target.value);
+if (e.target.checked) {
+selectedQuestions.add(questionId);
+} else {
+selectedQuestions.delete(questionId);
+}
+updateSelectedCount();
+});
+});
+}
+
+// 更新分页
+function updatePagination(pagination) {
+currentPage = pagination.page;
+totalPages = pagination.pages;
+
+// 更新统计信息
+document.getElementById('totalCount').textContent = pagination.total;
+document.getElementById('currentPage').textContent = pagination.page;
+document.getElementById('showingStart').textContent = (pagination.page - 1) * pagination.per_page + 1;
+document.getElementById('showingEnd').textContent = Math.min(pagination.page * pagination.per_page, pagination.total);
+document.getElementById('showingTotal').textContent = pagination.total;
+
+// 更新按钮状态
+document.getElementById('prevPageBtn').disabled = !pagination.has_prev;
+document.getElementById('nextPageBtn').disabled = !pagination.has_next;
+
+// 生成页码
+generatePageNumbers();
+}
+
+// 生成页码
+function generatePageNumbers() {
+const container = document.getElementById('pageNumbers');
+const maxVisible = 5;
+const start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+const end = Math.min(totalPages, start + maxVisible - 1);
+
+container.innerHTML = '';
+for (let i = start; i <= end; i++) {
+const button = document.createElement('button');
+button.className = `px-3 py-2 text-sm rounded-lg ${i === currentPage ? 'bg-primary text-white' : 'border border-gray-300 hover:bg-gray-50'}`;
+button.textContent = i;
+button.addEventListener('click', () => changePage(i));
+container.appendChild(button);
+}
+}
+
+// 切换页面
+function changePage(page) {
+if (page >= 1 && page <= totalPages && page !== currentPage) {
+currentPage = page;
+loadQuestions();
+}
+}
+
+// 加载统计数据
+async function loadStatistics() {
+try {
+const response = await fetch('/api/questions?per_page=1000'); // 获取所有题目进行统计
+const result = await response.json();
+
+if (result.success) {
+const questions = result.questions;
+const total = questions.length;
+const active = questions.filter(q => q.is_active).length;
+const subjects = [...new Set(questions.map(q => q.subject))].length;
+
+// 计算平均难度 - 支持专业级别
+const difficultyMap = { 
+    '简单': 1, '中等': 2, '困难': 3,
+    // 标准化考试级别
+    'gre_math': 4, 'gmat_math': 5, 'sat_math_2': 4,
+    // 学术研究级别
+    'advanced_undergraduate': 6, 'graduate_study': 8, 'competition_math': 7,
+    // 专业应用级别
+    'engineering_applications': 6, 'data_science': 5, 'financial_modeling': 6
+};
+
+const avgDiff = questions.length > 0 ? 
+    questions.reduce((sum, q) => sum + (difficultyMap[q.difficulty] || 2), 0) / questions.length : 0;
+
+// 获取翻译后的难度文本
+let avgDiffText;
+if (avgDiff < 1.5) {
+    avgDiffText = window.i18n && window.i18n.initialized ? window.i18n.translate('difficulty.easy', '简单') : '简单';
+} else if (avgDiff < 2.5) {
+    avgDiffText = window.i18n && window.i18n.initialized ? window.i18n.translate('difficulty.medium', '中等') : '中等';
+} else if (avgDiff < 3.5) {
+    avgDiffText = window.i18n && window.i18n.initialized ? window.i18n.translate('difficulty.hard', '困难') : '困难';
+} else if (avgDiff < 5.5) {
+    avgDiffText = window.i18n && window.i18n.initialized ? window.i18n.translate('difficulty.professional', '专业级') : '专业级';
+} else {
+    avgDiffText = window.i18n && window.i18n.initialized ? window.i18n.translate('difficulty.expert', '专家级') : '专家级';
+}
+
+document.getElementById('totalQuestions').textContent = total;
+document.getElementById('activeQuestions').textContent = active;
+document.getElementById('subjectCount').textContent = subjects;
+document.getElementById('avgDifficulty').textContent = avgDiffText;
+}
+} catch (error) {
+console.error('加载统计数据失败:', error);
+}
+}
+
+// 显示添加题目模态框
+function showAddQuestionModal() {
+editingQuestionId = null;
+document.getElementById('modalTitle').textContent = window.i18n ? window.i18n.translate('question.add_question', '添加题目') : '添加题目';
+document.getElementById('saveText').textContent = window.i18n ? window.i18n.translate('question.save_question', '保存题目') : '保存题目';
+document.getElementById('questionForm').reset();
+document.getElementById('questionActive').checked = true;
+document.getElementById('optionsContainer').classList.add('hidden');
+document.getElementById('questionModal').classList.remove('hidden');
+}
+
+// 显示编辑题目模态框
+function showEditQuestionModal(questionId) {
+const question = currentQuestions.find(q => q.id === questionId);
+if (!question) return;
+
+editingQuestionId = questionId;
+document.getElementById('modalTitle').textContent = window.i18n ? window.i18n.translate('question.edit_question', '编辑题目') : '编辑题目';
+document.getElementById('saveText').textContent = window.i18n ? window.i18n.translate('question.update_question', '更新题目') : '更新题目';
+
+// 填充表单
+document.getElementById('questionSubject').value = question.subject;
+document.getElementById('questionSubTag').value = question.sub_tag || '';
+document.getElementById('questionDifficulty').value = question.difficulty;
+document.getElementById('questionCognitive').value = question.cognitive_level;
+document.getElementById('questionType').value = question.type;
+document.getElementById('questionPoints').value = question.points;
+document.getElementById('questionActive').checked = question.is_active;
+document.getElementById('questionContent').value = question.content;
+document.getElementById('questionAnswer').value = question.correct_answer;
+document.getElementById('questionExplanation').value = question.explanation || '';
+
+// 处理选择题选项
+if (question.type === 'multiple_choice' && question.options) {
+document.getElementById('optionsContainer').classList.remove('hidden');
+const options = typeof question.options === 'string' ? JSON.parse(question.options) : question.options;
+const optionInputs = document.querySelectorAll('.option-input');
+optionInputs.forEach((input, index) => {
+input.value = options[index] || '';
+});
+} else {
+document.getElementById('optionsContainer').classList.add('hidden');
+}
+
+document.getElementById('questionModal').classList.remove('hidden');
+}
+
+// 隐藏题目模态框
+function hideQuestionModal() {
+document.getElementById('questionModal').classList.add('hidden');
+editingQuestionId = null;
+}
+
+// 处理保存题目
+async function handleSaveQuestion(e) {
+e.preventDefault();
+
+const saveBtn = document.getElementById('saveBtn');
+const originalText = saveBtn.innerHTML;
+saveBtn.disabled = true;
+saveBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>保存中...';
+
+try {
+const formData = {
+subject: document.getElementById('questionSubject').value,
+sub_tag: document.getElementById('questionSubTag').value,
+difficulty: document.getElementById('questionDifficulty').value,
+cognitive_level: document.getElementById('questionCognitive').value,
+question_type: document.getElementById('questionType').value,
+content: document.getElementById('questionContent').value,
+correct_answer: document.getElementById('questionAnswer').value,
+explanation: document.getElementById('questionExplanation').value,
+points: parseInt(document.getElementById('questionPoints').value),
+is_active: document.getElementById('questionActive').checked
+};
+
+// 处理选择题选项
+if (formData.question_type === 'multiple_choice') {
+const options = Array.from(document.querySelectorAll('.option-input')).map(input => input.value.trim()).filter(v => v);
+formData.options = options;
+}
+
+let response;
+if (editingQuestionId) {
+response = await fetch(`/api/questions/${editingQuestionId}`, {
+method: 'PUT',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(formData)
+});
+} else {
+response = await fetch('/api/questions', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(formData)
+});
+}
+
+const result = await response.json();
+if (result.success) {
+showSuccess(editingQuestionId ? '题目更新成功！' : '题目创建成功！');
+hideQuestionModal();
+loadQuestions();
+loadStatistics();
+} else {
+showError('保存失败: ' + result.message);
+}
+} catch (error) {
+console.error('保存题目失败:', error);
+showError('保存失败，请重试');
+} finally {
+saveBtn.disabled = false;
+saveBtn.innerHTML = originalText;
+}
+}
+
+// 切换题目状态
+async function toggleQuestionStatus(questionId, isActive) {
+try {
+const response = await fetch(`/api/questions/${questionId}`, {
+method: 'PUT',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ is_active: isActive })
+});
+
+const result = await response.json();
+if (result.success) {
+showSuccess(`题目${isActive ? '激活' : '禁用'}成功！`);
+loadQuestions();
+loadStatistics();
+} else {
+showError('操作失败: ' + result.message);
+}
+} catch (error) {
+console.error('切换状态失败:', error);
+showError('操作失败，请重试');
+}
+}
+
+// 删除题目
+async function deleteQuestion(questionId) {
+if (!confirm(window.i18n ? window.i18n.translate('question.confirm_delete', '确定要删除这道题目吗？此操作不可恢复。') : '确定要删除这道题目吗？此操作不可恢复。')) return;
+
+try {
+const response = await fetch(`/api/questions/${questionId}`, {
+method: 'DELETE'
+});
+
+const result = await response.json();
+if (result.success) {
+showSuccess('题目删除成功！');
+loadQuestions();
+loadStatistics();
+} else {
+showError('删除失败: ' + result.message);
+}
+} catch (error) {
+console.error('删除题目失败:', error);
+showError('删除失败，请重试');
+}
+}
+
+// 显示AI生成模态框
+function showAIGenerateModal() {
+document.getElementById('aiGenerateModal').classList.remove('hidden');
+}
+
+// 隐藏AI生成模态框
+function hideAIGenerateModal() {
+document.getElementById('aiGenerateModal').classList.add('hidden');
+}
+
+// 处理AI生成
+async function handleAIGenerate(e) {
+e.preventDefault();
+
+const generateBtn = document.getElementById('generateBtn');
+const originalText = generateBtn.innerHTML;
+generateBtn.disabled = true;
+generateBtn.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>生成中...';
+
+try {
+// 获取新的智能生题配置
+const formData = {
+count: parseInt(document.getElementById('aiQuestionCount').value),
+subject: document.getElementById('aiSubject').value,
+sub_domain: document.getElementById('aiSubDomain').value,
+language: document.getElementById('aiLanguage').value,
+difficulty: document.getElementById('aiDifficulty').value,
+question_type: document.getElementById('aiQuestionType').value,
+use_scenarios: document.getElementById('aiUseScenarios').checked,
+custom_prompt: document.getElementById('aiCustomPrompt').value,
+points_per_question: parseInt(document.getElementById('aiPointsPerQuestion').value),
+// 向后兼容
+types: [document.getElementById('aiQuestionType').value]
+};
+
+const response = await fetch('/api/questions/ai-generate', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(formData)
+});
+
+const result = await response.json();
+console.log('AI生成结果:', result); // 添加调试日志
+if (result.success) {
+showSuccess(`成功生成 ${result.generated_count} 道题目！`);
+hideAIGenerateModal();
+// 延迟一下再刷新，确保数据库已提交
+setTimeout(() => {
+loadQuestions();
+loadStatistics();
+}, 500);
+} else {
+showError('生成失败: ' + result.message);
+}
+} catch (error) {
+console.error('AI生成失败:', error);
+showError('生成失败，请重试');
+} finally {
+generateBtn.disabled = false;
+generateBtn.innerHTML = originalText;
+}
+}
+
+// 动态加载子领域选项
+function updateSubDomains() {
+    const subDomainSelect = document.getElementById('aiSubDomain');
+    const selectedSubject = document.getElementById('aiSubject').value;
+    const currentLang = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+    
+    // 根据学科设置子领域选项
+    const subDomains = {
+        '数学': {
+            '微积分': 'Calculus',
+            '线性代数': 'Linear Algebra',
+            '概率论': 'Probability Theory',
+            '数理统计': 'Mathematical Statistics',
+            '数值分析': 'Numerical Analysis',
+            '离散数学': 'Discrete Mathematics'
+        },
+        '物理': {
+            '经典力学': 'Classical Mechanics',
+            '电磁学': 'Electromagnetism',
+            '热力学': 'Thermodynamics',
+            '量子物理': 'Quantum Physics',
+            '光学': 'Optics',
+            '相对论': 'Relativity'
+        },
+        '统计学': {
+            '描述统计': 'Descriptive Statistics',
+            '推断统计': 'Inferential Statistics',
+            '回归分析': 'Regression Analysis',
+            '时间序列': 'Time Series',
+            '贝叶斯统计': 'Bayesian Statistics',
+            '机器学习': 'Machine Learning'
+        },
+        '计算机科学': {
+            '数据结构': 'Data Structures',
+            '算法设计': 'Algorithm Design',
+            '数据库': 'Database Systems',
+            '操作系统': 'Operating Systems',
+            '网络安全': 'Network Security',
+            '人工智能': 'Artificial Intelligence'
+        },
+        '工程': {
+            '材料工程': 'Materials Engineering',
+            '机械工程': 'Mechanical Engineering',
+            '电气工程': 'Electrical Engineering',
+            '化学工程': 'Chemical Engineering',
+            '土木工程': 'Civil Engineering',
+            '软件工程': 'Software Engineering'
+        }
+    };
+    
+    // 设置新选项
+    const generalText = currentLang === 'en' ? 'General' : '通用';
+    subDomainSelect.innerHTML = `<option value="">${generalText}</option>`;
+    
+    if (subDomains[selectedSubject]) {
+        for (const [zh, en] of Object.entries(subDomains[selectedSubject])) {
+            const option = document.createElement('option');
+            option.value = zh;
+            
+            if (currentLang === 'en') {
+                option.textContent = en;
+            } else {
+                option.textContent = `${zh} (${en})`;
+            }
+            
+            subDomainSelect.appendChild(option);
+        }
+    }
+}
+
+document.getElementById('aiSubject').addEventListener('change', updateSubDomains);
+
+// 场景设置切换功能
+document.getElementById('aiUseScenarios').addEventListener('change', function() {
+    const examples = document.getElementById('scenarioExamples');
+    if (this.checked) {
+        examples.classList.remove('hidden');
+    } else {
+        examples.classList.add('hidden');
+    }
+});
+
+// AI生题页面多语言支持
+const aiTranslations = {
+    zh: {
+        'ai_generate.title': '智能AI生题助手',
+        'ai_generate.basic_settings': '基础设置',
+        'ai_generate.question_count': '题目数量',
+        'ai_generate.question_language': '题目语言',
+        'ai_generate.points_per_question': '每题分值',
+        'ai_generate.subject_and_domain': '学科与领域',
+        'ai_generate.main_subject': '主要学科',
+        'ai_generate.sub_domain': '子领域 (可选)',
+        'ai_generate.select_subject_first': '请先选择主要学科',
+        'ai_generate.difficulty_and_type': '难度与题型',
+        'ai_generate.difficulty_level': '难度等级',
+        'ai_generate.question_type': '题目类型',
+        'ai_generate.basic_education': '━━━ 基础教育 ━━━',
+        'ai_generate.high_school': '🎓 高中水平',
+        'ai_generate.undergraduate_basic': '📚 本科基础',
+        'ai_generate.undergraduate_advanced': '🎯 本科高级',
+        'ai_generate.standardized_tests': '━━━ 标准化考试 ━━━',
+        'ai_generate.gre_level': '🎯 GRE难度',
+        'ai_generate.academic_research': '━━━ 学术研究 ━━━',
+        'ai_generate.graduate_study': '🏛️ 研究生水平',
+        'ai_generate.doctoral_research': '🔬 博士研究',
+        'ai_generate.multiple_choice': '📝 选择题',
+        'ai_generate.short_answer': '📄 简答题',
+        'ai_generate.programming': '💻 编程题',
+        'ai_generate.true_false': '✅ 判断题',
+        'ai_generate.fill_blank': '📝 填空题',
+        'ai_generate.essay': '📖 论述题',
+        'ai_generate.scenario_settings': '场景设置',
+        'ai_generate.use_real_scenarios': '使用真实应用场景题目',
+        'ai_generate.rich_background': '（提供丰富的背景环境描述）',
+        'ai_generate.scenario_examples': '场景类型示例：',
+        'ai_generate.engineering_project': '🏭 工程项目',
+        'ai_generate.scientific_research': '🔬 科学研究',
+        'ai_generate.business_decision': '💼 商业决策',
+        'ai_generate.laboratory_environment': '🎯 实验室环境',
+        'ai_generate.custom_prompt': '自定义提示词（可选）',
+        'ai_generate.custom_prompt_placeholder': '输入额外的题目要求...',
+        'ai_generate.generate_questions': '生成题目',
+        'common.cancel': '取消'
+    },
+    en: {
+        'ai_generate.title': 'Smart AI Question Generator',
+        'ai_generate.basic_settings': 'Basic Settings',
+        'ai_generate.question_count': 'Question Count',
+        'ai_generate.question_language': 'Question Language',
+        'ai_generate.points_per_question': 'Points per Question',
+        'ai_generate.subject_and_domain': 'Subject & Domain',
+        'ai_generate.main_subject': 'Main Subject',
+        'ai_generate.sub_domain': 'Sub-domain (Optional)',
+        'ai_generate.select_subject_first': 'Please select main subject first',
+        'ai_generate.difficulty_and_type': 'Difficulty & Type',
+        'ai_generate.difficulty_level': 'Difficulty Level',
+        'ai_generate.question_type': 'Question Type',
+        'ai_generate.basic_education': '━━━ Basic Education ━━━',
+        'ai_generate.high_school': '🎓 High School Level',
+        'ai_generate.undergraduate_basic': '📚 Undergraduate Basic',
+        'ai_generate.undergraduate_advanced': '🎯 Undergraduate Advanced',
+        'ai_generate.standardized_tests': '━━━ Standardized Tests ━━━',
+        'ai_generate.gre_level': '🎯 GRE Level',
+        'ai_generate.academic_research': '━━━ Academic Research ━━━',
+        'ai_generate.graduate_study': '🏛️ Graduate Study',
+        'ai_generate.doctoral_research': '🔬 Doctoral Research',
+        'ai_generate.multiple_choice': '📝 Multiple Choice',
+        'ai_generate.short_answer': '📄 Short Answer',
+        'ai_generate.programming': '💻 Programming',
+        'ai_generate.true_false': '✅ True/False',
+        'ai_generate.fill_blank': '📝 Fill in the Blank',
+        'ai_generate.essay': '📖 Essay',
+        'ai_generate.scenario_settings': 'Scenario Settings',
+        'ai_generate.use_real_scenarios': 'Use real-world application scenarios',
+        'ai_generate.rich_background': '(Provides rich background descriptions)',
+        'ai_generate.scenario_examples': 'Scenario Examples:',
+        'ai_generate.engineering_project': '🏭 Engineering Project',
+        'ai_generate.scientific_research': '🔬 Scientific Research',
+        'ai_generate.business_decision': '💼 Business Decision',
+        'ai_generate.laboratory_environment': '🎯 Laboratory Environment',
+        'ai_generate.custom_prompt': 'Custom Prompt (Optional)',
+        'ai_generate.custom_prompt_placeholder': 'Enter additional question requirements...',
+        'ai_generate.generate_questions': 'Generate Questions',
+        'common.cancel': 'Cancel'
+    }
+};
+
+// 更新AI生题页面的多语言内容
+function updateAIGenerateTranslations() {
+    const currentLang = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+    const translations = aiTranslations[currentLang] || aiTranslations.zh;
+    
+    // 更新所有带有data-i18n属性的元素（排除select选项）
+    const elements = document.querySelectorAll('#aiGenerateModal [data-i18n]:not(option):not(optgroup)');
+    elements.forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[key]) {
+            element.textContent = translations[key];
+        }
+    });
+    
+    // 更新所有带有data-i18n-placeholder属性的元素
+    const placeholderElements = document.querySelectorAll('#aiGenerateModal [data-i18n-placeholder]');
+    placeholderElements.forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (translations[key]) {
+            element.placeholder = translations[key];
+        }
+    });
+    
+    // 更新学科选项
+    updateSubjectOptions(currentLang);
+    
+    // 重新构建难度选择器以确保optgroup正确显示
+    updateDifficultySelect(currentLang, translations);
+    
+    // 更新题目类型选项
+    const typeOptions = document.querySelectorAll('#aiQuestionType option');
+    typeOptions.forEach(option => {
+        const key = option.getAttribute('data-i18n');
+        if (translations[key]) {
+            option.textContent = translations[key];
+        }
+    });
+}
+
+// 重新构建难度选择器
+function updateDifficultySelect(currentLang, translations) {
+    const difficultySelect = document.getElementById('aiDifficulty');
+    const currentValue = difficultySelect.value;
+    
+    const basicEducationLabel = translations['ai_generate.basic_education'] || '━━━ 基础教育 ━━━';
+    const standardizedTestsLabel = translations['ai_generate.standardized_tests'] || '━━━ 标准化考试 ━━━';
+    const academicResearchLabel = translations['ai_generate.academic_research'] || '━━━ 学术研究 ━━━';
+    
+    const highSchoolText = translations['ai_generate.high_school'] || '🎓 高中水平';
+    const undergraduateBasicText = translations['ai_generate.undergraduate_basic'] || '📚 本科基础';
+    const undergraduateAdvancedText = translations['ai_generate.undergraduate_advanced'] || '🎯 本科高级';
+    const greLevelText = translations['ai_generate.gre_level'] || '🎯 GRE难度';
+    const graduateStudyText = translations['ai_generate.graduate_study'] || '🏛️ 研究生水平';
+    const doctoralResearchText = translations['ai_generate.doctoral_research'] || '🔬 博士研究';
+    
+    difficultySelect.innerHTML = `
+        <optgroup label="${basicEducationLabel}">
+            <option value="high_school">${highSchoolText}</option>
+            <option value="undergraduate_basic">${undergraduateBasicText}</option>
+            <option value="undergraduate_advanced">${undergraduateAdvancedText}</option>
+        </optgroup>
+        <optgroup label="${standardizedTestsLabel}">
+            <option value="gre_level">${greLevelText}</option>
+        </optgroup>
+        <optgroup label="${academicResearchLabel}">
+            <option value="graduate_study">${graduateStudyText}</option>
+            <option value="doctoral_research">${doctoralResearchText}</option>
+        </optgroup>
+    `;
+    
+    // 恢复之前选中的值
+    difficultySelect.value = currentValue || 'undergraduate_basic';
+}
+
+// 更新学科选项的显示文本
+function updateSubjectOptions(lang) {
+    const subjectSelect = document.getElementById('aiSubject');
+    const options = subjectSelect.querySelectorAll('option');
+    
+    const subjectTranslations = {
+        zh: {
+            '数学': '📐 数学 (Mathematics)',
+            '物理': '⚛️ 物理 (Physics)', 
+            '统计学': '📊 统计学 (Statistics)',
+            '计算机科学': '💻 计算机科学 (Computer Science)',
+            '工程': '⚙️ 工程 (Engineering)'
+        },
+        en: {
+            '数学': '📐 Mathematics',
+            '物理': '⚛️ Physics',
+            '统计学': '📊 Statistics', 
+            '计算机科学': '💻 Computer Science',
+            '工程': '⚙️ Engineering'
+        }
+    };
+    
+    const translations = subjectTranslations[lang] || subjectTranslations.zh;
+    
+    options.forEach(option => {
+        const value = option.value;
+        if (translations[value]) {
+            option.textContent = translations[value];
+        }
+    });
+}
+
+// 监听语言切换事件
+document.addEventListener('i18n:languageChanged', function(e) {
+    updateAIGenerateTranslations();
+    updateSubDomains(); // 同时更新子领域选项
+});
+
+// 初始化时也更新一次
+document.addEventListener('i18n:initialized', function() {
+    updateAIGenerateTranslations();
+    updateSubDomains(); // 同时更新子领域选项
+});
+
+// 显示批量操作模态框
+function showBulkModal() {
+if (selectedQuestions.size === 0) {
+showError('请先选择要操作的题目');
+return;
+}
+
+updateSelectedCount();
+
+// 更新模态框标题显示选中数量
+const modalTitle = document.querySelector('#bulkModal h3');
+if (modalTitle) {
+modalTitle.textContent = `批量操作 (已选择 ${selectedQuestions.size} 道题目)`;
+}
+
+// 更新按钮文本显示数量
+const bulkActivateBtn = document.getElementById('bulkActivateBtn');
+const bulkDeactivateBtn = document.getElementById('bulkDeactivateBtn');
+const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+
+if (bulkActivateBtn) {
+bulkActivateBtn.innerHTML = `<i class="ri-check-circle-line text-green-600 mr-2"></i>批量启用 (${selectedQuestions.size}道)`;
+}
+if (bulkDeactivateBtn) {
+bulkDeactivateBtn.innerHTML = `<i class="ri-close-circle-line text-yellow-600 mr-2"></i>批量禁用 (${selectedQuestions.size}道)`;
+}
+if (bulkDeleteBtn) {
+bulkDeleteBtn.innerHTML = `<i class="ri-delete-bin-line text-red-600 mr-2"></i>批量删除 (${selectedQuestions.size}道)`;
+}
+
+document.getElementById('bulkModal').classList.remove('hidden');
+}
+
+// 隐藏批量操作模态框
+function hideBulkModal() {
+document.getElementById('bulkModal').classList.add('hidden');
+}
+
+// 更新选中数量
+function updateSelectedCount() {
+document.getElementById('selectedCount').textContent = selectedQuestions.size;
+}
+
+// 处理批量操作
+async function handleBulkAction(action) {
+if (selectedQuestions.size === 0) {
+showError('请先选择要操作的题目');
+return;
+}
+
+let confirmMessage = '';
+let endpoint = '';
+let method = 'POST';
+let body = {};
+
+switch (action) {
+case 'activate':
+confirmMessage = `确定要激活选中的 ${selectedQuestions.size} 道题目吗？`;
+endpoint = '/api/questions/batch-update';
+body = { question_ids: Array.from(selectedQuestions), is_active: true };
+method = 'PUT';
+break;
+case 'deactivate':
+confirmMessage = `确定要禁用选中的 ${selectedQuestions.size} 道题目吗？`;
+endpoint = '/api/questions/batch-update';
+body = { question_ids: Array.from(selectedQuestions), is_active: false };
+method = 'PUT';
+break;
+case 'delete':
+confirmMessage = `确定要删除选中的 ${selectedQuestions.size} 道题目吗？此操作不可恢复。`;
+endpoint = '/api/questions/batch-delete';
+method = 'DELETE';
+body = { question_ids: Array.from(selectedQuestions) };
+break;
+}
+
+if (!confirm(confirmMessage)) return;
+
+try {
+const response = await fetch(endpoint, {
+method: method,
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(body)
+});
+
+const result = await response.json();
+if (result.success) {
+showSuccess('批量操作成功！');
+selectedQuestions.clear();
+hideBulkModal();
+loadQuestions();
+loadStatistics();
+} else {
+showError('操作失败: ' + result.message);
+}
+} catch (error) {
+console.error('批量操作失败:', error);
+showError('操作失败，请重试');
+}
+}
+
+// 处理登出
+async function handleLogout() {
+try {
+const response = await fetch('/api/admin/logout', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' }
+});
+const result = await response.json();
+if (result.success) {
+window.location.href = '/';
+}
+} catch (error) {
+console.error('登出失败:', error);
+}
+}
+
+// 工具函数
+function getSubjectColor(subject) {
+const colors = {
+'数学': 'bg-blue-500',
+'统计学': 'bg-indigo-500',
+'计算机科学': 'bg-purple-500',
+'工程': 'bg-orange-500'
+};
+return colors[subject] || 'bg-gray-500';
+}
+
+function getSubjectName(subject) {
+if (window.i18n && window.i18n.initialized) {
+    const subjectMap = {
+        '数学': window.i18n.translate('subject.math', '数学'),
+        '统计学': window.i18n.translate('subject.statistics', '统计学'),
+        '计算机科学': window.i18n.translate('subject.computer_science', '计算机科学'),
+        '工程': window.i18n.translate('subject.engineering', '工程')
+    };
+    return subjectMap[subject] || subject;
+} else {
+    return subject || '未知';
+}
+}
+
+function getDifficultyColor(difficulty) {
+const colors = {
+'High School Level': 'bg-green-100 text-green-800',
+'本科基础': 'bg-blue-100 text-blue-800',
+'Undergraduate Basic': 'bg-blue-100 text-blue-800',
+'Undergraduate Advanced': 'bg-yellow-100 text-yellow-800',
+'GRE Level': 'bg-orange-100 text-orange-800',
+'GRE难度': 'bg-orange-100 text-orange-800',
+'Graduate Study Level': 'bg-red-100 text-red-800'
+};
+return colors[difficulty] || 'bg-gray-100 text-gray-800';
+}
+
+function getDifficultyName(difficulty) {
+if (window.i18n && window.i18n.initialized) {
+    const difficultyMap = {
+        'High School Level': window.i18n.translate('difficulty.high_school', '高中水平'),
+        '本科基础': window.i18n.translate('difficulty.undergraduate_basic_zh', '本科基础'),
+        'Undergraduate Basic': window.i18n.translate('difficulty.undergraduate_basic', '本科基础'),
+        'Undergraduate Advanced': window.i18n.translate('difficulty.undergraduate_advanced', '本科高级'),
+        'GRE Level': window.i18n.translate('difficulty.gre_level', 'GRE水平'),
+        'GRE难度': window.i18n.translate('difficulty.gre_difficulty', 'GRE难度'),
+        'Graduate Study Level': window.i18n.translate('difficulty.graduate', '研究生水平')
+    };
+    return difficultyMap[difficulty] || difficulty;
+} else {
+    return difficulty || '未知';
+}
+}
+
+function getTypeColor(type) {
+const colors = {
+'multiple_choice': 'bg-blue-100 text-blue-800',
+'short_answer': 'bg-purple-100 text-purple-800',
+'programming': 'bg-indigo-100 text-indigo-800'
+};
+return colors[type] || 'bg-gray-100 text-gray-800';
+}
+
+function getTypeName(type) {
+if (window.i18n && window.i18n.initialized) {
+    const typeMap = {
+        'multiple_choice': window.i18n.translate('question.type.multiple_choice', '选择题'),
+        'short_answer': window.i18n.translate('question.type.short_answer', '简答题'),
+        'programming': window.i18n.translate('question.type.programming', '编程题')
+    };
+    return typeMap[type] || type;
+} else {
+    const names = {
+        'multiple_choice': '选择题',
+        'short_answer': '简答题',
+        'programming': '编程题'
+    };
+    return names[type] || type;
+}
+}
+
+// 清空所有题目
+async function handleClearAll() {
+console.log('清空所有题目');
+
+const confirmMessage = '⚠️ 确定要清空题库中的所有题目吗？\n\n此操作将删除所有题目，包括：\n- 所有已生成的题目\n- 所有手动创建的题目\n- 所有导入的题目\n\n此操作不可恢复，请谨慎操作！';
+
+if (!confirm(confirmMessage)) {
+console.log('用户取消清空操作');
+return;
+}
+
+// 二次确认
+const doubleConfirm = prompt('请输入 "CLEAR ALL" 来确认清空操作（区分大小写）：');
+if (doubleConfirm !== 'CLEAR ALL') {
+console.log('二次确认失败');
+showError('确认失败，操作已取消');
+return;
+}
+
+try {
+showLoading(true);
+console.log('开始清空所有题目...');
+
+const response = await fetch('/api/questions/clear-all', {
+method: 'DELETE',
+headers: {
+'Content-Type': 'application/json'
+}
+});
+
+const result = await response.json();
+console.log('清空结果:', result);
+
+if (result.success) {
+showSuccess(result.message);
+hideBulkModal();
+// 清空选中状态
+selectedQuestions.clear();
+updateSelectedCount();
+// 重新加载题目列表和统计
+loadQuestions();
+loadStatistics();
+} else {
+showError('清空失败: ' + result.message);
+}
+} catch (error) {
+console.error('清空题目失败:', error);
+showError('清空失败，请重试');
+} finally {
+showLoading(false);
+}
+}
+
+function formatDate(dateString) {
+if (!dateString) return '未知时间';
+try {
+return new Date(dateString).toLocaleDateString('zh-CN');
+} catch (error) {
+console.error('日期格式化错误:', error, dateString);
+return '时间格式错误';
+}
+}
+
+function debounce(func, wait) {
+let timeout;
+return function executedFunction(...args) {
+const later = () => {
+clearTimeout(timeout);
+func(...args);
+};
+clearTimeout(timeout);
+timeout = setTimeout(later, wait);
+};
+}
+
+function showLoading(show) {
+// 可以添加加载指示器
+}
+
+function showSuccess(message) {
+// 简单的成功提示
+alert('✅ ' + message);
+}
+
+// 显示题目详情
+async function showQuestionDetail(questionId) {
+    try {
+        // 查看题目详情
+        
+        const response = await fetch(`/api/questions/${questionId}`);
+        if (!response.ok) {
+            throw new Error('获取题目详情失败');
+        }
+        
+        const result = await response.json();
+        if (result.success) {
+            const question = result.question;
+            renderQuestionDetail(question);
+            document.getElementById('questionDetailModal').classList.remove('hidden');
+        } else {
+            showError('获取题目详情失败: ' + result.message);
+        }
+    } catch (error) {
+        console.error('获取题目详情失败:', error);
+        showError('获取题目详情失败，请重试');
+    }
+}
+
+// 渲染题目详情
+function renderQuestionDetail(question) {
+    const container = document.getElementById('questionDetailContent');
+    
+    // 格式化选项显示
+    let optionsHtml = '';
+    if (question.type === 'multiple_choice' && question.options && question.options.length > 0) {
+        optionsHtml = `
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-medium text-gray-900 mb-3">选项</h4>
+                <div class="space-y-2">
+                    ${question.options.map((option, index) => {
+                        const label = String.fromCharCode(65 + index); // A, B, C, D
+                        const isCorrect = option === question.correct_answer;
+                        return `
+                            <div class="flex items-center p-2 rounded ${isCorrect ? 'bg-green-100 border border-green-300' : 'bg-white border border-gray-200'}">
+                                <span class="font-medium text-gray-700 w-8">${label}.</span>
+                                <span class="text-gray-900 math-content">${option}</span>
+                                ${isCorrect ? '<i class="ri-check-circle-fill text-green-600 ml-auto"></i>' : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 基本信息 -->
+            <div class="space-y-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-blue-900 mb-3">基本信息</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">题目ID:</span>
+                            <span class="font-medium">${question.id}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">学科:</span>
+                            <span class="font-medium">${question.subject}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">子标签:</span>
+                            <span class="font-medium">${question.sub_tag || '无'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">语言:</span>
+                            <span class="font-medium">${question.language === 'zh' ? '中文' : '英文'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">难度:</span>
+                            <span class="font-medium">${question.difficulty}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">题型:</span>
+                            <span class="font-medium">${getTypeName(question.type)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">分值:</span>
+                            <span class="font-medium">${question.points || 1}分</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">状态:</span>
+                            <span class="font-medium ${question.is_active ? 'text-green-600' : 'text-gray-500'}">
+                                ${question.is_active ? 
+                                    (window.i18n && window.i18n.initialized ? window.i18n.translate('question.status.active', '已激活') : '已激活') : 
+                                    (window.i18n && window.i18n.initialized ? window.i18n.translate('question.status.inactive', '未激活') : '未激活')
+                                }
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-blue-700">创建时间:</span>
+                            <span class="font-medium">${formatDate(question.created_at)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 题目内容 -->
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900 mb-3">题目内容</h4>
+                    <div class="text-gray-800 leading-relaxed math-content">${question.content}</div>
+                </div>
+            </div>
+        </div>
+        
+        ${optionsHtml}
+        
+        <!-- 正确答案 -->
+        <div class="bg-green-50 p-4 rounded-lg">
+            <h4 class="font-medium text-green-900 mb-3">正确答案</h4>
+            <div class="text-green-800 font-medium math-content">${question.correct_answer}</div>
+        </div>
+        
+        <!-- 题目解析 -->
+        <div class="bg-yellow-50 p-4 rounded-lg">
+            <h4 class="font-medium text-yellow-900 mb-3">题目解析</h4>
+            <div class="text-yellow-800 leading-relaxed math-content">${question.explanation || '暂无解析'}</div>
+        </div>
+    `;
+    
+    // 渲染数学公式
+    renderMathJaxForQuestionDetail();
+}
+
+// 隐藏题目详情模态框
+function hideQuestionDetailModal() {
+    document.getElementById('questionDetailModal').classList.add('hidden');
+}
+
+function showError(message) {
+// 简单的错误提示
+alert('❌ ' + message);
+}
+
+// 渲染数学公式
+function renderMathJaxForQuestions() {
+    // 检查容器是否存在
+    const container = document.getElementById('questionsContainer');
+    if (!container) {
+        return;
+    }
+    
+    // 检查是否有需要渲染的内容
+    const mathElements = container.querySelectorAll('.math-content');
+    
+    if (mathElements.length === 0) {
+        return;
+    }
+    
+    // 尝试多种渲染方法
+    if (window.MathJax) {
+        
+        // 方法1: 使用 typesetPromise (MathJax 3.x 推荐方法)
+        if (window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([container])
+                .then(() => {
+                    // 检查渲染结果
+                    const renderedElements = container.querySelectorAll('.MathJax, .mjx-chtml, .mjx-math, mjx-container');
+                    
+                    if (renderedElements.length === 0) {
+                        tryAlternativeRender();
+                    }
+                })
+                .catch((err) => {
+                    console.warn('MathJax 渲染失败:', err);
+                    tryAlternativeRender();
+                });
+        } 
+        // 方法2: 使用 startup.document.rerender
+        else if (window.MathJax.startup && window.MathJax.startup.document) {
+            // 使用 startup.document.rerender 方法渲染
+            try {
+                window.MathJax.startup.document.clear();
+                window.MathJax.startup.document.updateDocument();
+                // startup.document 渲染完成
+            } catch (err) {
+                console.warn('MathJax 渲染失败:', err);
+                tryAlternativeRender();
+            }
+        }
+        // 方法3: 其他备用方法
+        else {
+            tryAlternativeRender();
+        }
+        
+        // 备用渲染方法
+        function tryAlternativeRender() {
+            // 尝试备用渲染方法
+            
+            // 方法3: 手动处理每个数学元素
+            if (window.MathJax.tex2chtml) {
+                // 使用 tex2chtml 手动渲染
+                mathElements.forEach((elem, index) => {
+                    if (elem.textContent.includes('$')) {
+                        try {
+                            const mathText = elem.textContent;
+                            // 提取数学公式
+                            const mathMatch = mathText.match(/\$([^$]+)\$/g);
+                            if (mathMatch) {
+                                let newHTML = mathText;
+                                mathMatch.forEach(match => {
+                                    const tex = match.slice(1, -1); // 移除 $ 符号
+                                    try {
+                                        const rendered = window.MathJax.tex2chtml(tex);
+                                        newHTML = newHTML.replace(match, rendered.outerHTML);
+                                    } catch (e) {
+                                        console.warn(`渲染公式失败: ${tex}`, e);
+                                    }
+                                });
+                                elem.innerHTML = newHTML;
+                                // 手动渲染元素完成
+                            }
+                        } catch (e) {
+                            console.warn(`手动渲染元素 ${index + 1} 失败:`, e);
+                        }
+                    }
+                });
+            }
+            // 方法4: 使用 MathJax.Hub (MathJax 2.x 兼容)
+            else if (window.MathJax.Hub && window.MathJax.Hub.Queue) {
+                // 使用 MathJax.Hub.Queue 渲染
+                window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub, container]);
+            }
+            else {
+                console.warn('所有渲染方法都不可用');
+            }
+        }
+    } else {
+        // MathJax 尚未加载完成，延迟渲染
+        setTimeout(() => renderMathJaxForQuestions(), 500);
+    }
+}
+
+// 渲染题目详情中的数学公式
+function renderMathJaxForQuestionDetail() {
+    // 开始渲染题目详情数学公式
+    
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        // MathJax 已加载，开始渲染题目详情
+        
+        // 重新渲染题目详情模态框中的数学公式
+        window.MathJax.typesetPromise([document.getElementById('questionDetailContent')])
+            .then(() => {
+                // 题目详情数学公式渲染完成
+            })
+            .catch((err) => {
+                console.warn('题目详情数学公式渲染失败:', err);
+            });
+    } else {
+        // MathJax 尚未加载完成，延迟渲染题目详情
+        // 如果MathJax还没有加载完成，延迟渲染
+        setTimeout(() => renderMathJaxForQuestionDetail(), 200);
+    }
+}
+</script>
+
+<!-- Question Detail Modal -->
+<div id="questionDetailModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">题目详情</h3>
+            <button id="closeDetailModalBtn" class="text-gray-400 hover:text-gray-600">
+                <i class="ri-close-line text-xl"></i>
+            </button>
+        </div>
+        
+        <div id="questionDetailContent" class="space-y-6">
+            <!-- 题目详细信息将在这里动态加载 -->
+        </div>
+        
+        <div class="flex justify-end mt-6 pt-6 border-t">
+            <button id="closeDetailBtn" class="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                关闭
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="admin.dashboard.title">管理仪表板 - IMBA 智能考试系统</title>
+<link rel="icon" type="image/x-icon" id="faviconLink" href="/favicon.ico">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- 多语言支持脚本 -->
+<script src="/static/js/i18n.js"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#2563eb',
+secondary: '#3b82f6',
+success: '#10b981',
+warning: '#f59e0b',
+danger: '#ef4444',
+purple: '#8b5cf6',
+indigo: '#6366f1'
+},
+fontFamily: {
+'sans': ['Inter', 'system-ui', 'sans-serif']
+}
+}
+}
+}
+</script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.card {
+background: white;
+border-radius: 12px;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+transition: all 0.3s ease;
+}
+
+.card:hover {
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+transform: translateY(-2px);
+}
+
+.gradient-bg {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stats-card {
+background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+border: 1px solid #e5e7eb;
+}
+
+.menu-item {
+transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+transform: translateX(4px);
+}
+
+.chart-container {
+position: relative;
+height: 300px;
+}
+</style>
+</head>
+
+<body class="min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-16">
+<div class="flex items-center space-x-4">
+<a href="/" class="flex items-center space-x-3">
+<img id="systemLogo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzI1NjNlYiIvPgo8cGF0aCBkPSJNMTIgMTJIMjhWMTZIMTJWMTJaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMThIMjRWMjJIMTJWMThaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIgMjRIMjhWMjhIMTJWMjRaIiBmaWxsPSJ3aGl0ZSIvPgo8Y2lyY2xlIGN4PSIzMCIgY3k9IjEwIiByPSIzIiBmaWxsPSIjMTBiOTgxIi8+Cjwvc3ZnPgo=" 
+alt="System Logo" class="w-8 h-8 object-contain">
+<span id="systemTitle" class="font-bold text-xl text-primary" data-i18n="system.name">智能考试系统</span>
+</a>
+</div>
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-4">
+<button id="languageToggle" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+<i class="ri-global-line mr-1"></i><span class="language-display">中</span>
+</button>
+<span class="text-sm text-gray-600" data-i18n="dashboard.welcome">欢迎，管理员</span>
+</div>
+<button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+<i class="ri-logout-box-line mr-1"></i><span data-i18n="nav.logout">退出登录</span>
+</button>
+</div>
+</div>
+</div>
+</nav>
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Page Header -->
+<div class="mb-8">
+<h1 class="text-3xl font-bold text-gray-900 mb-2" data-i18n="dashboard.title">管理仪表板</h1>
+<p class="text-gray-600" data-i18n="dashboard.subtitle">智能考试系统管理控制台</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="stats-card card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+<i class="ri-question-line text-blue-600 text-xl"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="admin.total_questions">题库总数</p>
+<p class="text-2xl font-bold text-gray-900" id="totalQuestions">-</p>
+</div>
+</div>
+</div>
+
+<div class="stats-card card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+<i class="ri-user-line text-green-600 text-xl"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="admin.total_students">考生总数</p>
+<p class="text-2xl font-bold text-gray-900" id="totalStudents">-</p>
+</div>
+</div>
+</div>
+
+<div class="stats-card card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+<i class="ri-file-list-line text-purple-600 text-xl"></i>
+</div>
+</div>
+<div class="ml-4">
+                <p class="text-sm font-medium text-gray-500" data-i18n="admin.total_exams">考试配置</p>
+<p class="text-2xl font-bold text-gray-900" id="totalExams">-</p>
+</div>
+</div>
+</div>
+
+<div class="stats-card card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="ri-settings-3-line text-orange-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500" data-i18n="admin.total_exam_records">考试记录</p>
+<p class="text-2xl font-bold text-gray-900" id="totalConfigs">-</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Quick Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+<!-- Core Management -->
+<div class="card p-6">
+<h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+<i class="ri-settings-line text-primary mr-2"></i>
+<span data-i18n="admin.core_management">核心管理</span>
+</h3>
+<div class="space-y-3">
+<a href="/question_management.html" class="menu-item block p-3 rounded-lg border border-gray-200">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+<i class="ri-question-line text-blue-600"></i>
+</div>
+<div>
+<h4 class="font-medium text-gray-900" data-i18n="admin.question_management">题库管理</h4>
+<p class="text-sm text-gray-500" data-i18n="admin.question_desc">管理题目、添加、编辑、删除</p>
+</div>
+</div>
+</a>
+
+<a href="/exam_config_management.html" class="menu-item block p-3 rounded-lg border border-gray-200">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+<i class="ri-settings-3-line text-purple-600"></i>
+</div>
+<div>
+<h4 class="font-medium text-gray-900" data-i18n="admin.exam_config">考试配置</h4>
+<p class="text-sm text-gray-500" data-i18n="admin.exam_config_desc">设置考试参数、时间、题目数量</p>
+</div>
+</div>
+</a>
+
+                                <a href="/exam_management.html" class="menu-item block p-3 rounded-lg border border-gray-200">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+<i class="ri-history-line text-orange-600"></i>
+</div>
+<div>
+<h4 class="font-medium text-gray-900" data-i18n="admin.exam_history">考试历史</h4>
+<p class="text-sm text-gray-500" data-i18n="admin.exam_history_desc">查看历史考试记录和学生信息</p>
+</div>
+</div>
+</a>
+
+<button id="verificationConfigBtn" class="menu-item w-full text-left p-3 rounded-lg border border-gray-200">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center mr-3">
+<i class="ri-shield-check-line text-teal-600"></i>
+</div>
+<div>
+<h4 class="font-medium text-gray-900" data-i18n="admin.verification_config">验证配置</h4>
+<p class="text-sm text-gray-500" data-i18n="admin.verification_config_desc">自定义考生登录验证字段</p>
+</div>
+</div>
+</button>
+
+<button id="systemConfigBtn" class="menu-item w-full text-left p-3 rounded-lg border border-gray-200">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+<i class="ri-settings-4-line text-indigo-600"></i>
+</div>
+<div>
+<h4 class="font-medium text-gray-900" data-i18n="admin.system_config">系统配置</h4>
+<p class="text-sm text-gray-500" data-i18n="admin.system_config_desc">配置系统设置和外观</p>
+</div>
+</div>
+</button>
+</div>
+</div>
+
+<!-- Data Management -->
+<div class="card p-6">
+<h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+<i class="ri-database-line text-success mr-2"></i>
+<span data-i18n="admin.data_management">数据管理</span>
+</h3>
+<div class="space-y-3">
+<a href="/student_records.html" class="menu-item block p-3 rounded-lg border border-gray-200">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+<i class="ri-file-list-line text-green-600"></i>
+</div>
+<div>
+<h4 class="font-medium text-gray-900" data-i18n="admin.student_records">答题记录</h4>
+<p class="text-sm text-gray-500" data-i18n="admin.student_records_desc">查看学生答题和成绩记录</p>
+</div>
+</div>
+</a>
+
+</div>
+</div>
+
+<!-- Quick Stats -->
+<div class="card p-6">
+<h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+<i class="ri-bar-chart-line text-warning mr-2"></i>
+<span data-i18n="admin.quick_stats">快速统计</span>
+</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-sm text-gray-600" data-i18n="admin.today_exams">今日考试次数</span>
+<span class="font-medium text-gray-900" id="todayExams">-</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-gray-600" data-i18n="admin.avg_duration">平均考试时长</span>
+<span class="font-medium text-gray-900" id="avgDuration">-</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-gray-600" data-i18n="admin.avg_score">平均成绩</span>
+<span class="font-medium text-gray-900" id="avgScore">-</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm text-gray-600" data-i18n="admin.pass_rate">通过率</span>
+<span class="font-medium text-gray-900" id="passRate">-</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+<!-- Question Distribution Chart -->
+<div class="card p-6">
+<h3 class="text-lg font-semibold text-gray-900 mb-4" data-i18n="admin.question_distribution">题目分布</h3>
+<div class="chart-container">
+<canvas id="questionChart"></canvas>
+</div>
+</div>
+
+<!-- Exam Performance Chart -->
+<div class="card p-6">
+<h3 class="text-lg font-semibold text-gray-900 mb-4" data-i18n="admin.performance_distribution">考试成绩分布</h3>
+<div class="chart-container">
+<canvas id="performanceChart"></canvas>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- Verification Config Modal -->
+<div id="verificationConfigModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-semibold text-gray-900" data-i18n="admin.verification_settings">考生验证字段配置</h3>
+<button id="closeVerificationConfigBtn" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+
+<div class="mb-6">
+<p class="text-gray-600 mb-4" data-i18n="admin.verification_settings.description">自定义考生登录时需要填写的验证字段。您可以启用/禁用字段、设置是否必填、自定义显示名称和验证规则。</p>
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+<div class="flex items-start">
+<i class="ri-information-line text-blue-500 mt-0.5 mr-2"></i>
+<div class="text-sm text-blue-700">
+<strong data-i18n="common.tips">提示：</strong>
+<ul class="mt-1 list-disc list-inside space-y-1">
+<li data-i18n="admin.verification_settings.tip1">姓名、身份证号、报名号是系统预设字段</li>
+<li data-i18n="admin.verification_settings.tip2">可以自定义字段的显示名称、占位符和验证规则</li>
+<li data-i18n="admin.verification_settings.tip3">禁用的字段不会在登录页面显示</li>
+<li data-i18n="admin.verification_settings.tip4">至少需要启用一个字段作为学生识别</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<div id="verificationFieldsContainer" class="space-y-4">
+<!-- 动态加载验证字段配置 -->
+</div>
+
+<div class="flex justify-end space-x-4 mt-6 pt-4 border-t">
+<button id="resetVerificationConfig" class="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50" data-i18n="admin.verification_settings.reset_default">
+重置为默认
+</button>
+<button id="saveVerificationConfig" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+保存配置
+</button>
+</div>
+</div>
+</div>
+
+<!-- System Config Modal -->
+<div id="systemConfigModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-semibold text-gray-900" data-i18n="admin.system_settings">系统配置</h3>
+<button id="closeSystemConfigBtn" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+
+<div class="mb-6">
+<p class="text-gray-600 mb-4" data-i18n="admin.system_settings.description">配置系统的基本信息和外观设置，包括logo、名称、语言和页脚信息。</p>
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+<div class="flex items-start">
+<i class="ri-information-line text-blue-500 mt-0.5 mr-2"></i>
+<div class="text-sm text-blue-700">
+<strong data-i18n="common.tips">提示：</strong>
+<ul class="mt-1 list-disc list-inside space-y-1">
+<li data-i18n="admin.system_settings.tip1">上传的logo和favicon文件建议使用PNG或SVG格式</li>
+<li data-i18n="admin.system_settings.tip2">系统名称将显示在页面标题和导航栏</li>
+<li data-i18n="admin.system_settings.tip3">语言设置会影响前端界面的默认显示语言</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+<!-- Basic Settings -->
+<div class="space-y-6">
+<h4 class="text-lg font-medium text-gray-900 border-b pb-2" data-i18n="admin.system_settings.basic_settings">基本设置</h4>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="admin.system_settings.system_name">系统名称</label>
+<input type="text" id="systemName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Smart Exam System">
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="admin.system_settings.default_language">系统默认语言</label>
+<select id="defaultLanguage" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+<option value="en">English (英语)</option>
+<option value="zh">中文 (Chinese)</option>
+</select>
+<p class="text-xs text-gray-500 mt-1" data-i18n="admin.system_settings.default_language_desc">设置系统的默认显示语言，用户可以通过语言切换按钮更改</p>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="admin.system_settings.enforce_language">强制统一语言</label>
+<div class="flex items-center space-x-3">
+<label class="flex items-center">
+<input type="checkbox" id="enforceLanguage" class="w-4 h-4 text-blue-600 rounded">
+<span class="ml-2 text-sm text-gray-700" data-i18n="admin.system_settings.enforce_language_text">强制所有用户使用系统默认语言</span>
+</label>
+</div>
+<p class="text-xs text-gray-500 mt-1" data-i18n="admin.system_settings.enforce_language_desc">启用后，用户将无法切换语言，所有界面统一使用默认语言</p>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="admin.system_settings.footer_copyright">页脚版权信息</label>
+<textarea id="footerText" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="© 2025 Smart Exam System. All rights reserved."></textarea>
+</div>
+</div>
+
+<!-- File Upload Settings -->
+<div class="space-y-6">
+<h4 class="text-lg font-medium text-gray-900 border-b pb-2" data-i18n="admin.system_settings.file_settings">文件设置</h4>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="admin.system_settings.system_logo">系统Logo</label>
+<div class="flex items-center space-x-4">
+<div class="flex-1">
+<input type="file" id="logoFile" accept="image/*" class="hidden">
+<button type="button" onclick="document.getElementById('logoFile').click()" class="w-full px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-left">
+<i class="ri-upload-line mr-2"></i><span data-i18n="admin.system_settings.select_logo_file">选择Logo文件</span>
+</button>
+</div>
+<div id="logoPreview" class="w-16 h-16 border border-gray-200 rounded-lg flex items-center justify-center bg-gray-50">
+<i class="ri-image-line text-gray-400"></i>
+</div>
+</div>
+<p class="text-xs text-gray-500 mt-1" data-i18n="admin.system_settings.logo_size_desc">推荐尺寸：40x40px，支持PNG、JPG、SVG格式</p>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="admin.system_settings.favicon">网站图标 (Favicon)</label>
+<div class="flex items-center space-x-4">
+<div class="flex-1">
+<input type="file" id="faviconFile" accept=".ico,.png,.svg" class="hidden">
+<button type="button" onclick="document.getElementById('faviconFile').click()" class="w-full px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-left">
+<i class="ri-upload-line mr-2"></i><span data-i18n="admin.system_settings.select_favicon_file">选择Favicon文件</span>
+</button>
+</div>
+<div id="faviconPreview" class="w-8 h-8 border border-gray-200 rounded flex items-center justify-center bg-gray-50">
+<i class="ri-home-line text-gray-400 text-sm"></i>
+</div>
+</div>
+<p class="text-xs text-gray-500 mt-1" data-i18n="admin.system_settings.favicon_format_desc">推荐格式：ICO、PNG或SVG，尺寸：16x16px或32x32px</p>
+</div>
+
+<!-- AI API Settings -->
+<div class="space-y-6">
+<h4 class="text-lg font-medium text-gray-900 border-b pb-2" data-i18n="admin.system_settings.ai_api_settings">AI API 设置</h4>
+
+<!-- API Status Display -->
+<div id="apiStatusCard" class="hidden">
+<div class="bg-green-50 border border-green-200 rounded-lg p-4">
+<div class="flex items-center space-x-2">
+<i class="ri-check-circle-line text-green-500 text-lg"></i>
+<span class="font-medium text-green-800" data-i18n="admin.system_settings.api_status">当前API状态</span>
+</div>
+<div id="currentApiStatus" class="mt-2 text-sm text-green-700"></div>
+</div>
+</div>
+
+<!-- Provider Selection Tabs -->
+<div class="border-b border-gray-200">
+<nav class="-mb-px flex space-x-8">
+<button class="api-provider-tab py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-provider="openrouter">
+<i class="ri-earth-line mr-2"></i>OpenRouter
+</button>
+<button class="api-provider-tab py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-provider="openai">
+<i class="ri-cpu-line mr-2"></i>OpenAI
+</button>
+<button class="api-provider-tab py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-provider="anthropic">
+<i class="ri-robot-line mr-2"></i>Anthropic
+</button>
+</nav>
+</div>
+
+<!-- Provider Configuration Panels -->
+<div id="apiProviderPanels">
+<!-- OpenRouter Panel -->
+<div class="api-provider-panel hidden" data-provider="openrouter">
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">OpenRouter API 密钥</label>
+<div class="flex space-x-2">
+<input type="password" id="openrouterApiKey" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="sk-or-v1-...">
+<button class="validate-api-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm" data-provider="openrouter">
+<i class="ri-check-line mr-1"></i>验证
+</button>
+</div>
+<p class="text-xs text-gray-500 mt-1">OpenRouter提供多种AI模型的统一接口</p>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">选择模型</label>
+<select id="openrouterModel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" disabled>
+<option value="">请先验证API密钥</option>
+</select>
+</div>
+
+<div class="flex space-x-2">
+<button class="save-provider-btn flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm" data-provider="openrouter" disabled>
+<i class="ri-save-line mr-1"></i>保存配置
+</button>
+<button class="activate-provider-btn flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors text-sm" data-provider="openrouter" disabled>
+<i class="ri-play-line mr-1"></i>激活使用
+</button>
+</div>
+
+<div class="provider-status hidden">
+<div class="flex items-center space-x-2">
+<i class="status-icon text-lg"></i>
+<span class="status-text text-sm"></span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- OpenAI Panel -->
+<div class="api-provider-panel hidden" data-provider="openai">
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">OpenAI API 密钥</label>
+<div class="flex space-x-2">
+<input type="password" id="openaiApiKey" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="sk-...">
+<button class="validate-api-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm" data-provider="openai">
+<i class="ri-check-line mr-1"></i>验证
+</button>
+</div>
+<p class="text-xs text-gray-500 mt-1">直接使用OpenAI官方API</p>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">选择模型</label>
+<select id="openaiModel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" disabled>
+<option value="">请先验证API密钥</option>
+</select>
+</div>
+
+<div class="flex space-x-2">
+<button class="save-provider-btn flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm" data-provider="openai" disabled>
+<i class="ri-save-line mr-1"></i>保存配置
+</button>
+<button class="activate-provider-btn flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors text-sm" data-provider="openai" disabled>
+<i class="ri-play-line mr-1"></i>激活使用
+</button>
+</div>
+
+<div class="provider-status hidden">
+<div class="flex items-center space-x-2">
+<i class="status-icon text-lg"></i>
+<span class="status-text text-sm"></span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Anthropic Panel -->
+<div class="api-provider-panel hidden" data-provider="anthropic">
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">Anthropic API 密钥</label>
+<div class="flex space-x-2">
+<input type="password" id="anthropicApiKey" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="sk-ant-...">
+<button class="validate-api-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm" data-provider="anthropic">
+<i class="ri-check-line mr-1"></i>验证
+</button>
+</div>
+<p class="text-xs text-gray-500 mt-1">使用Anthropic Claude AI模型</p>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">选择模型</label>
+<select id="anthropicModel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" disabled>
+<option value="">请先验证API密钥</option>
+</select>
+</div>
+
+<div class="flex space-x-2">
+<button class="save-provider-btn flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm" data-provider="anthropic" disabled>
+<i class="ri-save-line mr-1"></i>保存配置
+</button>
+<button class="activate-provider-btn flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors text-sm" data-provider="anthropic" disabled>
+<i class="ri-play-line mr-1"></i>激活使用
+</button>
+</div>
+
+<div class="provider-status hidden">
+<div class="flex items-center space-x-2">
+<i class="status-icon text-lg"></i>
+<span class="status-text text-sm"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="admin.system_settings.enable_ai_api">启用 AI API</label>
+<div class="space-y-3">
+<label class="flex items-center">
+<input type="checkbox" id="aiApiEnabled" class="w-4 h-4 text-blue-600 rounded">
+<span class="ml-2 text-sm text-gray-700" data-i18n="admin.system_settings.enable_ai_api_text">启用AI题目生成功能</span>
+</label>
+<label class="flex items-center">
+<input type="checkbox" id="aiScoringEnabled" class="w-4 h-4 text-purple-600 rounded">
+<span class="ml-2 text-sm text-gray-700">启用AI智能评分功能</span>
+</label>
+</div>
+<div class="text-xs text-gray-500 space-y-1">
+<p data-i18n="admin.system_settings.enable_ai_api_desc">• 出题功能：禁用后将无法使用AI生成题目功能</p>
+<p>• 评分功能：禁用后简答题和编程题将使用关键词匹配和结构检查评分</p>
+</div>
+</div>
+</div>
+
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+<div class="flex items-start">
+<i class="ri-information-line text-blue-500 mt-0.5 mr-2"></i>
+<div class="text-sm text-blue-700">
+<strong data-i18n="common.info">提示：</strong>
+<ul class="mt-1 list-disc list-inside space-y-1">
+<li>支持多种AI提供商，可根据需求选择合适的API</li>
+<li>API密钥将安全存储在数据库中</li>
+<li>请确保API密钥有效且有足够的额度</li>
+<li>建议定期更换API密钥以确保安全</li>
+<li>无需提前配置API也可正常运行系统</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<div class="bg-gray-50 p-4 rounded-lg">
+<h5 class="font-medium text-gray-900 mb-2" data-i18n="admin.system_settings.current_preview">当前设置预览</h5>
+<div class="flex items-center space-x-3 mb-2">
+<div id="currentLogoPreview" class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+<i class="ri-dashboard-line text-white"></i>
+</div>
+<span id="currentSystemName" class="font-medium text-gray-900">Smart Exam System</span>
+</div>
+<div class="text-xs text-gray-500" id="currentFooterText">© 2025 Smart Exam System. All rights reserved.</div>
+</div>
+</div>
+</div>
+
+<div class="flex justify-end space-x-3 mt-6 pt-6 border-t">
+<button id="cancelSystemConfigBtn" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" data-i18n="common.cancel">
+取消
+</button>
+<button id="saveSystemConfigBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+<i class="ri-save-line mr-1"></i><span data-i18n="admin.system_settings.save_config">保存配置</span>
+</button>
+</div>
+</div>
+</div>
+
+<!-- AI Generate Modal -->
+<div id="aiGenerateModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-2xl">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-semibold text-gray-900" data-i18n="admin.ai_generate_questions">AI 生成题目</h3>
+<button id="closeAIGenerateBtn" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+
+<form id="aiGenerateForm" class="space-y-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai.generate.question_count">题目数量</label>
+<input type="number" id="aiQuestionCount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="5" min="1" max="20">
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai.generate.subject">科目</label>
+<select id="aiSubject" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="数学" data-i18n="ai.generate.subject.math">数学</option>
+<option value="英语" data-i18n="ai.generate.subject.english">英语</option>
+<option value="计算机" data-i18n="ai.generate.subject.computer">计算机</option>
+<option value="逻辑" data-i18n="ai.generate.subject.logic">逻辑</option>
+<option value="统计学" data-i18n="ai.generate.subject.statistics">统计学</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai.generate.difficulty">难度</label>
+<select id="aiDifficulty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="简单" data-i18n="ai.generate.difficulty.easy">简单</option>
+<option value="中等" data-i18n="ai.generate.difficulty.medium">中等</option>
+<option value="困难" data-i18n="ai.generate.difficulty.hard">困难</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai.generate.question_type">题型</label>
+<select id="aiQuestionType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+<option value="multiple_choice" data-i18n="ai.generate.type.multiple_choice">选择题</option>
+<option value="short_answer" data-i18n="ai.generate.type.short_answer">简答题</option>
+<option value="programming" data-i18n="ai.generate.type.programming">编程题</option>
+</select>
+</div>
+</div>
+
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2" data-i18n="ai.generate.custom_prompt">自定义提示词（可选）</label>
+<textarea id="aiCustomPrompt" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-i18n-placeholder="ai.generate.custom_prompt_placeholder" placeholder="输入额外的题目要求..."></textarea>
+</div>
+
+<div class="flex justify-end space-x-3 pt-4">
+<button type="button" id="cancelAIGenerateBtn" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors" data-i18n="common.cancel">
+取消
+</button>
+<button type="submit" id="startAIGenerateBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+<i class="ri-robot-line mr-2"></i>
+<span data-i18n="ai.generate.start_generate">开始生成</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+// 全局变量
+let questionChart, performanceChart;
+
+// 检查管理员权限
+async function checkAdminStatus() {
+    try {
+        const response = await fetch('/api/admin/status');
+        const result = await response.json();
+        
+        if (!result.success || !result.is_admin) {
+            // 未登录或非管理员，重定向到登录页
+            alert('请先登录管理员账户');
+            window.location.href = '/admin/login';
+            return false;
+        }
+        
+        // 动态更新欢迎信息
+        const welcomeElement = document.querySelector('[data-i18n="dashboard.welcome"]');
+        if (welcomeElement && result.username) {
+            const currentLang = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+            const welcomeText = currentLang === 'en' ? `Welcome, ${result.username}` : `欢迎，${result.username}`;
+            welcomeElement.textContent = welcomeText;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('检查管理员状态失败:', error);
+        alert('权限验证失败，请重新登录');
+        window.location.href = '/admin/login';
+        return false;
+    }
+}
+
+// 页面初始化
+document.addEventListener('DOMContentLoaded', async function() {
+// 等待多语言初始化完成
+if (window.i18n && !window.i18n.initialized) {
+await new Promise(resolve => {
+document.addEventListener('i18n:initialized', resolve, { once: true });
+});
+}
+
+// 首先检查管理员权限
+if (!(await checkAdminStatus())) {
+    return; // 如果权限验证失败，停止后续初始化
+}
+
+loadDashboardData();
+initCharts();
+initEventListeners();
+await applySystemConfiguration();
+});
+
+// 绑定多语言更新事件
+document.addEventListener('i18n:languageChanged', () => {
+// 语言切换时更新显示（现在由 i18n.js 自动处理）
+console.log('Language changed in admin dashboard');
+
+// 重新加载动态内容以应用新语言
+loadChartsData();
+});
+
+// 应用系统配置
+async function applySystemConfiguration() {
+try {
+const response = await fetch('/api/system-config');
+if (response.ok) {
+const result = await response.json();
+const config = result.data;
+
+console.log('应用系统配置:', config); // 调试日志
+
+// 应用logo
+console.log('尝试应用logo:', config.logo);
+const systemLogo = document.getElementById('systemLogo');
+console.log('找到systemLogo元素:', systemLogo);
+if (config.logo && systemLogo) {
+console.log('当前logo src:', systemLogo.src);
+systemLogo.src = config.logo;
+console.log('设置新logo src:', config.logo);
+console.log('设置后logo src:', systemLogo.src);
+} else {
+if (!config.logo) console.log('配置中没有logo');
+if (!systemLogo) console.log('找不到systemLogo元素');
+}
+
+// 应用系统名称
+if (config.systemName) {
+const systemTitle = document.getElementById('systemTitle');
+if (systemTitle) {
+if (window.i18n && window.i18n.initialized) {
+// 如果有多语种管理器，使用翻译
+systemTitle.textContent = window.i18n.translate('system.name') || config.systemName;
+} else {
+systemTitle.textContent = config.systemName;
+}
+console.log('应用系统名称:', config.systemName);
+}
+}
+
+// 应用语言设置
+console.log('尝试应用语言设置:', config.language);
+console.log('i18n存在:', !!window.i18n);
+if (config.language && window.i18n && window.i18n.initialized) {
+console.log('设置语言为:', config.language);
+window.i18n.setLanguage(config.language);
+// 语言显示更新现在由 i18n.js 自动处理
+console.log('语言设置完成');
+} else {
+console.log('语言设置条件不满足:');
+console.log('- config.language:', config.language);
+console.log('- i18n存在:', !!window.i18n);
+console.log('- i18n已初始化:', window.i18n ? window.i18n.initialized : false);
+}
+}
+} catch (error) {
+console.error('应用系统配置失败:', error);
+}
+}
+
+// 加载仪表板数据
+async function loadDashboardData() {
+try {
+// 加载统计数据
+await Promise.all([
+loadDashboardStats(),
+loadChartsData()
+]);
+} catch (error) {
+console.error('加载仪表板数据失败:', error);
+}
+}
+
+// 加载仪表板统计数据
+async function loadDashboardStats() {
+try {
+const response = await fetch('/api/admin/dashboard-stats');
+const result = await response.json();
+if (result.success && result.stats) {
+const stats = result.stats;
+document.getElementById('totalQuestions').textContent = stats.total_questions || 0;
+document.getElementById('totalStudents').textContent = stats.total_students || 0;
+document.getElementById('totalExams').textContent = stats.total_exams || 0;
+document.getElementById('totalConfigs').textContent = stats.total_exam_records || 0;
+
+// 更新Quick Statistics
+document.getElementById('todayExams').textContent = stats.today_exams || 0;
+document.getElementById('avgDuration').textContent = stats.avg_duration ? stats.avg_duration + '分钟' : '-';
+document.getElementById('avgScore').textContent = stats.avg_score ? stats.avg_score + '分' : '-';
+document.getElementById('passRate').textContent = stats.pass_rate ? stats.pass_rate + '%' : '-';
+} else {
+// 如果API失败，设置默认值
+document.getElementById('totalQuestions').textContent = '0';
+document.getElementById('totalStudents').textContent = '0';
+document.getElementById('totalExams').textContent = '0';
+document.getElementById('totalConfigs').textContent = '0';
+document.getElementById('todayExams').textContent = '0';
+document.getElementById('avgDuration').textContent = '-';
+document.getElementById('avgScore').textContent = '-';
+document.getElementById('passRate').textContent = '-';
+}
+} catch (error) {
+console.error('加载统计数据失败:', error);
+// 设置默认值
+document.getElementById('totalQuestions').textContent = '0';
+document.getElementById('totalStudents').textContent = '0';
+document.getElementById('totalExams').textContent = '0';
+document.getElementById('totalConfigs').textContent = '0';
+document.getElementById('todayExams').textContent = '0';
+document.getElementById('avgDuration').textContent = '-';
+document.getElementById('avgScore').textContent = '-';
+document.getElementById('passRate').textContent = '-';
+}
+}
+
+// 加载图表数据
+async function loadChartsData() {
+try {
+const response = await fetch('/api/admin/dashboard-charts');
+const result = await response.json();
+if (result.success && result.data) {
+// 更新图表数据
+updateCharts(result.data);
+} else {
+console.warn('加载图表数据失败:', result.message);
+}
+} catch (error) {
+console.error('加载图表数据失败:', error);
+}
+}
+
+// 更新图表
+function updateCharts(data) {
+// 更新题目分布图表
+if (questionChart && data.question_distribution) {
+questionChart.data.labels = data.question_distribution.labels;
+questionChart.data.datasets[0].data = data.question_distribution.data;
+questionChart.update();
+}
+
+// 更新成绩分布图表
+if (performanceChart && data.performance_distribution) {
+performanceChart.data.datasets[0].data = data.performance_distribution.data;
+performanceChart.update();
+}
+}
+
+
+
+
+// 初始化图表
+function initCharts() {
+// 题目分布图表
+const questionCtx = document.getElementById('questionChart').getContext('2d');
+questionChart = new Chart(questionCtx, {
+type: 'doughnut',
+data: {
+labels: [],
+datasets: [{
+data: [],
+backgroundColor: [
+'#3b82f6',
+'#10b981',
+'#f59e0b',
+'#ef4444',
+'#8b5cf6',
+'#06b6d4',
+'#84cc16',
+'#ec4899',
+'#f97316',
+'#6366f1'
+],
+borderWidth: 0
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+position: 'bottom'
+}
+}
+}
+});
+
+// 成绩分布图表
+const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+performanceChart = new Chart(performanceCtx, {
+type: 'bar',
+data: {
+labels: ['0-60', '60-70', '70-80', '80-90', '90-100'],
+datasets: [{
+label: '人数',
+data: [0, 0, 0, 0, 0],
+backgroundColor: [
+'#ef4444',
+'#f59e0b', 
+'#10b981',
+'#3b82f6',
+'#8b5cf6'
+],
+borderRadius: 4
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+display: false
+}
+},
+scales: {
+y: {
+beginAtZero: true
+}
+}
+}
+});
+}
+
+// 初始化事件监听器
+function initEventListeners() {
+// 登出按钮
+document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+// 语言切换按钮由 i18n.js 自动处理，无需手动绑定
+
+// 验证配置
+document.getElementById('verificationConfigBtn').addEventListener('click', showVerificationConfigModal);
+document.getElementById('closeVerificationConfigBtn').addEventListener('click', hideVerificationConfigModal);
+document.getElementById('saveVerificationConfig').addEventListener('click', saveVerificationConfig);
+document.getElementById('resetVerificationConfig').addEventListener('click', resetVerificationConfig);
+
+// 系统配置
+document.getElementById('systemConfigBtn').addEventListener('click', showSystemConfigModal);
+document.getElementById('closeSystemConfigBtn').addEventListener('click', hideSystemConfigModal);
+document.getElementById('cancelSystemConfigBtn').addEventListener('click', hideSystemConfigModal);
+document.getElementById('saveSystemConfigBtn').addEventListener('click', saveSystemConfig);
+// 注意：validateApiBtn 和 aiModel 已被新的API管理系统替代
+
+// 文件上传预览
+document.getElementById('logoFile').addEventListener('change', function() {
+handleFileSelect(this, 'logoPreview');
+updateSystemConfigPreview();
+});
+document.getElementById('faviconFile').addEventListener('change', function() {
+handleFileSelect(this, 'faviconPreview');
+});
+
+// 实时更新预览
+document.getElementById('systemName').addEventListener('input', updateSystemConfigPreview);
+document.getElementById('footerText').addEventListener('input', updateSystemConfigPreview);
+
+// AI生成 - 安全绑定（元素可能不存在）
+const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+if (aiGenerateBtn) {
+    aiGenerateBtn.addEventListener('click', showAIGenerateModal);
+}
+const closeAIGenerateBtn = document.getElementById('closeAIGenerateBtn');
+if (closeAIGenerateBtn) {
+    closeAIGenerateBtn.addEventListener('click', hideAIGenerateModal);
+}
+const cancelAIGenerateBtn = document.getElementById('cancelAIGenerateBtn');
+if (cancelAIGenerateBtn) {
+    cancelAIGenerateBtn.addEventListener('click', hideAIGenerateModal);
+}
+const aiGenerateForm = document.getElementById('aiGenerateForm');
+if (aiGenerateForm) {
+    aiGenerateForm.addEventListener('submit', handleAIGenerate);
+}
+}
+
+// 处理登出
+async function handleLogout() {
+try {
+const response = await fetch('/api/admin/logout', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' }
+});
+const result = await response.json();
+if (result.success) {
+window.location.href = '/';
+}
+} catch (error) {
+console.error('登出失败:', error);
+}
+}
+
+// 语言切换和显示更新现在由 i18n.js 统一处理
+
+// 显示验证配置模态框   
+function showVerificationConfigModal() {
+loadVerificationConfig();
+document.getElementById('verificationConfigModal').classList.remove('hidden');
+}
+
+// 隐藏验证配置模态框
+function hideVerificationConfigModal() {
+document.getElementById('verificationConfigModal').classList.add('hidden');
+}
+
+// 加载验证字段配置
+async function loadVerificationConfig() {
+try {
+const response = await fetch('/api/admin/verification-config');
+const result = await response.json();
+
+if (result.success) {
+renderVerificationFields(result.configs);
+} else {
+console.error('加载验证配置失败:', result.message);
+}
+} catch (error) {
+console.error('加载验证配置失败:', error);
+}
+}
+
+// 渲染验证字段配置
+function renderVerificationFields(configs) {
+const container = document.getElementById('verificationFieldsContainer');
+container.innerHTML = '';
+
+configs.forEach((config, index) => {
+const fieldHtml = `
+<div class="verification-field-item bg-gray-50 rounded-lg p-4 border border-gray-200">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center space-x-3">
+<input type="checkbox" id="enabled_${config.field_name}" 
+class="field-enabled-checkbox w-4 h-4 text-blue-600 rounded" 
+${config.is_enabled ? 'checked' : ''}
+data-field="${config.field_name}">
+<label for="enabled_${config.field_name}" class="text-sm font-medium text-gray-700">
+<span data-i18n="admin.verification_settings.enable_field">启用字段</span>
+</label>
+<span class="px-2 py-1 text-xs font-medium rounded-full ${getFieldTypeColor(config.field_name)}">
+${getFieldTypeName(config.field_name)}
+</span>
+</div>
+<div class="flex items-center space-x-2">
+<button type="button" class="move-up-btn text-gray-400 hover:text-gray-600" 
+data-index="${index}" ${index === 0 ? 'disabled' : ''}>
+<i class="ri-arrow-up-line"></i>
+</button>
+<button type="button" class="move-down-btn text-gray-400 hover:text-gray-600" 
+data-index="${index}" ${index === configs.length - 1 ? 'disabled' : ''}>
+<i class="ri-arrow-down-line"></i>
+</button>
+</div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="admin.verification_settings.display_name">显示名称</label>
+<input type="text" class="field-display-name w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+value="${config.display_name}" data-field="${config.field_name}">
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="admin.verification_settings.placeholder">占位符</label>
+<input type="text" class="field-placeholder w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+value="${config.placeholder || ''}" data-field="${config.field_name}">
+</div>
+</div>
+
+<div class="mt-4 flex items-center space-x-6">
+<label class="flex items-center space-x-2">
+<input type="checkbox" class="field-required-checkbox w-4 h-4 text-blue-600 rounded" 
+${config.is_required ? 'checked' : ''} data-field="${config.field_name}">
+<span class="text-sm text-gray-700" data-i18n="admin.verification_settings.required_field">必填字段</span>
+</label>
+</div>
+
+${config.field_name === 'id_number' ? `
+<div class="mt-4">
+<label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="admin.verification_settings.validation_rules">验证规则</label>
+<input type="text" class="field-validation w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+value="${config.validation_pattern || ''}" data-field="${config.field_name}"
+placeholder="正则表达式，如：^[1-9]\\d{17}$">
+<p class="text-xs text-gray-500 mt-1" data-i18n="admin.verification_settings.id_validation_desc">身份证号码验证正则表达式</p>
+</div>
+<div class="mt-2">
+<label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="admin.verification_settings.error_message">错误提示</label>
+<input type="text" class="field-error-message w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+value="${config.error_message || ''}" data-field="${config.field_name}"
+placeholder="验证失败时的提示信息">
+</div>
+` : ''}
+</div>
+`;
+container.insertAdjacentHTML('beforeend', fieldHtml);
+});
+
+// 绑定移动按钮事件
+bindMoveButtonEvents();
+}
+
+// 获取字段类型颜色
+function getFieldTypeColor(fieldName) {
+const colors = {
+name: 'bg-green-100 text-green-800',
+id_number: 'bg-blue-100 text-blue-800',
+application_number: 'bg-purple-100 text-purple-800'
+};
+return colors[fieldName] || 'bg-gray-100 text-gray-800';
+}
+
+// 获取字段类型名称
+function getFieldTypeName(fieldName) {
+const names = {
+name: '姓名',
+id_number: '身份证',
+application_number: '报名号'
+};
+return names[fieldName] || '未知';
+}
+
+// 绑定移动按钮事件
+function bindMoveButtonEvents() {
+document.querySelectorAll('.move-up-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+const index = parseInt(e.target.closest('button').dataset.index);
+moveField(index, index - 1);
+});
+});
+
+document.querySelectorAll('.move-down-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+const index = parseInt(e.target.closest('button').dataset.index);
+moveField(index, index + 1);
+});
+});
+}
+
+// 移动字段位置
+function moveField(fromIndex, toIndex) {
+const container = document.getElementById('verificationFieldsContainer');
+const items = Array.from(container.children);
+
+if (toIndex >= 0 && toIndex < items.length) {
+const fromItem = items[fromIndex];
+const toItem = items[toIndex];
+
+if (fromIndex < toIndex) {
+container.insertBefore(fromItem, toItem.nextSibling);
+} else {
+container.insertBefore(fromItem, toItem);
+}
+
+// 重新渲染以更新索引
+const configs = collectCurrentConfig();
+renderVerificationFields(configs);
+}
+}
+
+// 收集当前配置
+function collectCurrentConfig() {
+const configs = [];
+const fieldItems = document.querySelectorAll('.verification-field-item');
+
+fieldItems.forEach((item, index) => {
+const fieldName = item.querySelector('.field-enabled-checkbox').dataset.field;
+const config = {
+field_name: fieldName,
+display_name: item.querySelector('.field-display-name').value,
+is_required: item.querySelector('.field-required-checkbox').checked,
+is_enabled: item.querySelector('.field-enabled-checkbox').checked,
+field_type: 'text',
+placeholder: item.querySelector('.field-placeholder').value,
+field_order: index + 1
+};
+
+// 如果是身份证字段，添加验证规则
+if (fieldName === 'id_number') {
+const validationInput = item.querySelector('.field-validation');
+const errorMessageInput = item.querySelector('.field-error-message');
+if (validationInput) config.validation_pattern = validationInput.value;
+if (errorMessageInput) config.error_message = errorMessageInput.value;
+}
+
+configs.push(config);
+});
+
+return configs;
+}
+
+// 保存验证配置
+async function saveVerificationConfig() {
+try {
+const configs = collectCurrentConfig();
+
+// 检查至少启用一个字段
+const enabledConfigs = configs.filter(c => c.is_enabled);
+if (enabledConfigs.length === 0) {
+alert('至少需要启用一个验证字段');
+return;
+}
+
+const response = await fetch('/api/admin/verification-config', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ configs })
+});
+
+const result = await response.json();
+
+if (result.success) {
+alert('验证配置保存成功');
+hideVerificationConfigModal();
+} else {
+alert('保存失败: ' + result.message);
+}
+} catch (error) {
+console.error('保存验证配置失败:', error);
+alert('保存失败，请重试');
+}
+}
+
+// 重置验证配置
+function resetVerificationConfig() {
+if (confirm('确定要重置为默认配置吗？这将覆盖当前的所有设置。')) {
+const defaultConfigs = [
+{
+field_name: 'name',
+display_name: '姓名',
+is_required: true,
+is_enabled: true,
+field_type: 'text',
+placeholder: '请输入您的姓名',
+field_order: 1
+},
+{
+field_name: 'id_number',
+display_name: '身份证号',
+is_required: true,
+is_enabled: true,
+field_type: 'text',
+placeholder: '请输入身份证号码',
+validation_pattern: '^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
+error_message: '请输入有效的身份证号码',
+field_order: 2
+},
+{
+field_name: 'application_number',
+display_name: '报名号',
+is_required: true,
+is_enabled: true,
+field_type: 'text',
+placeholder: '请输入报名号码',
+field_order: 3
+}
+];
+renderVerificationFields(defaultConfigs);
+}
+}
+
+// 显示系统配置模态框
+function showSystemConfigModal() {
+loadSystemConfig();
+
+// 初始化API提供商管理
+initApiProviderTabs();
+document.getElementById('systemConfigModal').classList.remove('hidden');
+}
+
+// 隐藏系统配置模态框
+function hideSystemConfigModal() {
+document.getElementById('systemConfigModal').classList.add('hidden');
+}
+
+// 加载系统配置
+async function loadSystemConfig() {
+try {
+const response = await fetch('/api/admin/system-config');
+const result = await response.json();
+if (result.success) {
+const configs = result.configs;
+const configMap = {};
+configs.forEach(config => {
+configMap[config.config_key] = config.config_value;
+});
+
+// 填充表单数据
+document.getElementById('systemName').value = configMap.systemName || 'Smart Exam System';
+document.getElementById('defaultLanguage').value = configMap.language || 'en';
+document.getElementById('enforceLanguage').checked = configMap.enforceLanguage === 'true';
+document.getElementById('footerText').value = configMap.footerText || '© 2025 Smart Exam System. All rights reserved.';
+
+// 填充API设置
+const openrouterApiKeyInput = document.getElementById('openrouterApiKey');
+if (openrouterApiKeyInput) {
+    openrouterApiKeyInput.value = configMap.openrouterApiKey || '';
+}
+document.getElementById('aiApiEnabled').checked = configMap.aiApiEnabled === 'true';
+document.getElementById('aiScoringEnabled').checked = configMap.aiScoringEnabled === 'true';
+
+// 加载API提供商状态和配置
+await loadAllProviderConfigs();
+
+// 旧版API配置兼容性处理
+if (configMap.openrouterApiKey) {
+    console.log('发现旧版API配置，建议迁移到新的API管理系统');
+}
+
+// 更新预览
+updateSystemConfigPreview();
+
+// 如果有logo，显示预览
+if (configMap.logo) {
+showImagePreview('logoPreview', configMap.logo);
+document.getElementById('currentLogoPreview').innerHTML = `<img src="${configMap.logo}" class="w-full h-full object-cover rounded">`;
+}
+
+// 如果有favicon，显示预览  
+if (configMap.favicon && configMap.favicon !== '/favicon.ico') {
+showImagePreview('faviconPreview', configMap.favicon);
+}
+}
+} catch (error) {
+console.error('加载系统配置失败:', error);
+}
+}
+
+// 更新系统配置预览
+function updateSystemConfigPreview() {
+const systemName = document.getElementById('systemName').value || 'Smart Exam System';
+const footerText = document.getElementById('footerText').value || '© 2025 Smart Exam System. All rights reserved.';
+
+document.getElementById('currentSystemName').textContent = systemName;
+document.getElementById('currentFooterText').textContent = footerText;
+}
+
+// 显示图片预览
+function showImagePreview(elementId, imageUrl) {
+const element = document.getElementById(elementId);
+element.innerHTML = `<img src="${imageUrl}" class="w-full h-full object-cover rounded">`;
+}
+
+// 处理文件选择
+function handleFileSelect(fileInput, previewElementId) {
+const file = fileInput.files[0];
+if (file) {
+const reader = new FileReader();
+reader.onload = function(e) {
+showImagePreview(previewElementId, e.target.result);
+};
+reader.readAsDataURL(file);
+}
+}
+
+// API Provider Management
+let currentProvider = 'openrouter';
+
+// Initialize API provider tabs
+function initApiProviderTabs() {
+    const tabs = document.querySelectorAll('.api-provider-tab');
+    const panels = document.querySelectorAll('.api-provider-panel');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const provider = tab.dataset.provider;
+            switchProvider(provider);
+        });
+    });
+    
+    // Initialize validate buttons
+    document.querySelectorAll('.validate-api-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const provider = btn.dataset.provider;
+            await validateProviderApi(provider);
+        });
+    });
+    
+    // Initialize API key input change handlers
+    document.querySelectorAll('[id$="ApiKey"]').forEach(input => {
+        const provider = input.id.replace('ApiKey', '');
+        input.addEventListener('input', () => {
+            // 如果用户开始重新输入，清除原始密钥数据
+            if (!input.value.includes('...')) {
+                input.removeAttribute('data-original-key');
+            }
+        });
+    });
+    
+    // Initialize save buttons
+    document.querySelectorAll('.save-provider-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const provider = btn.dataset.provider;
+            await saveProviderConfig(provider);
+        });
+    });
+    
+    // Initialize activate buttons
+    document.querySelectorAll('.activate-provider-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const provider = btn.dataset.provider;
+            await activateProvider(provider);
+        });
+    });
+    
+    // Load API status
+    loadApiStatus();
+    
+    // 显示默认的API提供商面板
+    switchProvider(currentProvider);
+}
+
+// Switch provider tab
+function switchProvider(provider) {
+    currentProvider = provider;
+    
+    // Update tabs
+    document.querySelectorAll('.api-provider-tab').forEach(tab => {
+        if (tab.dataset.provider === provider) {
+            tab.className = 'api-provider-tab py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600';
+        } else {
+            tab.className = 'api-provider-tab py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+        }
+    });
+    
+    // Update panels
+    document.querySelectorAll('.api-provider-panel').forEach(panel => {
+        if (panel.dataset.provider === provider) {
+            panel.classList.remove('hidden');
+        } else {
+            panel.classList.add('hidden');
+        }
+    });
+}
+
+// Validate provider API
+async function validateProviderApi(provider) {
+    const apiKeyInput = document.getElementById(`${provider}ApiKey`);
+    const validateBtn = document.querySelector(`.validate-api-btn[data-provider="${provider}"]`);
+    const statusDiv = document.querySelector(`[data-provider="${provider}"] .provider-status`);
+    const modelSelect = document.getElementById(`${provider}Model`);
+    const saveBtn = document.querySelector(`.save-provider-btn[data-provider="${provider}"]`);
+    
+    let apiKey = apiKeyInput.value.trim();
+    
+    // 如果是掩码形式（包含...），则使用原始密钥
+    if (apiKey.includes('...') && apiKeyInput.getAttribute('data-original-key')) {
+        apiKey = apiKeyInput.getAttribute('data-original-key');
+        console.log(`🔑 使用原始API密钥进行验证`);
+    }
+    
+    if (!apiKey) {
+        showProviderStatus(provider, 'error', '请输入API密钥');
+        return;
+    }
+    
+    // Show loading state
+    validateBtn.disabled = true;
+    validateBtn.innerHTML = '<i class="ri-loader-4-line mr-1 animate-spin"></i>验证中...';
+    showProviderStatus(provider, 'loading', '正在验证API密钥...');
+    
+    try {
+        const response = await fetch(`/api/admin/api-providers/${provider}/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ api_key: apiKey })
+        });
+        
+        const result = await response.json();
+        console.log(`🔍 ${provider} API验证结果:`, result);
+        
+        if (result.success) {
+            showProviderStatus(provider, 'success', 'API密钥验证成功！');
+            console.log(`📋 ${provider} 返回的模型数量:`, result.models ? result.models.length : 0);
+            loadProviderModels(provider, result.models);
+            saveBtn.disabled = false;
+            
+            // 启用激活按钮
+            const activateBtn = document.querySelector(`.activate-provider-btn[data-provider="${provider}"]`);
+            if (activateBtn) {
+                activateBtn.disabled = false;
+                activateBtn.className = 'activate-provider-btn flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm';
+                console.log(`✅ ${provider} 激活按钮已启用`);
+            }
+        } else {
+            showProviderStatus(provider, 'error', result.message || 'API密钥验证失败');
+            modelSelect.innerHTML = '<option value="">请先验证API密钥</option>';
+            modelSelect.disabled = true;
+            saveBtn.disabled = true;
+            
+            // 禁用激活按钮
+            const activateBtn = document.querySelector(`.activate-provider-btn[data-provider="${provider}"]`);
+            if (activateBtn) {
+                activateBtn.disabled = true;
+                activateBtn.className = 'activate-provider-btn flex-1 px-4 py-2 bg-gray-400 text-gray-300 rounded-lg cursor-not-allowed transition-colors text-sm';
+                console.log(`❌ ${provider} 激活按钮已禁用`);
+            }
+        }
+    } catch (error) {
+        console.error('API验证失败:', error);
+        showProviderStatus(provider, 'error', '网络请求失败，请重试');
+        
+        // 禁用激活按钮
+        const activateBtn = document.querySelector(`.activate-provider-btn[data-provider="${provider}"]`);
+        if (activateBtn) {
+            activateBtn.disabled = true;
+            activateBtn.className = 'activate-provider-btn flex-1 px-4 py-2 bg-gray-400 text-gray-300 rounded-lg cursor-not-allowed transition-colors text-sm';
+        }
+    } finally {
+        validateBtn.disabled = false;
+        validateBtn.innerHTML = '<i class="ri-check-line mr-1"></i>验证';
+    }
+}
+
+// Show provider status
+function showProviderStatus(provider, type, message) {
+    const statusDiv = document.querySelector(`[data-provider="${provider}"] .provider-status`);
+    const statusIcon = statusDiv.querySelector('.status-icon');
+    const statusText = statusDiv.querySelector('.status-text');
+    
+    statusDiv.classList.remove('hidden');
+    
+    if (type === 'success') {
+        statusIcon.className = 'status-icon ri-check-line text-green-500';
+        statusText.textContent = message;
+        statusText.className = 'status-text text-sm text-green-600';
+    } else if (type === 'error') {
+        statusIcon.className = 'status-icon ri-close-line text-red-500';
+        statusText.textContent = message;
+        statusText.className = 'status-text text-sm text-red-600';
+    } else if (type === 'loading') {
+        statusIcon.className = 'status-icon ri-loader-4-line text-blue-500 animate-spin';
+        statusText.textContent = message;
+        statusText.className = 'status-text text-sm text-blue-600';
+    }
+}
+
+// Load provider models
+function loadProviderModels(provider, models) {
+    console.log(`🔍 正在加载 ${provider} 的模型列表:`, models);
+    const modelSelect = document.getElementById(`${provider}Model`);
+    
+    if (!modelSelect) {
+        console.error(`❌ 找不到模型选择器: ${provider}Model`);
+        return;
+    }
+    
+    modelSelect.innerHTML = '<option value="">请选择模型</option>';
+    
+    if (!models || models.length === 0) {
+        console.warn(`⚠️ ${provider} 没有可用模型`);
+        modelSelect.innerHTML = '<option value="">没有可用模型</option>';
+        return;
+    }
+    
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = model.name || model.id;
+        modelSelect.appendChild(option);
+    });
+    
+    modelSelect.disabled = false;
+    console.log(`✅ 成功加载 ${models.length} 个 ${provider} 模型`);
+}
+
+// Save provider config
+async function saveProviderConfig(provider) {
+    const apiKeyInput = document.getElementById(`${provider}ApiKey`);
+    const modelSelect = document.getElementById(`${provider}Model`);
+    const saveBtn = document.querySelector(`.save-provider-btn[data-provider="${provider}"]`);
+    const activateBtn = document.querySelector(`.activate-provider-btn[data-provider="${provider}"]`);
+    
+    let apiKey = apiKeyInput.value.trim();
+    const model = modelSelect.value;
+    
+    // 如果是掩码形式（包含...），则使用原始密钥
+    if (apiKey.includes('...') && apiKeyInput.getAttribute('data-original-key')) {
+        apiKey = apiKeyInput.getAttribute('data-original-key');
+        console.log(`🔑 使用原始API密钥进行保存`);
+    }
+    
+    if (!apiKey) {
+        showProviderStatus(provider, 'error', '请先输入并验证API密钥');
+        return;
+    }
+    
+    if (!model) {
+        showProviderStatus(provider, 'error', '请选择一个模型');
+        return;
+    }
+    
+    // Show loading state
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="ri-loader-4-line mr-1 animate-spin"></i>保存中...';
+    
+    try {
+        const response = await fetch(`/api/admin/api-providers/${provider}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ api_key: apiKey, model: model })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showProviderStatus(provider, 'success', '配置保存成功！');
+            activateBtn.disabled = false;
+        } else {
+            showProviderStatus(provider, 'error', result.message || '保存配置失败');
+        }
+    } catch (error) {
+        console.error('保存配置失败:', error);
+        showProviderStatus(provider, 'error', '网络请求失败，请重试');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="ri-save-line mr-1"></i>保存配置';
+    }
+}
+
+// Activate provider
+async function activateProvider(provider) {
+    const activateBtn = document.querySelector(`.activate-provider-btn[data-provider="${provider}"]`);
+    
+    // Show loading state
+    activateBtn.disabled = true;
+    activateBtn.innerHTML = '<i class="ri-loader-4-line mr-1 animate-spin"></i>激活中...';
+    
+    try {
+        const response = await fetch(`/api/admin/api-providers/${provider}/activate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showProviderStatus(provider, 'success', `${provider.toUpperCase()} API已激活！`);
+            loadApiStatus(); // Refresh API status display
+            
+            // 更新激活按钮状态
+            updateActivationButtonStates(provider);
+        } else {
+            showProviderStatus(provider, 'error', result.message || '激活失败');
+        }
+    } catch (error) {
+        console.error('激活失败:', error);
+        showProviderStatus(provider, 'error', '网络请求失败，请重试');
+    } finally {
+        if (!activateBtn.innerHTML.includes('已激活')) {
+            activateBtn.disabled = false;
+            activateBtn.innerHTML = '<i class="ri-play-line mr-1"></i>激活使用';
+        }
+    }
+}
+
+// Load API status
+async function loadApiStatus() {
+    try {
+        const response = await fetch('/api/admin/api-status');
+        const result = await response.json();
+        
+        if (result.success && result.status.available) {
+            const statusCard = document.getElementById('apiStatusCard');
+            const statusText = document.getElementById('currentApiStatus');
+            
+            statusCard.classList.remove('hidden');
+            statusText.textContent = `当前使用: ${result.status.provider.toUpperCase()} - ${result.status.model}`;
+            
+            // 更新激活按钮状态
+            updateActivationButtonStates(result.status.provider);
+        }
+    } catch (error) {
+        console.error('加载API状态失败:', error);
+    }
+}
+
+// Update activation button states based on current active provider
+function updateActivationButtonStates(activeProvider) {
+    console.log(`🔄 更新激活按钮状态，当前激活: ${activeProvider}`);
+    
+    // 更新所有激活按钮的状态
+    document.querySelectorAll('.activate-provider-btn').forEach(btn => {
+        const provider = btn.dataset.provider;
+        
+        if (provider === activeProvider) {
+            // 已激活状态 - 绿色
+            btn.innerHTML = '<i class="ri-check-line mr-1"></i>已激活';
+            btn.disabled = true;
+            btn.className = 'activate-provider-btn flex-1 px-4 py-2 bg-green-600 text-white rounded-lg transition-colors text-sm cursor-not-allowed';
+            console.log(`✅ ${provider} 按钮设为已激活状态`);
+        } else {
+            // 检查该提供商是否已验证
+            const apiKeyInput = document.getElementById(`${provider}ApiKey`);
+            const hasConfig = apiKeyInput && (apiKeyInput.value.trim() !== '' || apiKeyInput.getAttribute('data-original-key'));
+            
+            if (hasConfig) {
+                // 可激活状态 - 蓝色
+                btn.innerHTML = '<i class="ri-play-line mr-1"></i>激活使用';
+                btn.disabled = false;
+                btn.className = 'activate-provider-btn flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm';
+                console.log(`🔄 ${provider} 按钮设为可激活状态`);
+            } else {
+                // 禁用状态 - 灰色
+                btn.innerHTML = '<i class="ri-play-line mr-1"></i>激活使用';
+                btn.disabled = true;
+                btn.className = 'activate-provider-btn flex-1 px-4 py-2 bg-gray-400 text-gray-300 rounded-lg cursor-not-allowed transition-colors text-sm';
+                console.log(`❌ ${provider} 按钮保持禁用状态（无配置）`);
+            }
+        }
+    });
+}
+
+// Load all provider configurations
+async function loadAllProviderConfigs() {
+    try {
+        const response = await fetch('/api/admin/api-providers');
+        const result = await response.json();
+        
+        if (result.success) {
+            for (const provider of result.providers) {
+                await loadProviderConfig(provider.name);
+            }
+        }
+    } catch (error) {
+        console.error('加载API提供商配置失败:', error);
+    }
+}
+
+// Load specific provider configuration
+async function loadProviderConfig(provider) {
+    try {
+        const response = await fetch('/api/admin/api-providers');
+        const result = await response.json();
+        
+        if (result.success) {
+            const providerData = result.providers.find(p => p.name === provider);
+            if (providerData && providerData.has_config) {
+                console.log(`🔍 加载 ${provider} 配置:`, providerData);
+                
+                const apiKeyInput = document.getElementById(`${provider}ApiKey`);
+                const modelSelect = document.getElementById(`${provider}Model`);
+                const saveBtn = document.querySelector(`.save-provider-btn[data-provider="${provider}"]`);
+                const activateBtn = document.querySelector(`.activate-provider-btn[data-provider="${provider}"]`);
+                
+                // 显示有配置状态
+                showProviderStatus(provider, 'success', '已保存配置');
+                saveBtn.disabled = false;
+                activateBtn.disabled = false;
+                
+                // 获取详细配置信息
+                await loadProviderDetails(provider, providerData);
+                
+                // 如果是当前激活的提供商
+                if (providerData.is_active) {
+                    showProviderStatus(provider, 'success', '当前激活的API');
+                }
+            }
+        }
+    } catch (error) {
+        console.error(`加载${provider}配置失败:`, error);
+    }
+}
+
+// Load detailed provider configuration
+async function loadProviderDetails(provider, providerData) {
+    try {
+        // 获取详细配置，包括API密钥和已选择的模型
+        const detailResponse = await fetch(`/api/admin/api-providers/${provider}/details`);
+        if (detailResponse.ok) {
+            const detailResult = await detailResponse.json();
+            if (detailResult.success) {
+                const apiKeyInput = document.getElementById(`${provider}ApiKey`);
+                const modelSelect = document.getElementById(`${provider}Model`);
+                
+                // 填充API密钥（显示部分）
+                if (detailResult.config.api_key) {
+                    const maskedKey = detailResult.config.api_key.substring(0, 8) + '...';
+                    apiKeyInput.value = maskedKey;
+                    apiKeyInput.setAttribute('data-original-key', detailResult.config.api_key);
+                }
+                
+                // 如果有保存的模型，需要先验证API获取模型列表，然后设置选中的模型
+                if (detailResult.config.default_model && apiKeyInput.getAttribute('data-original-key')) {
+                    const originalKey = apiKeyInput.getAttribute('data-original-key');
+                    
+                    // 重新验证API获取模型列表
+                    const validateResponse = await fetch(`/api/admin/api-providers/${provider}/validate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_key: originalKey })
+                    });
+                    
+                    if (validateResponse.ok) {
+                        const validateResult = await validateResponse.json();
+                        if (validateResult.success) {
+                            // 加载模型列表
+                            loadProviderModels(provider, validateResult.models);
+                            
+                            // 启用激活按钮
+                            const activateBtn = document.querySelector(`.activate-provider-btn[data-provider="${provider}"]`);
+                            if (activateBtn) {
+                                activateBtn.disabled = false;
+                                activateBtn.className = 'activate-provider-btn flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm';
+                                console.log(`✅ ${provider} 激活按钮已启用 (从详细配置)`);
+                            }
+                            
+                            // 设置已保存的模型
+                            setTimeout(() => {
+                                modelSelect.value = detailResult.config.default_model;
+                                console.log(`✅ 已设置 ${provider} 模型为: ${detailResult.config.default_model}`);
+                            }, 100);
+                        }
+                    }
+                }
+                
+                return;
+            }
+        }
+        
+        // 如果没有详细信息接口，使用已有的数据
+        if (providerData.default_model) {
+            console.log(`📋 使用基础配置信息: ${providerData.default_model}`);
+        }
+        
+    } catch (error) {
+        console.error(`加载${provider}详细配置失败:`, error);
+    }
+}
+
+// 验证API密钥 (保留旧版本兼容)
+async function validateApiKey() {
+    return await validateProviderApi('openrouter');
+}
+
+// 旧版模型加载函数已被新的API管理系统替代
+// loadAvailableModels 和 updateModelInfo 函数已移除
+
+// 保存系统配置
+async function saveSystemConfig() {
+try {
+const configs = [
+{
+config_key: 'systemName',
+config_value: document.getElementById('systemName').value,
+config_type: 'text',
+description: '系统名称'
+},
+{
+config_key: 'language',
+config_value: document.getElementById('defaultLanguage').value,
+config_type: 'text',
+description: '默认语言'
+},
+{
+config_key: 'enforceLanguage',
+config_value: document.getElementById('enforceLanguage').checked.toString(),
+config_type: 'boolean',
+description: '强制统一语言'
+},
+{
+config_key: 'footerText',
+config_value: document.getElementById('footerText').value,
+config_type: 'text',
+description: '页脚版权文本'
+},
+{
+config_key: 'openrouterApiKey',
+config_value: document.getElementById('openrouterApiKey') ? document.getElementById('openrouterApiKey').value : '',
+config_type: 'text',
+description: 'OpenRouter API密钥（已废弃，请使用新的API管理功能）'
+},
+{
+config_key: 'aiModel',
+config_value: '', // 新版本不再使用这个字段
+config_type: 'text',
+description: 'AI模型名称（已废弃，请使用新的API管理功能）'
+},
+{
+config_key: 'aiApiEnabled',
+config_value: document.getElementById('aiApiEnabled').checked.toString(),
+config_type: 'boolean',
+description: '启用AI API（出题功能）'
+},
+{
+config_key: 'aiScoringEnabled',
+config_value: document.getElementById('aiScoringEnabled').checked.toString(),
+config_type: 'boolean',
+description: '启用AI智能评分'
+}
+];
+
+// 处理文件上传
+const logoFile = document.getElementById('logoFile').files[0];
+const faviconFile = document.getElementById('faviconFile').files[0];
+
+// 上传logo
+if (logoFile) {
+const logoFormData = new FormData();
+logoFormData.append('file', logoFile);
+logoFormData.append('type', 'image');
+
+const logoResponse = await fetch('/api/admin/upload-file', {
+method: 'POST',
+body: logoFormData
+});
+
+const logoResult = await logoResponse.json();
+if (logoResult.success) {
+configs.push({
+config_key: 'logo',
+config_value: logoResult.file_url,
+config_type: 'file',
+description: '系统logo图片URL'
+});
+}
+}
+
+// 上传favicon
+if (faviconFile) {
+const faviconFormData = new FormData();
+faviconFormData.append('file', faviconFile);
+faviconFormData.append('type', 'icon');
+
+const faviconResponse = await fetch('/api/admin/upload-file', {
+method: 'POST',
+body: faviconFormData
+});
+
+const faviconResult = await faviconResponse.json();
+if (faviconResult.success) {
+configs.push({
+config_key: 'favicon',
+config_value: faviconResult.file_url,
+config_type: 'file',
+description: '网站图标URL'
+});
+}
+}
+
+// 保存配置
+const response = await fetch('/api/admin/system-config', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ configs })
+});
+
+const result = await response.json();
+if (result.success) {
+alert('系统配置保存成功，页面将刷新以应用新设置');
+hideSystemConfigModal();
+// 刷新页面以应用新配置
+setTimeout(() => {
+window.location.reload();
+}, 1000);
+} else {
+alert('保存失败: ' + result.message);
+}
+} catch (error) {
+console.error('保存系统配置失败:', error);
+alert('保存失败，请重试');
+}
+}
+
+// 显示AI生成模态框
+function showAIGenerateModal() {
+document.getElementById('aiGenerateModal').classList.remove('hidden');
+}
+
+// 隐藏AI生成模态框
+function hideAIGenerateModal() {
+document.getElementById('aiGenerateModal').classList.add('hidden');
+}
+
+// 处理AI生成
+async function handleAIGenerate(e) {
+e.preventDefault();
+
+const button = document.getElementById('startAIGenerateBtn');
+const originalText = button.innerHTML;
+button.disabled = true;
+button.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>生成中...';
+
+try {
+const formData = {
+count: parseInt(document.getElementById('aiQuestionCount').value),
+subject: document.getElementById('aiSubject').value,
+difficulty: document.getElementById('aiDifficulty').value,
+types: [document.getElementById('aiQuestionType').value],
+custom_prompt: document.getElementById('aiCustomPrompt').value
+};
+
+const response = await fetch('/api/questions/ai-generate', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(formData)
+});
+
+const result = await response.json();
+if (result.success) {
+alert(`成功生成 ${result.generated_count} 道题目！`);
+hideAIGenerateModal();
+loadDashboardData(); // 重新加载数据
+} else {
+alert('生成题目失败: ' + result.message);
+}
+} catch (error) {
+console.error('AI生成失败:', error);
+alert('生成题目失败，请重试');
+} finally {
+button.disabled = false;
+button.innerHTML = originalText;
+}
+}
+
+
+</script>
+</body>
+</html>
+</html>

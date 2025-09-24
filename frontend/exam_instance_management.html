@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考试实例管理 - IMBA 智能考试系统</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#1A237E',
+secondary: '#3F51B5'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<style>
+:where([class^="ri-"])::before {
+content: "\f3c2";
+}
+.exam-bg {
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+.card-hover {
+transition: all 0.3s ease;
+}
+.card-hover:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+</style>
+</head>
+<body class="exam-bg min-h-screen">
+<div class="min-h-screen flex flex-col">
+<!-- Header -->
+<div class="bg-white shadow-sm border-b sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<!-- Logo -->
+<div class="flex items-center space-x-3">
+<img src="https://static.readdy.ai/image/3c1ff9a008dc8b425236e4faed5d7924/c0ad19844b74c75ecb76a8cc5a6f9bd3.jfif" alt="IMBA Logo" class="w-8 h-8 object-contain">
+<div class="font-bold text-lg text-primary">IMBA 考试实例管理</div>
+</div>
+<!-- Navigation -->
+<div class="flex items-center space-x-4">
+<a href="/admin/dashboard" class="text-gray-600 hover:text-primary transition-colors">
+<i class="ri-dashboard-line mr-1"></i>管理面板
+</a>
+<a href="/admin/exam-templates" class="text-gray-600 hover:text-primary transition-colors">
+<i class="ri-file-list-line mr-1"></i>模板管理
+</a>
+<button id="logoutBtn" class="text-red-600 hover:text-red-800 transition-colors">
+<i class="ri-logout-box-line mr-1"></i>登出
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Main Content -->
+<div class="flex-1 p-6">
+<div class="max-w-7xl mx-auto">
+<!-- Page Header -->
+<div class="mb-8">
+<h1 class="text-3xl font-bold text-gray-900 mb-2">考试实例管理</h1>
+<p class="text-gray-600">管理基于模板创建的考试实例</p>
+</div>
+
+<!-- Action Bar -->
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+<!-- Search and Filters -->
+<div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+<div class="flex space-x-2">
+<input type="text" id="searchInput" placeholder="搜索考试名称..." 
+class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+<select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+<option value="">所有状态</option>
+<option value="draft">草稿</option>
+<option value="active">进行中</option>
+<option value="completed">已完成</option>
+<option value="archived">已归档</option>
+</select>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex space-x-2">
+<button id="createInstanceBtn" class="bg-primary text-white px-4 py-2 !rounded-button hover:bg-opacity-90 transition-colors">
+<i class="ri-add-line mr-2"></i>创建实例
+</button>
+<button id="refreshBtn" class="bg-gray-500 text-white px-4 py-2 !rounded-button hover:bg-gray-600 transition-colors">
+<i class="ri-refresh-line mr-2"></i>刷新
+</button>
+</div>
+</div>
+</div>
+
+<!-- Instances Table -->
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+<div class="overflow-x-auto">
+<table class="min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">考试名称</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模板</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开始时间</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">结束时间</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最大尝试次数</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">参与人数</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+</tr>
+</thead>
+<tbody id="instancesTableBody" class="bg-white divide-y divide-gray-200">
+<!-- 实例列表将通过JavaScript动态加载 -->
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Create Instance Modal -->
+<div id="instanceModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+<div class="flex items-center justify-center min-h-screen p-4">
+<div class="bg-white rounded-xl shadow-xl max-w-2xl w-full">
+<div class="p-6">
+<div class="flex items-center justify-between mb-6">
+<h3 id="modalTitle" class="text-xl font-semibold text-gray-900">创建考试实例</h3>
+<button id="closeModal" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+
+<form id="instanceForm" class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">选择模板 <span class="text-red-500">*</span></label>
+<select id="templateSelect" name="template_id" required 
+class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+<option value="">请选择模板...</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">考试名称 <span class="text-red-500">*</span></label>
+<input type="text" id="instanceName" name="name" required 
+class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+placeholder="例如：2024年春季数学考试">
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">考试描述</label>
+<textarea id="instanceDescription" name="description" rows="3"
+class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none"
+placeholder="描述这次考试的目的和要求..."></textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">开始时间</label>
+<input type="datetime-local" id="startTime" name="start_time"
+class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">结束时间</label>
+<input type="datetime-local" id="endTime" name="end_time"
+class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-2">最大尝试次数</label>
+<input type="number" id="maxAttempts" name="max_attempts" min="1" max="10" value="1"
+class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="instanceActive" name="is_active" checked 
+class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+<label for="instanceActive" class="ml-2 text-sm text-gray-700">立即激活考试</label>
+</div>
+</form>
+
+<!-- Form Actions -->
+<div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+<button type="button" id="cancelInstance" class="px-6 py-2 border border-gray-300 text-gray-700 !rounded-button hover:bg-gray-50 transition-colors">
+取消
+</button>
+<button type="button" id="saveInstance" class="px-6 py-2 bg-primary text-white !rounded-button hover:bg-opacity-90 transition-colors">
+创建实例
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+class ExamInstanceManager {
+constructor() {
+this.currentPage = 1;
+this.perPage = 20;
+this.editingInstanceId = null;
+this.init();
+}
+
+init() {
+this.setupEventListeners();
+this.loadInstances();
+this.loadTemplates();
+}
+
+setupEventListeners() {
+// 搜索和筛选
+document.getElementById('searchInput').addEventListener('input', () => this.loadInstances());
+document.getElementById('statusFilter').addEventListener('change', () => this.loadInstances());
+
+// 按钮事件
+document.getElementById('createInstanceBtn').addEventListener('click', () => this.showCreateModal());
+document.getElementById('refreshBtn').addEventListener('click', () => this.loadInstances());
+
+// 模态框事件
+document.getElementById('closeModal').addEventListener('click', () => this.hideModal());
+document.getElementById('cancelInstance').addEventListener('click', () => this.hideModal());
+
+// 表单事件
+document.getElementById('saveInstance').addEventListener('click', () => this.saveInstance());
+
+// 登出
+document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+}
+
+async loadInstances() {
+try {
+const params = new URLSearchParams({
+page: this.currentPage,
+per_page: this.perPage,
+search: document.getElementById('searchInput').value,
+status: document.getElementById('statusFilter').value
+});
+
+const response = await fetch(`/api/exam-instances?${params}`);
+const result = await response.json();
+
+if (result.success) {
+this.renderInstances(result.instances);
+} else {
+this.showError('加载实例失败: ' + result.message);
+}
+} catch (error) {
+console.error('加载实例失败:', error);
+this.showError('加载实例失败，请重试');
+}
+}
+
+async loadTemplates() {
+try {
+const response = await fetch('/api/exam-templates?per_page=100');
+const result = await response.json();
+
+if (result.success) {
+this.renderTemplateSelect(result.templates);
+} else {
+this.showError('加载模板失败: ' + result.message);
+}
+} catch (error) {
+console.error('加载模板失败:', error);
+this.showError('加载模板失败，请重试');
+}
+}
+
+renderTemplateSelect(templates) {
+const select = document.getElementById('templateSelect');
+select.innerHTML = '<option value="">请选择模板...</option>';
+
+templates.forEach(template => {
+const option = document.createElement('option');
+option.value = template.id;
+option.textContent = `${template.name} (${template.total_questions}题)`;
+select.appendChild(option);
+});
+}
+
+renderInstances(instances) {
+const tbody = document.getElementById('instancesTableBody');
+tbody.innerHTML = '';
+
+if (instances.length === 0) {
+tbody.innerHTML = `
+<tr>
+<td colspan="8" class="px-6 py-12 text-center text-gray-500">
+<i class="ri-file-list-line text-4xl mb-4 block"></i>
+暂无考试实例
+</td>
+</tr>
+`;
+return;
+}
+
+instances.forEach(instance => {
+const row = document.createElement('tr');
+row.innerHTML = `
+<td class="px-6 py-4">
+<div class="text-sm font-medium text-gray-900">${instance.name}</div>
+<div class="text-sm text-gray-500">${instance.description || '无描述'}</div>
+</td>
+<td class="px-6 py-4">
+<div class="text-sm text-gray-900">模板ID: ${instance.template_id}</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="px-2 py-1 text-xs font-medium ${this.getStatusColor(instance.status)} rounded-full">
+${this.getStatusText(instance.status)}
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${this.formatDateTime(instance.start_time)}</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${this.formatDateTime(instance.end_time)}</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${instance.max_attempts}</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">0</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<div class="flex space-x-2">
+<button onclick="instanceManager.editInstance(${instance.id})" class="text-primary hover:text-primary-dark">
+<i class="ri-edit-line"></i>
+</button>
+<button onclick="instanceManager.deleteInstance(${instance.id})" class="text-red-600 hover:text-red-800">
+<i class="ri-delete-bin-line"></i>
+</button>
+<button onclick="instanceManager.viewResults(${instance.id})" class="text-green-600 hover:text-green-800">
+<i class="ri-bar-chart-line"></i>
+</button>
+</div>
+</td>
+`;
+tbody.appendChild(row);
+});
+}
+
+getStatusColor(status) {
+const colors = {
+'draft': 'bg-gray-100 text-gray-800',
+'active': 'bg-green-100 text-green-800',
+'completed': 'bg-blue-100 text-blue-800',
+'archived': 'bg-red-100 text-red-800'
+};
+return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+getStatusText(status) {
+const texts = {
+'draft': '草稿',
+'active': '进行中',
+'completed': '已完成',
+'archived': '已归档'
+};
+return texts[status] || status;
+}
+
+formatDateTime(dateString) {
+if (!dateString) return '未设置';
+const date = new Date(dateString);
+return date.toLocaleString('zh-CN');
+}
+
+showCreateModal() {
+this.editingInstanceId = null;
+document.getElementById('modalTitle').textContent = '创建考试实例';
+document.getElementById('instanceForm').reset();
+this.showModal();
+}
+
+showModal() {
+document.getElementById('instanceModal').classList.remove('hidden');
+}
+
+hideModal() {
+document.getElementById('instanceModal').classList.add('hidden');
+}
+
+async saveInstance() {
+try {
+const formData = new FormData(document.getElementById('instanceForm'));
+const instanceData = {
+template_id: parseInt(formData.get('template_id')),
+name: formData.get('name'),
+description: formData.get('description'),
+start_time: formData.get('start_time') || null,
+end_time: formData.get('end_time') || null,
+max_attempts: parseInt(formData.get('max_attempts')),
+is_active: formData.get('is_active') === 'on'
+};
+
+if (!instanceData.template_id) {
+this.showError('请选择模板');
+return;
+}
+
+const response = await fetch(`/api/exam-templates/${instanceData.template_id}/create-instance`, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(instanceData)
+});
+
+const result = await response.json();
+if (result.success) {
+this.showSuccess(result.message);
+this.hideModal();
+this.loadInstances();
+} else {
+this.showError('保存失败: ' + result.message);
+}
+} catch (error) {
+console.error('保存实例失败:', error);
+this.showError('保存失败，请重试');
+}
+}
+
+showSuccess(message) {
+alert('✅ ' + message);
+}
+
+showError(message) {
+alert('❌ ' + message);
+}
+
+async logout() {
+try {
+const response = await fetch('/api/admin/logout', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+}
+});
+const result = await response.json();
+if (result.success) {
+window.location.href = '/admin/login';
+} else {
+this.showError('登出失败: ' + result.message);
+}
+} catch (error) {
+console.error('登出失败:', error);
+this.showError('登出失败，请重试');
+}
+}
+}
+
+// 初始化实例管理器
+const instanceManager = new ExamInstanceManager();
+</script>
+</body>
+</html>

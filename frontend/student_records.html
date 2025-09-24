@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="student.records.title">学生记录中心 - IMBA智能考试系统</title>
+    <link rel="icon" type="image/x-icon" id="faviconLink" href="/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/i18n.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .hover-scale {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .tab-content {
+            min-height: 500px;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .table-row-hover {
+            transition: all 0.2s ease;
+        }
+        .table-row-hover:hover {
+            background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- 顶部导航 -->
+    <nav class="glass-card mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- 左侧品牌和标题 -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                            <i class="ri-user-line text-white text-lg"></i>
+                        </div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                            学生记录中心
+                        </h1>
+                    </div>
+                </div>
+                
+                <!-- 右侧导航 -->
+                <div class="flex items-center space-x-6">
+                    <a href="/admin/dashboard" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="ri-dashboard-line mr-2"></i>
+                        <span data-i18n="nav.dashboard">仪表板</span>
+                    </a>
+                    <a href="/exam_management.html" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="ri-file-list-3-line mr-2"></i>
+                        <span data-i18n="nav.exam_management">考试管理</span>
+                    </a>
+                    <a href="/question_management.html" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors">
+                        <i class="ri-question-line mr-2"></i>
+                        <span data-i18n="nav.question_management">题库管理</span>
+                    </a>
+                    <button id="languageToggle" class="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i class="ri-global-line mr-2"></i>
+                        <span class="language-display">中</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <!-- 统计卡片区域 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- 总学生数 -->
+            <div class="glass-card rounded-xl p-6 hover-scale">
+                <div class="flex items-center">
+                    <div class="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
+                        <i class="ri-user-line text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600" data-i18n="stats.total_students">总学生数</p>
+                        <p class="text-2xl font-bold text-gray-900" id="totalStudents">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 活跃学生 -->
+            <div class="glass-card rounded-xl p-6 hover-scale">
+                <div class="flex items-center">
+                    <div class="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-lg">
+                        <i class="ri-user-star-line text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600" data-i18n="stats.active_students">活跃学生</p>
+                        <p class="text-2xl font-bold text-gray-900" id="activeStudents">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 总考试次数 -->
+            <div class="glass-card rounded-xl p-6 hover-scale">
+                <div class="flex items-center">
+                    <div class="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg">
+                        <i class="ri-file-list-line text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600" data-i18n="stats.total_exams">总考试次数</p>
+                        <p class="text-2xl font-bold text-gray-900" id="totalExams">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 平均分 -->
+            <div class="glass-card rounded-xl p-6 hover-scale">
+                <div class="flex items-center">
+                    <div class="p-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg">
+                        <i class="ri-award-line text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600" data-i18n="stats.average_score">平均分</p>
+                        <p class="text-2xl font-bold text-gray-900" id="averageScore">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="glass-card rounded-xl">
+            <!-- 标签页导航 -->
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6">
+                    <button onclick="switchTab('overview')" id="overviewTab" 
+                            class="tab-btn active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                        <i class="ri-pie-chart-line mr-2"></i>
+                        <span data-i18n="tabs.overview">数据概览</span>
+                    </button>
+                    <button onclick="switchTab('students')" id="studentsTab" 
+                            class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="ri-user-line mr-2"></i>
+                        <span data-i18n="tabs.students">学生列表</span>
+                    </button>
+                    <button onclick="switchTab('exams')" id="examsTab" 
+                            class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="ri-file-list-3-line mr-2"></i>
+                        <span data-i18n="tabs.exams">考试记录</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- 标签页内容 -->
+            <div class="p-6">
+                <!-- 数据概览 -->
+                <div id="overviewContent" class="tab-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 成绩分布图 -->
+                        <div class="bg-white rounded-lg border border-gray-100 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                <i class="ri-bar-chart-box-line text-blue-500 mr-2"></i>
+                                <span data-i18n="charts.score_distribution">成绩分布</span>
+                            </h3>
+                            <div class="h-64 flex items-center justify-center">
+                                <canvas id="scoreChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 考试完成趋势 -->
+                        <div class="bg-white rounded-lg border border-gray-100 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                <i class="ri-line-chart-line text-green-500 mr-2"></i>
+                                <span data-i18n="charts.exam_trend">考试趋势</span>
+                            </h3>
+                            <div class="h-64 flex items-center justify-center">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 最近活动 -->
+                    <div class="mt-8 bg-white rounded-lg border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <i class="ri-time-line text-purple-500 mr-2"></i>
+                            <span data-i18n="recent.title">最近活动</span>
+                        </h3>
+                        <div id="recentActivities" class="space-y-3">
+                            <!-- 动态加载 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 学生列表 -->
+                <div id="studentsContent" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">学生列表</h3>
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <input type="text" id="studentSearch" placeholder="搜索学生..." 
+                                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                            <select id="studentFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="all">所有学生</option>
+                                <option value="active">活跃学生</option>
+                                <option value="inactive">非活跃学生</option>
+                            </select>
+                            
+                            <!-- 批量操作按钮 -->
+                            <button id="batchModeBtn" onclick="toggleBatchMode()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center">
+                                <i class="ri-checkbox-multiple-line mr-2"></i>
+                                批量操作
+                            </button>
+                            
+                            <!-- 全部删除按钮 -->
+                            <button onclick="deleteAllStudents()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center">
+                                <i class="ri-delete-bin-line mr-2"></i>
+                                全部删除
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 批量操作栏（隐藏状态） -->
+                    <div id="batchActionsBar" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" 
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                    <span class="text-sm text-gray-700">全选</span>
+                                </label>
+                                <span id="selectedCount" class="text-sm text-blue-600 font-medium">已选择 0 个学生</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="batchDeleteStudents()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center">
+                                    <i class="ri-delete-bin-line mr-2"></i>
+                                    删除选中
+                                </button>
+                                <button onclick="exitBatchMode()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                    退出批量操作
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="studentsGrid">
+                        <!-- 动态加载 -->
+                    </div>
+                </div>
+
+                <!-- 考试记录 -->
+                <div id="examsContent" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">考试记录</h3>
+                        <div class="flex items-center space-x-4">
+                            <select id="examFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="all">所有记录</option>
+                                <option value="completed">已完成</option>
+                                <option value="in_progress">进行中</option>
+                            </select>
+                            
+                            <!-- 批量操作按钮 -->
+                            <button id="examBatchModeBtn" onclick="toggleExamBatchMode()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center">
+                                <i class="ri-checkbox-multiple-line mr-2"></i>
+                                批量操作
+                            </button>
+                            
+                            <!-- 全部删除按钮 -->
+                            <button onclick="deleteAllExams()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center">
+                                <i class="ri-delete-bin-line mr-2"></i>
+                                全部删除
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 批量操作栏（隐藏状态） -->
+                    <div id="examBatchActionsBar" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="selectAllExamCheckbox" onchange="toggleSelectAllExams()" 
+                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                    <span class="text-sm text-gray-700">全选</span>
+                                </label>
+                                <span id="selectedExamCount" class="text-sm text-blue-600 font-medium">已选择 0 条记录</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="batchDeleteExams()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center">
+                                    <i class="ri-delete-bin-line mr-2"></i>
+                                    删除选中
+                                </button>
+                                <button onclick="exitExamBatchMode()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                    退出批量操作
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg border border-gray-100 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th id="examCheckboxColumn" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden">
+                                            <input type="checkbox" id="examHeaderCheckbox" onchange="toggleSelectAllExams()" 
+                                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">考试</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分数</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="examsTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- 动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card rounded-lg p-8 flex flex-col items-center">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-gray-600">正在加载数据...</p>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="glass-card rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                    <h3 id="modalTitle" class="text-lg font-semibold text-gray-900">详情</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+                <div id="modalContent" class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                    <!-- 动态内容 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示 -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script>
+        // 全局变量
+        let currentTab = 'overview';
+        let charts = {};
+        let currentData = {
+            students: [],
+            exams: [],
+            stats: {}
+        };
+        
+        // 批量操作相关变量
+        let batchMode = false;
+        let selectedStudents = new Set();
+        
+        // 考试记录批量操作变量
+        let examBatchMode = false;
+        let selectedExams = new Set();
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('学生记录中心页面初始化开始');
+            
+            // 等待多语言初始化
+            if (window.i18n && !window.i18n.initialized) {
+                await new Promise(resolve => {
+                    document.addEventListener('i18n:initialized', resolve, { once: true });
+                });
+            }
+
+            // 检查管理员权限
+            const hasPermission = await checkAdminStatus();
+            if (!hasPermission) {
+                console.log('权限验证失败，停止初始化');
+                return;
+            }
+
+            console.log('开始加载初始数据');
+            await loadInitialData();
+            initializeCharts();
+            console.log('学生记录中心页面初始化完成');
+        });
+
+        // 检查管理员状态
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/admin/status');
+                const data = await response.json();
+                if (!data.is_logged_in) {
+                    showMessage('需要管理员权限', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/admin/login';
+                    }, 2000);
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('检查管理员状态失败:', error);
+                return false;
+            }
+        }
+
+        // 加载初始数据
+        async function loadInitialData() {
+            showLoading(true);
+            try {
+                console.log('开始并行加载数据');
+                
+                // 并行加载数据，每个函数内部处理自己的错误
+                const results = await Promise.allSettled([
+                    loadStatistics(),
+                    loadStudents(),
+                    loadExams(),
+                    loadRecentActivities()
+                ]);
+                
+                // 检查哪些加载失败了
+                results.forEach((result, index) => {
+                    const names = ['统计数据', '学生数据', '考试记录', '最近活动'];
+                    if (result.status === 'rejected') {
+                        console.error(`${names[index]}加载失败:`, result.reason);
+                    } else {
+                        console.log(`${names[index]}加载成功`);
+                    }
+                });
+                
+                console.log('数据加载完成');
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showMessage('加载数据失败', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 加载统计数据
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/student-records-statistics');
+                const data = await response.json();
+                if (data.success) {
+                    currentData.stats = data.statistics;
+                    updateStatistics(data.statistics);
+                } else {
+                    console.warn('统计数据API返回失败:', data.message);
+                    // 设置默认值
+                    updateStatistics({
+                        total_students: 0,
+                        active_students: 0,
+                        total_exams: 0,
+                        average_score: 0
+                    });
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+                // 设置默认值
+                updateStatistics({
+                    total_students: 0,
+                    active_students: 0,
+                    total_exams: 0,
+                    average_score: 0
+                });
+            }
+        }
+
+        // 更新统计显示
+        function updateStatistics(stats) {
+            document.getElementById('totalStudents').textContent = stats.total_students || 0;
+            document.getElementById('activeStudents').textContent = stats.active_students || 0;
+            document.getElementById('totalExams').textContent = stats.total_exams || 0;
+            document.getElementById('averageScore').textContent = stats.average_score ? 
+                stats.average_score.toFixed(1) + '%' : '-';
+        }
+
+        // 加载学生数据
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/student-records-data?per_page=100');
+                const data = await response.json();
+                if (data.success) {
+                    currentData.students = data.records;
+                    renderStudents(data.records);
+                }
+            } catch (error) {
+                console.error('加载学生数据失败:', error);
+            }
+        }
+
+        // 渲染学生列表
+        function renderStudents(students) {
+            const grid = document.getElementById('studentsGrid');
+            grid.innerHTML = '';
+
+            if (students.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="ri-user-line text-gray-400 text-4xl mb-4"></i>
+                        <p class="text-gray-500">暂无学生数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            students.forEach(student => {
+                const card = document.createElement('div');
+                const isSelected = selectedStudents.has(student.id);
+                card.className = `bg-white rounded-lg border border-gray-100 p-6 hover-scale relative ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`;
+                
+                const statusColor = student.status === '活跃' ? 'green' : 'gray';
+                const scoreColor = student.avg_score >= 80 ? 'green' : 
+                                 student.avg_score >= 60 ? 'yellow' : 'red';
+
+                card.innerHTML = `
+                    ${batchMode ? `
+                        <div class="absolute top-3 right-3">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleStudentSelection(${student.id})"
+                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                ${student.student_name ? student.student_name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-semibold text-gray-900">${student.student_name || '未知学生'}</h4>
+                                <p class="text-xs text-gray-500">ID: ${student.id}</p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800">
+                            ${student.status}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">考试次数</span>
+                            <span class="font-medium">${student.total_exams || 0}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">平均分</span>
+                            <span class="font-medium text-${scoreColor}-600">${student.avg_score ? student.avg_score.toFixed(1) + '%' : '-'}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">最后考试</span>
+                            <span class="font-medium">${student.last_exam_at ? formatDateTime(student.last_exam_at) : '无记录'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-100 flex space-x-2">
+                        <button onclick="viewStudentDetail(${student.id})" 
+                                class="flex-1 px-3 py-2 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                            <i class="ri-eye-line mr-1"></i>查看详情
+                        </button>
+                        <button onclick="showStudentTypeScores(${student.id}, '${student.student_name}')" 
+                                class="flex-1 px-3 py-2 text-xs bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors">
+                            <i class="ri-bar-chart-line mr-1"></i>题型评分
+                        </button>
+                        <button onclick="viewStudentAnswers(${student.id})" 
+                                class="flex-1 px-3 py-2 text-xs bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors">
+                            <i class="ri-file-list-line mr-1"></i>答题记录
+                        </button>
+                        <button onclick="deleteStudent(${student.id})" 
+                                class="px-3 py-2 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+                            <i class="ri-delete-bin-line mr-1"></i>删除
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 继续其他函数...
+        async function loadExams() {
+            try {
+                const response = await fetch('/api/admin/dashboard-charts');
+                const data = await response.json();
+                if (data.success && data.data.recent_activities) {
+                    // 使用recent_activities作为考试记录数据
+                    const examRecords = data.data.recent_activities.map((activity, index) => ({
+                        id: index + 1,
+                        student_name: activity.student_name,
+                        exam_name: activity.exam_name,
+                        percentage: parseFloat(activity.score.replace('%', '')),
+                        total_score: activity.score,
+                        status: activity.status === '已完成' ? 'completed' : 'in_progress',
+                        completed_at: activity.completed_at,
+                        created_at: activity.completed_at
+                    }));
+                    currentData.exams = examRecords;
+                    renderExams(examRecords);
+                } else {
+                    currentData.exams = [];
+                    renderExams([]);
+                }
+            } catch (error) {
+                console.error('加载考试数据失败:', error);
+                currentData.exams = [];
+                renderExams([]);
+            }
+        }
+
+        function renderExams(exams) {
+            const tbody = document.getElementById('examsTableBody');
+            tbody.innerHTML = '';
+
+            // 更新表头复选框列的可见性
+            const checkboxColumn = document.getElementById('examCheckboxColumn');
+            if (checkboxColumn) {
+                checkboxColumn.classList.toggle('hidden', !examBatchMode);
+            }
+
+            const colspanCount = examBatchMode ? 7 : 6;
+            if (exams.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="${colspanCount}" class="px-6 py-12 text-center text-gray-500">
+                        <i class="ri-file-list-line text-gray-400 text-4xl mb-4"></i><p>暂无考试记录</p>
+                    </td></tr>
+                `;
+                return;
+            }
+
+            exams.forEach(exam => {
+                const row = document.createElement('tr');
+                const isSelected = selectedExams.has(exam.id);
+                row.className = `table-row-hover ${isSelected ? 'bg-blue-50' : ''}`;
+                const statusClass = exam.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                const statusText = exam.status === 'completed' ? '已完成' : '进行中';
+
+                row.innerHTML = `
+                    ${examBatchMode ? `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleExamSelection(${exam.id})"
+                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </td>
+                    ` : ''}
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                ${exam.student_name ? exam.student_name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-gray-900">${exam.student_name || '未知学生'}</div>
+                                <div class="text-sm text-gray-500">ID: ${exam.id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${exam.exam_name || '考试'}</div>
+                        <div class="text-sm text-gray-500">${exam.exam_config || '默认配置'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${exam.percentage ? exam.percentage.toFixed(1) + '%' : '-'}</div>
+                        <div class="text-sm text-gray-500">${exam.total_score ? exam.total_score + '分' : '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${exam.completed_at ? formatDateTime(exam.completed_at) : formatDateTime(exam.created_at)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewExamDetail(${exam.id})" 
+                                class="text-blue-600 hover:text-blue-900 mr-3 transition-colors">
+                            <i class="ri-eye-line mr-1"></i>查看
+                        </button>
+                        <button onclick="deleteExam(${exam.id})" 
+                                class="text-red-600 hover:text-red-900 transition-colors">
+                            <i class="ri-delete-bin-line mr-1"></i>删除
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+
+        async function loadRecentActivities() {
+            try {
+                const response = await fetch('/api/admin/dashboard-charts');
+                const data = await response.json();
+                if (data.success && data.data.recent_activities) {
+                    renderRecentActivities(data.data.recent_activities);
+                }
+            } catch (error) {
+                console.error('加载最近活动失败:', error);
+                document.getElementById('recentActivities').innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="ri-time-line text-2xl mb-2"></i>
+                        <p>暂无最近活动</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderRecentActivities(activities) {
+            const container = document.getElementById('recentActivities');
+            container.innerHTML = '';
+
+            if (activities.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="ri-time-line text-2xl mb-2"></i>
+                        <p>暂无最近活动</p>
+                    </div>
+                `;
+                return;
+            }
+
+            activities.forEach(activity => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                
+                item.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                            ${activity.student_name ? activity.student_name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">${activity.student_name} 完成了 ${activity.exam_name}</p>
+                            <p class="text-xs text-gray-500">${activity.completed_at ? formatDateTime(activity.completed_at) : '未知时间'}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-900">${activity.score}</p>
+                        <p class="text-xs text-gray-500">${activity.time_spent}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function initializeCharts() {
+            const scoreCtx = document.getElementById('scoreChart').getContext('2d');
+            charts.scoreChart = new Chart(scoreCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['优秀 (90-100)', '良好 (80-89)', '及格 (60-79)', '不及格 (<60)'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            charts.trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '考试次数',
+                        data: [],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            loadChartData();
+        }
+
+        async function loadChartData() {
+            try {
+                const response = await fetch('/api/admin/dashboard-charts');
+                const data = await response.json();
+                if (data.success) {
+                    updateCharts(data.data);
+                }
+            } catch (error) {
+                console.error('加载图表数据失败:', error);
+            }
+        }
+
+        function updateCharts(data) {
+            if (data.performance_distribution && charts.scoreChart) {
+                const perfData = data.performance_distribution.data;
+                charts.scoreChart.data.datasets[0].data = [
+                    perfData[4], perfData[3], perfData[1] + perfData[2], perfData[0]
+                ];
+                charts.scoreChart.update();
+            }
+
+            if (charts.trendChart) {
+                const dates = getLast7Days();
+                const examCounts = generateMockTrendData();
+                
+                charts.trendChart.data.labels = dates;
+                charts.trendChart.data.datasets[0].data = examCounts;
+                charts.trendChart.update();
+            }
+        }
+
+        function generateMockTrendData() {
+            return Array.from({length: 7}, () => Math.floor(Math.random() * 10) + 1);
+        }
+
+        function getLast7Days() {
+            const dates = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                dates.push(date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }));
+            }
+            return dates;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            });
+            
+            document.getElementById(tab + 'Tab').className = 'tab-btn active py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600';
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            const targetContent = document.getElementById(tab + 'Content');
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('fade-in');
+            }
+            
+            switch(tab) {
+                case 'overview':
+                    loadChartData();
+                    break;
+                case 'students':
+                    if (currentData.students.length === 0) loadStudents();
+                    break;
+                case 'exams':
+                    if (currentData.exams.length === 0) loadExams();
+                    break;
+            }
+        }
+
+        function viewStudentDetail(studentId) {
+            const student = currentData.students.find(s => s.id === studentId);
+            if (!student) return;
+
+            document.getElementById('modalTitle').textContent = `学生详情 - ${student.student_name}`;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-900">基本信息</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between"><span class="text-gray-600">学生ID:</span><span class="font-medium">${student.id}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">姓名:</span><span class="font-medium">${student.student_name || '未知'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">状态:</span><span class="font-medium">${student.status === 'active' ? '活跃' : '非活跃'}</span></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-900">考试统计</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between"><span class="text-gray-600">考试次数:</span><span class="font-medium">${student.exam_count || 0}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">平均分:</span><span class="font-medium">${student.average_score ? student.average_score.toFixed(1) + '%' : '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">最后考试:</span><span class="font-medium">${student.last_exam ? formatDateTime(student.last_exam) : '无记录'}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        async function viewStudentAnswers(studentId) {
+            try {
+                const response = await fetch(`/api/student-answers/${studentId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const student = currentData.students.find(s => s.id === studentId);
+                    document.getElementById('modalTitle').textContent = `答题记录 - ${student ? student.student_name : '学生'}`;
+                    
+                    if (data.answers.length === 0) {
+                        document.getElementById('modalContent').innerHTML = `
+                            <div class="text-center py-12">
+                                <i class="ri-file-list-line text-gray-400 text-4xl mb-4"></i>
+                                <p class="text-gray-500">该学生暂无答题记录</p>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('modalContent').innerHTML = data.answers.map(exam => `
+                            <div class="mb-6 border border-gray-200 rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="text-lg font-semibold text-gray-900">${exam.exam_name}</h4>
+                                    <div class="flex items-center space-x-4">
+                                        <span class="px-2 py-1 text-xs rounded-full ${exam.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                            ${exam.status === 'completed' ? '已完成' : '进行中'}
+                                        </span>
+                                        <span class="text-sm text-gray-500">得分: ${exam.score}/${exam.total_score} (${exam.percentage}%)</span>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    ${exam.questions.map((q, index) => `
+                                        <div class="border-l-4 ${q.is_correct ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'} pl-4 py-2">
+                                            <div class="flex items-start justify-between">
+                                                <div class="flex-1">
+                                                    <p class="font-medium text-gray-900 mb-2"><span class="mr-2">${index + 1}.</span>${q.question_text}</p>
+                                                    <div class="text-sm">
+                                                        <p class="mb-1"><span class="font-medium text-gray-700">学生答案:</span><span class="${q.is_correct ? 'text-green-700' : 'text-red-700'}">${q.student_answer || '未作答'}</span></p>
+                                                        ${!q.is_correct ? `<p><span class="font-medium text-gray-700">正确答案:</span><span class="text-green-700">${q.correct_answer}</span></p>` : ''}
+                                                    </div>
+                                                </div>
+                                                <div class="ml-4"><i class="ri-${q.is_correct ? 'check' : 'close'}-circle-fill text-xl ${q.is_correct ? 'text-green-500' : 'text-red-500'}"></i></div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex justify-between text-sm text-gray-600">
+                                        <span>答题时间: ${exam.completed_at ? formatDateTime(exam.completed_at) : '未完成'}</span>
+                                        <span>用时: ${exam.time_spent_minutes ? exam.time_spent_minutes + '分钟' : '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    document.getElementById('detailModal').classList.remove('hidden');
+                } else {
+                    showMessage('获取答题记录失败: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('获取答题记录失败:', error);
+                showMessage('获取答题记录失败', 'error');
+            }
+        }
+
+        function viewExamDetail(examId) {
+            const exam = currentData.exams.find(e => e.id === examId);
+            if (!exam) return;
+
+            document.getElementById('modalTitle').textContent = `考试详情`;
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-900">基本信息</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between"><span class="text-gray-600">考试ID:</span><span class="font-medium">${exam.id}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">学生:</span><span class="font-medium">${exam.student_name || '未知'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">考试名称:</span><span class="font-medium">${exam.exam_name || '考试'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">状态:</span><span class="font-medium">${exam.status === 'completed' ? '已完成' : '进行中'}</span></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-900">成绩信息</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between"><span class="text-gray-600">得分:</span><span class="font-medium">${exam.total_score || '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">百分比:</span><span class="font-medium">${exam.percentage ? exam.percentage.toFixed(1) + '%' : '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">开始时间:</span><span class="font-medium">${exam.created_at ? formatDateTime(exam.created_at) : '-'}</span></div>
+                                <div class="flex justify-between"><span class="text-gray-600">完成时间:</span><span class="font-medium">${exam.completed_at ? formatDateTime(exam.completed_at) : '-'}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-green-100 text-green-800 border-green-200',
+                error: 'bg-red-100 text-red-800 border-red-200',
+                info: 'bg-blue-100 text-blue-800 border-blue-200'
+            };
+            
+            messageDiv.className = `p-4 mb-4 text-sm border rounded-lg ${colors[type]} fade-in`;
+            messageDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-current opacity-50 hover:opacity-75">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.remove();
+                }
+            }, 5000);
+        }
+
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text) return '-';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        // 检查管理员权限
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/admin/status');
+                const data = await response.json();
+                
+                if (!data.logged_in) {
+                    showMessage('需要管理员权限才能访问此页面', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/admin/login';
+                    }, 2000);
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('权限检查失败:', error);
+                showMessage('权限检查失败，请重新登录', 'error');
+                setTimeout(() => {
+                    window.location.href = '/admin/login';
+                }, 2000);
+                return false;
+            }
+        }
+
+        // 搜索和过滤功能
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 先检查管理员权限
+            const hasPermission = await checkAdminStatus();
+            if (!hasPermission) {
+                return; // 如果没有权限，停止后续初始化
+            }
+
+            // 初始化页面
+            await window.i18n.init();
+            
+            const studentSearch = document.getElementById('studentSearch');
+            const studentFilter = document.getElementById('studentFilter');
+            
+            if (studentSearch && studentFilter) {
+                studentSearch.addEventListener('input', filterStudents);
+                studentFilter.addEventListener('change', filterStudents);
+            }
+            
+            const examFilter = document.getElementById('examFilter');
+            if (examFilter) {
+                examFilter.addEventListener('change', filterExams);
+            }
+            
+
+            // 权限验证通过后加载数据
+            loadData();
+        });
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('studentSearch').value.toLowerCase();
+            const filterValue = document.getElementById('studentFilter').value;
+            
+            let filteredStudents = currentData.students;
+            
+            if (searchTerm) {
+                filteredStudents = filteredStudents.filter(student => 
+                    (student.student_name || '').toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filterValue !== 'all') {
+                filteredStudents = filteredStudents.filter(student => 
+                    student.status === filterValue
+                );
+            }
+            
+            renderStudents(filteredStudents);
+        }
+
+        function filterExams() {
+            const filterValue = document.getElementById('examFilter').value;
+            
+            let filteredExams = currentData.exams;
+            
+            if (filterValue !== 'all') {
+                filteredExams = filteredExams.filter(exam => 
+                    exam.status === filterValue
+                );
+            }
+            
+            renderExams(filteredExams);
+        }
+
+        // ========== 学生删除功能 ==========
+        
+        // 切换批量操作模式
+        function toggleBatchMode() {
+            batchMode = !batchMode;
+            const batchActionsBar = document.getElementById('batchActionsBar');
+            const batchModeBtn = document.getElementById('batchModeBtn');
+            
+            if (batchMode) {
+                batchActionsBar.classList.remove('hidden');
+                batchModeBtn.innerHTML = '<i class="ri-close-line mr-2"></i>退出批量操作';
+                batchModeBtn.className = 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center';
+            } else {
+                exitBatchMode();
+            }
+            
+            // 重新渲染学生列表以显示/隐藏复选框
+            renderStudents(currentData.students);
+        }
+        
+        // 退出批量操作模式
+        function exitBatchMode() {
+            batchMode = false;
+            selectedStudents.clear();
+            const batchActionsBar = document.getElementById('batchActionsBar');
+            const batchModeBtn = document.getElementById('batchModeBtn');
+            
+            batchActionsBar.classList.add('hidden');
+            batchModeBtn.innerHTML = '<i class="ri-checkbox-multiple-line mr-2"></i>批量操作';
+            batchModeBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center';
+            
+            updateSelectedCount();
+            renderStudents(currentData.students);
+        }
+        
+        // 切换学生选择状态
+        function toggleStudentSelection(studentId) {
+            if (selectedStudents.has(studentId)) {
+                selectedStudents.delete(studentId);
+            } else {
+                selectedStudents.add(studentId);
+            }
+            updateSelectedCount();
+            updateSelectAllCheckbox();
+            renderStudents(currentData.students);
+        }
+        
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox.checked) {
+                // 全选
+                currentData.students.forEach(student => {
+                    selectedStudents.add(student.id);
+                });
+            } else {
+                // 取消全选
+                selectedStudents.clear();
+            }
+            updateSelectedCount();
+            renderStudents(currentData.students);
+        }
+        
+        // 更新选中计数显示
+        function updateSelectedCount() {
+            const selectedCountEl = document.getElementById('selectedCount');
+            if (selectedCountEl) {
+                selectedCountEl.textContent = `已选择 ${selectedStudents.size} 个学生`;
+            }
+        }
+        
+        // 更新全选复选框状态
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox && currentData.students.length > 0) {
+                const allSelected = currentData.students.every(student => selectedStudents.has(student.id));
+                const noneSelected = selectedStudents.size === 0;
+                
+                selectAllCheckbox.checked = allSelected;
+                selectAllCheckbox.indeterminate = !allSelected && !noneSelected;
+            }
+        }
+        
+        // 删除单个学生
+        async function deleteStudent(studentId) {
+            const student = currentData.students.find(s => s.id === studentId);
+            const studentName = student ? student.student_name : '未知学生';
+            
+            if (!confirm(`确定要删除学生"${studentName}"吗？此操作将同时删除其所有考试记录，且无法恢复。`)) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/students-management/${studentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('学生删除成功', 'success');
+                    // 重新加载学生数据
+                    await loadStudents();
+                    await loadStatistics(); // 更新统计数据
+                } else {
+                    showMessage(`删除失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('删除学生失败:', error);
+                showMessage('删除失败，请重试', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 批量删除学生
+        async function batchDeleteStudents() {
+            if (selectedStudents.size === 0) {
+                showMessage('请先选择要删除的学生', 'error');
+                return;
+            }
+            
+            if (!confirm(`确定要删除选中的 ${selectedStudents.size} 个学生吗？此操作将同时删除其所有考试记录，且无法恢复。`)) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const studentIds = Array.from(selectedStudents);
+                const response = await fetch('/api/students-management/batch-delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ student_ids: studentIds })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(`成功删除 ${studentIds.length} 个学生`, 'success');
+                    exitBatchMode();
+                    // 重新加载学生数据
+                    await loadStudents();
+                    await loadStatistics(); // 更新统计数据
+                } else {
+                    showMessage(`批量删除失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('批量删除失败:', error);
+                showMessage('批量删除失败，请重试', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 删除所有学生
+        async function deleteAllStudents() {
+            if (currentData.students.length === 0) {
+                showMessage('没有学生可以删除', 'error');
+                return;
+            }
+            
+            if (!confirm(`确定要删除所有 ${currentData.students.length} 个学生吗？此操作将清空所有学生数据和考试记录，且无法恢复！`)) {
+                return;
+            }
+            
+            // 二次确认
+            if (!confirm('这是最后确认：删除所有学生数据无法恢复，是否继续？')) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch('/api/students-management/delete-all', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('所有学生数据已删除', 'success');
+                    exitBatchMode();
+                    // 重新加载学生数据
+                    await loadStudents();
+                    await loadStatistics(); // 更新统计数据
+                } else {
+                    showMessage(`删除失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('删除所有学生失败:', error);
+                showMessage('删除失败，请重试', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ========== 考试记录删除功能 ==========
+        
+        // 切换考试记录批量操作模式
+        function toggleExamBatchMode() {
+            examBatchMode = !examBatchMode;
+            const batchActionsBar = document.getElementById('examBatchActionsBar');
+            const batchModeBtn = document.getElementById('examBatchModeBtn');
+            
+            if (examBatchMode) {
+                batchActionsBar.classList.remove('hidden');
+                batchModeBtn.innerHTML = '<i class="ri-close-line mr-2"></i>退出批量操作';
+                batchModeBtn.className = 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center';
+            } else {
+                exitExamBatchMode();
+            }
+            
+            // 重新渲染考试记录列表以显示/隐藏复选框
+            renderExams(currentData.exams);
+        }
+        
+        // 退出考试记录批量操作模式
+        function exitExamBatchMode() {
+            examBatchMode = false;
+            selectedExams.clear();
+            const batchActionsBar = document.getElementById('examBatchActionsBar');
+            const batchModeBtn = document.getElementById('examBatchModeBtn');
+            
+            batchActionsBar.classList.add('hidden');
+            batchModeBtn.innerHTML = '<i class="ri-checkbox-multiple-line mr-2"></i>批量操作';
+            batchModeBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center';
+            
+            updateSelectedExamCount();
+            renderExams(currentData.exams);
+        }
+        
+        // 切换考试记录选择状态
+        function toggleExamSelection(examId) {
+            if (selectedExams.has(examId)) {
+                selectedExams.delete(examId);
+            } else {
+                selectedExams.add(examId);
+            }
+            updateSelectedExamCount();
+            updateSelectAllExamCheckbox();
+            renderExams(currentData.exams);
+        }
+        
+        // 全选/取消全选考试记录
+        function toggleSelectAllExams() {
+            const selectAllCheckbox = document.getElementById('selectAllExamCheckbox');
+            const headerCheckbox = document.getElementById('examHeaderCheckbox');
+            
+            // 同步两个复选框状态
+            if (selectAllCheckbox && headerCheckbox) {
+                if (selectAllCheckbox.checked !== headerCheckbox.checked) {
+                    headerCheckbox.checked = selectAllCheckbox.checked;
+                }
+            }
+            
+            const isChecked = selectAllCheckbox ? selectAllCheckbox.checked : (headerCheckbox ? headerCheckbox.checked : false);
+            
+            if (isChecked) {
+                // 全选
+                currentData.exams.forEach(exam => {
+                    selectedExams.add(exam.id);
+                });
+            } else {
+                // 取消全选
+                selectedExams.clear();
+            }
+            updateSelectedExamCount();
+            renderExams(currentData.exams);
+        }
+        
+        // 更新选中考试记录计数显示
+        function updateSelectedExamCount() {
+            const selectedCountEl = document.getElementById('selectedExamCount');
+            if (selectedCountEl) {
+                selectedCountEl.textContent = `已选择 ${selectedExams.size} 条记录`;
+            }
+        }
+        
+        // 更新全选复选框状态
+        function updateSelectAllExamCheckbox() {
+            const selectAllCheckbox = document.getElementById('selectAllExamCheckbox');
+            const headerCheckbox = document.getElementById('examHeaderCheckbox');
+            
+            if (currentData.exams.length > 0) {
+                const allSelected = currentData.exams.every(exam => selectedExams.has(exam.id));
+                const noneSelected = selectedExams.size === 0;
+                
+                [selectAllCheckbox, headerCheckbox].forEach(checkbox => {
+                    if (checkbox) {
+                        checkbox.checked = allSelected;
+                        checkbox.indeterminate = !allSelected && !noneSelected;
+                    }
+                });
+            }
+        }
+        
+        // 删除单个考试记录
+        async function deleteExam(examId) {
+            const exam = currentData.exams.find(e => e.id === examId);
+            const examInfo = exam ? `"${exam.student_name || '未知学生'}"的考试记录` : '该考试记录';
+            
+            if (!confirm(`确定要删除${examInfo}吗？此操作无法恢复。`)) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/exam-records/${examId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('考试记录删除成功', 'success');
+                    // 重新加载考试记录数据
+                    await loadExams();
+                    await loadStatistics(); // 更新统计数据
+                } else {
+                    showMessage(`删除失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('删除考试记录失败:', error);
+                showMessage('删除失败，请重试', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 批量删除考试记录
+        async function batchDeleteExams() {
+            if (selectedExams.size === 0) {
+                showMessage('请先选择要删除的考试记录', 'error');
+                return;
+            }
+            
+            if (!confirm(`确定要删除选中的 ${selectedExams.size} 条考试记录吗？此操作无法恢复。`)) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const examIds = Array.from(selectedExams);
+                const response = await fetch('/api/exam-records/batch-delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ exam_ids: examIds })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showMessage(`成功删除 ${examIds.length} 条考试记录`, 'success');
+                    exitExamBatchMode();
+                    // 重新加载考试记录数据
+                    await loadExams();
+                    await loadStatistics(); // 更新统计数据
+                } else {
+                    showMessage(`批量删除失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('批量删除考试记录失败:', error);
+                showMessage('批量删除失败，请重试', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // 删除所有考试记录
+        async function deleteAllExams() {
+            if (currentData.exams.length === 0) {
+                showMessage('没有考试记录可以删除', 'error');
+                return;
+            }
+            
+            if (!confirm(`确定要删除所有 ${currentData.exams.length} 条考试记录吗？此操作将清空所有考试数据，且无法恢复！`)) {
+                return;
+            }
+            
+            // 二次确认
+            if (!confirm('这是最后确认：删除所有考试记录无法恢复，是否继续？')) {
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                const response = await fetch('/api/exam-records/delete-all', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showMessage('所有考试记录已删除', 'success');
+                    exitExamBatchMode();
+                    // 重新加载考试记录数据
+                    await loadExams();
+                    await loadStatistics(); // 更新统计数据
+                } else {
+                    showMessage(`删除失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('删除所有考试记录失败:', error);
+                showMessage('删除失败，请重试', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ============= 学生个人题型评分功能 =============
+        
+        // 显示学生个人题型评分
+        async function showStudentTypeScores(studentId, studentName) {
+            try {
+                const response = await fetch(`/api/student/${studentId}/type-scores`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayStudentTypeScores(data.type_scores, data.student_name || studentName, studentId);
+                    document.getElementById('studentTypeScoresModal').classList.remove('hidden');
+                } else {
+                    showMessage('获取学生题型评分失败: ' + (data.message || '未知错误'), 'error');
+                }
+            } catch (error) {
+                console.error('获取学生题型评分失败:', error);
+                showMessage('获取学生题型评分失败，请重试', 'error');
+            }
+        }
+
+        // 显示学生个人题型评分数据
+        function displayStudentTypeScores(typeScores, studentName, studentId) {
+            const container = document.getElementById('studentTypeScoresContent');
+            
+            // 存储当前数据供导出使用
+            window.currentStudentTypeScores = {
+                student_name: studentName,
+                student_id: studentId,
+                type_scores: typeScores
+            };
+            
+            if (!typeScores || Object.keys(typeScores).length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="ri-bar-chart-line text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500">该学生暂无题型评分数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const typeScoresList = Object.entries(typeScores).map(([typeKey, stats]) => {
+                const percentage = stats.percentage || 0;
+                const accuracy = stats.accuracy || 0;
+                const progressColor = getScoreColor(percentage);
+                const accuracyColor = getScoreColor(accuracy);
+
+                return `
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                    <i class="${getTypeIcon(typeKey)} text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">${stats.type_name}</h3>
+                                    <p class="text-sm text-gray-500">${stats.question_count} 道题目</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleDetailedScores('${typeKey}')" 
+                                    class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                                <i class="ri-eye-line mr-1"></i>展开详情
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-600">得分率</span>
+                                    <span class="text-sm font-semibold ${progressColor}">${percentage.toFixed(1)}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full transition-all duration-500 ${progressColor.replace('text-', 'bg-')}" 
+                                         style="width: ${Math.min(percentage, 100)}%"></div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">${stats.total_score}/${stats.max_score} 分</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-600">正确率</span>
+                                    <span class="text-sm font-semibold ${accuracyColor}">${accuracy.toFixed(1)}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full transition-all duration-500 ${accuracyColor.replace('text-', 'bg-')}" 
+                                         style="width: ${Math.min(accuracy, 100)}%"></div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">${stats.correct_count}/${stats.question_count} 题</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 详细题目得分 -->
+                        <div id="detailed-${typeKey}" class="hidden mt-4 pt-4 border-t border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-3">详细题目得分</h4>
+                            <div class="space-y-2 max-h-64 overflow-y-auto">
+                                ${stats.detailed_scores ? stats.detailed_scores.map((detail, index) => `
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium text-gray-900">题目 ${index + 1}</div>
+                                            <div class="text-xs text-gray-600 truncate" style="max-width: 200px;">${detail.question_text}</div>
+                                            <div class="text-xs text-gray-500 mt-1">${detail.exam_date}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-semibold ${detail.is_correct ? 'text-green-600' : 'text-red-600'}">
+                                                ${detail.score}/${detail.max_score} 
+                                                ${detail.is_correct ? '✓' : '✗'}
+                                            </div>
+                                            <div class="text-xs text-gray-500">${detail.percentage.toFixed(1)}%</div>
+                                        </div>
+                                    </div>
+                                `).join('') : '<p class="text-sm text-gray-500">暂无详细题目数据</p>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-center pb-4 border-b border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-900">${studentName} 的题型评分分析</h2>
+                        <p class="text-sm text-gray-600 mt-1">详细的题型表现和得分统计</p>
+                    </div>
+                    ${typeScoresList}
+                </div>
+            `;
+        }
+
+        // 切换详细得分显示
+        function toggleDetailedScores(typeKey) {
+            const detailDiv = document.getElementById(`detailed-${typeKey}`);
+            const button = event.target.closest('button');
+            
+            if (detailDiv.classList.contains('hidden')) {
+                detailDiv.classList.remove('hidden');
+                button.innerHTML = '<i class="ri-eye-off-line mr-1"></i>收起详情';
+            } else {
+                detailDiv.classList.add('hidden');
+                button.innerHTML = '<i class="ri-eye-line mr-1"></i>展开详情';
+            }
+        }
+
+        // 隐藏学生个人题型评分模态框
+        function hideStudentTypeScoresModal() {
+            document.getElementById('studentTypeScoresModal').classList.add('hidden');
+        }
+
+        // 导出学生个人题型评分数据
+        function exportStudentTypeScores() {
+            if (!window.currentStudentTypeScores) {
+                showMessage('没有可导出的数据', 'error');
+                return;
+            }
+            
+            const data = window.currentStudentTypeScores;
+            const csvContent = generateStudentTypeScoresCSV(data.type_scores, data.student_name);
+            const filename = `学生题型评分_${data.student_name}_${new Date().toISOString().split('T')[0]}.csv`;
+            downloadCSV(csvContent, filename);
+        }
+
+        // 生成学生个人题型评分CSV内容
+        function generateStudentTypeScoresCSV(typeScores, studentName) {
+            const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+            let csvContent = BOM;
+            
+            // 标题行
+            csvContent += `学生姓名,${studentName}\n`;
+            csvContent += `导出时间,${new Date().toLocaleString('zh-CN')}\n\n`;
+            
+            // 题型统计表头
+            csvContent += '题型名称,总得分,满分,得分率(%),正确题数,总题数,正确率(%)\n';
+            
+            // 题型统计数据
+            Object.entries(typeScores).forEach(([typeKey, stats]) => {
+                csvContent += `${stats.type_name},${stats.total_score},${stats.max_score},${stats.percentage.toFixed(2)},${stats.correct_count},${stats.question_count},${stats.accuracy.toFixed(2)}\n`;
+            });
+            
+            // 详细题目得分
+            csvContent += '\n详细题目得分\n';
+            csvContent += '题型,题目ID,题目内容,得分,满分,得分率(%),是否正确,考试时间\n';
+            
+            Object.entries(typeScores).forEach(([typeKey, stats]) => {
+                if (stats.detailed_scores && stats.detailed_scores.length > 0) {
+                    stats.detailed_scores.forEach(detail => {
+                        const questionText = detail.question_text ? detail.question_text.replace(/,/g, '，') : '';
+                        csvContent += `${stats.type_name},${detail.question_id},"${questionText}",${detail.score},${detail.max_score},${detail.percentage.toFixed(2)},${detail.is_correct ? '是' : '否'},${detail.exam_date}\n`;
+                    });
+                }
+            });
+            
+            return csvContent;
+        }
+
+        // 获取题型图标
+        function getTypeIcon(questionType) {
+            const icons = {
+                'multiple_choice': 'ri-checkbox-circle-line',
+                '选择题': 'ri-checkbox-circle-line',
+                'short_answer': 'ri-file-text-line',
+                '简答题': 'ri-file-text-line',
+                'programming': 'ri-code-line',
+                '编程题': 'ri-code-line',
+                'essay': 'ri-article-line',
+                '论述题': 'ri-article-line'
+            };
+            return icons[questionType] || 'ri-question-line';
+        }
+
+        // 获取分数颜色
+        function getScoreColor(percentage) {
+            if (percentage >= 90) return 'text-green-600';
+            if (percentage >= 80) return 'text-blue-600';
+            if (percentage >= 70) return 'text-yellow-600';
+            if (percentage >= 60) return 'text-orange-600';
+            return 'text-red-600';
+        }
+
+        // CSV下载辅助函数
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+    </script>
+
+    <!-- 学生个人题型评分模态框 -->
+    <div id="studentTypeScoresModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        <i class="ri-bar-chart-line mr-2"></i>
+                        学生个人题型评分
+                    </h3>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportStudentTypeScores()" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="ri-download-line mr-1"></i>
+                            导出数据
+                        </button>
+                        <button onclick="hideStudentTypeScoresModal()" 
+                                class="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                    <div id="studentTypeScoresContent">
+                        <!-- 动态内容将在这里加载 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

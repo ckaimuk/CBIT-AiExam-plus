@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="verification.title">考生身份验证 - IMBA 智能考试系统</title>
+<link rel="icon" type="image/x-icon" id="faviconLink" href="/favicon.ico">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#2563eb',
+secondary: '#3b82f6',
+success: '#10b981',
+warning: '#f59e0b',
+danger: '#ef4444'
+},
+fontFamily: {
+'sans': ['Inter', 'system-ui', 'sans-serif']
+},
+borderRadius: {
+'xl': '12px',
+'2xl': '16px'
+}
+}
+}
+}
+</script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.glass-effect {
+backdrop-filter: blur(10px);
+background: rgba(255, 255, 255, 0.1);
+border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-input {
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-input:focus {
+box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+transform: translateY(-1px);
+}
+
+.btn-primary {
+background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.btn-admin {
+background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.btn-admin:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+.fade-in {
+animation: fadeIn 0.6s ease-out;
+}
+
+.slide-up {
+animation: slideUp 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+@keyframes slideUp {
+from { 
+opacity: 0;
+transform: translateY(30px);
+}
+to { 
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.loading-spinner {
+animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+from { transform: rotate(0deg); }
+to { transform: rotate(360deg); }
+}
+
+.error-shake {
+animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+25% { transform: translateX(-5px); }
+75% { transform: translateX(5px); }
+}
+</style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4">
+<!-- Background Elements -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none">
+<div class="absolute -top-1/2 -right-1/2 w-96 h-96 bg-blue-500 rounded-full opacity-10 animate-pulse"></div>
+<div class="absolute -bottom-1/2 -left-1/2 w-96 h-96 bg-purple-500 rounded-full opacity-10 animate-pulse" style="animation-delay: 1s;"></div>
+</div>
+
+<!-- Main Container -->
+<div class="w-full max-w-md mx-auto relative z-10">
+<!-- Header -->
+<div class="text-center mb-8 fade-in">
+<div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
+<img id="systemLogo" src="https://static.readdy.ai/image/3c1ff9a008dc8b425236e4faed5d7924/c0ad19844b74c75ecb76a8cc5a6f9bd3.jfif" 
+alt="IMBA Logo" class="w-10 h-10 object-contain">
+</div>
+<h1 id="systemName" class="text-3xl font-bold text-white mb-2" data-i18n="system.name">IMBA 智能考试</h1>
+<p class="text-blue-100" data-i18n="verification.subtitle">安全可靠的在线考试平台</p>
+<!-- Language Toggle -->
+<button id="languageToggle" class="mt-4 text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg border border-white/20">
+<i class="ri-global-line mr-1"></i>
+<span class="language-display">中</span>
+</button>
+</div>
+
+<!-- Admin Quick Access (显示在管理员已登录时) -->
+<div id="adminQuickAccess" class="hidden mb-6 slide-up">
+<div class="glass-effect rounded-2xl p-6 text-center">
+<div class="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-xl mb-4">
+<i class="ri-admin-line text-white text-xl"></i>
+</div>
+<h2 class="text-xl font-semibold text-white mb-2" data-i18n="verification.admin_mode">管理员模式</h2>
+<p class="text-blue-100 text-sm mb-4" data-i18n="verification.admin_logged_in">您已登录管理员账户</p>
+<!-- 考试配置选择 -->
+<div class="mb-4">
+<select id="adminExamConfigSelect" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30">
+<option value="" data-i18n="verification.select_config">选择考试配置...</option>
+</select>
+</div>
+<button id="adminStartExamBtn" class="btn-admin w-full py-3 px-6 rounded-xl font-semibold text-white flex items-center justify-center space-x-2">
+<i class="ri-play-fill"></i>
+<span data-i18n="verification.start_exam_direct">直接进入考试</span>
+</button>
+<div class="mt-4 flex justify-center space-x-4 text-sm">
+<button id="adminLogoutBtn" class="text-white/70 hover:text-white transition-colors">
+<i class="ri-logout-box-line mr-1"></i><span data-i18n="verification.logout">退出登录</span>
+</button>
+<a href="/admin/dashboard" class="text-white/70 hover:text-white transition-colors">
+<i class="ri-dashboard-line mr-1"></i><span data-i18n="verification.admin_panel">管理面板</span>
+</a>
+</div>
+</div>
+</div>
+
+<!-- Student Form -->
+<div id="studentForm" class="glass-effect rounded-2xl p-6 slide-up">
+<div class="text-center mb-6">
+<div class="inline-flex items-center justify-center w-12 h-12 bg-blue-500 rounded-xl mb-4">
+<i class="ri-user-line text-white text-xl"></i>
+</div>
+<h2 class="text-xl font-semibold text-white mb-1" data-i18n="verification.student_verification">学生身份验证</h2>
+<p class="text-blue-100 text-sm" data-i18n="verification.form_instruction">请填写您的考试信息</p>
+</div>
+
+<form id="verificationForm" class="space-y-4">
+<!-- 考试选择 -->
+<div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
+<div class="flex items-center space-x-3 mb-3">
+<i class="ri-file-list-3-line text-green-600 text-lg"></i>
+<h4 class="text-green-800 font-medium" data-i18n="verification.select_exam">选择考试</h4>
+</div>
+<div id="examTemplatesList" class="space-y-2">
+<div class="text-center text-green-600 py-4">
+<i class="ri-loader-4-line text-xl animate-spin"></i>
+<p class="mt-2 text-sm" data-i18n="verification.loading_exams">正在加载可用考试...</p>
+</div>
+</div>
+</div>
+
+<div id="dynamicFieldsContainer">
+<!-- 动态加载验证字段 -->
+</div>
+
+
+<!-- 考试须知 -->
+<div class="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
+<div class="flex items-start space-x-3">
+<div class="flex-shrink-0">
+<i class="ri-file-list-3-line text-green-300 text-lg mt-0.5"></i>
+</div>
+<div class="text-xs text-blue-100 space-y-1" id="examNotice">
+<p class="font-medium text-white" data-i18n="verification.exam_instructions">考试须知</p>
+<p data-i18n="verification.auto_generate">• 系统将根据默认配置自动生成考试题目</p>
+<p id="examTimeLimit" data-i18n="verification.time_limit">• 考试时间限制：加载中...</p>
+<p id="examQuestionCount" data-i18n="verification.question_count">• 题目数量：加载中...</p>
+<p id="examSubjects" data-i18n="verification.subjects">• 考试科目：加载中...</p>
+<p data-i18n="verification.one_chance">• 每位考生仅有一次考试机会，请认真作答</p>
+</div>
+</div>
+</div>
+
+<!-- 设备信息提示 -->
+<div class="bg-white/5 border border-white/10 rounded-xl p-4">
+<div class="flex items-start space-x-3">
+<div class="flex-shrink-0">
+<i class="ri-information-line text-blue-300 text-lg mt-0.5"></i>
+</div>
+<div class="text-xs text-blue-100 space-y-1">
+<p class="font-medium text-white" data-i18n="verification.device_binding">设备绑定信息</p>
+<p>
+<span data-i18n="verification.current_ip">• 当前设备 IP：</span>
+<span id="deviceIP" class="font-mono text-blue-200">获取中...</span>
+</p>
+<p>
+<span data-i18n="verification.device_id_label">• 设备标识：</span>
+<span id="deviceId" class="font-mono text-blue-200">生成中...</span>
+</p>
+<p data-i18n="verification.device_warning">• 提交后将绑定当前设备，无法在其他设备重复考试</p>
+</div>
+</div>
+</div>
+
+<!-- 提交按钮 -->
+<button type="submit" id="submitButton" class="btn-primary w-full py-3 px-6 rounded-xl font-semibold text-white flex items-center justify-center space-x-2">
+<span id="buttonText" data-i18n="verification.start_exam">开始考试</span>
+<div id="loadingSpinner" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full loading-spinner hidden"></div>
+</button>
+
+<!-- 错误信息 -->
+<div id="generalError" class="text-red-300 text-sm text-center hidden"></div>
+
+<!-- 管理员登录入口 -->
+<div class="text-center mt-4">
+<button type="button" id="showAdminLoginBtn" class="text-white/60 hover:text-white text-sm transition-colors">
+<i class="ri-admin-line mr-1"></i><span data-i18n="verification.admin_login">管理员登录</span>
+</button>
+</div>
+</form>
+</div>
+
+<!-- Admin Login Modal -->
+<div id="adminLoginModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+<div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-auto transform transition-all">
+<div class="text-center mb-6">
+<div class="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-xl mb-4">
+<i class="ri-admin-line text-white text-xl"></i>
+</div>
+<h3 class="text-xl font-semibold text-gray-900 mb-1" data-i18n="verification.admin_login_title">管理员登录</h3>
+<p class="text-gray-600 text-sm" data-i18n="verification.admin_password_prompt">请输入管理员密码</p>
+</div>
+
+<form id="adminLoginForm" class="space-y-4">
+<div>
+<label class="block text-gray-700 text-sm font-medium mb-2" data-i18n="verification.password">密码</label>
+<input type="password" id="adminPassword" required
+class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+data-i18n="verification.password_placeholder" placeholder="请输入管理员密码">
+<div id="adminPasswordError" class="text-red-500 text-xs mt-1 hidden"></div>
+</div>
+
+<div class="flex space-x-3">
+<button type="button" id="cancelAdminLoginBtn" class="flex-1 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+<span data-i18n="verification.cancel">取消</span>
+</button>
+<button type="submit" id="adminLoginBtn" class="flex-1 py-3 px-4 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors flex items-center justify-center">
+<span id="adminLoginText" data-i18n="verification.login">登录</span>
+<div id="adminLoginSpinner" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full loading-spinner hidden ml-2"></div>
+</button>
+</div>
+
+<div id="adminLoginError" class="text-red-500 text-sm text-center hidden"></div>
+</form>
+</div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+<div class="bg-white rounded-2xl p-8 text-center">
+<div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full loading-spinner mx-auto mb-4"></div>
+<p class="text-gray-700 font-medium" data-i18n="verification.processing">正在处理，请稍候...</p>
+</div>
+</div>
+
+<!-- 多语言支持脚本 -->
+<script src="/static/js/i18n.js"></script>
+
+<script>
+// 全局变量
+let isAdminLoggedIn = false;
+let examConfigs = [];
+
+// DOM元素
+const adminQuickAccess = document.getElementById('adminQuickAccess');
+const studentForm = document.getElementById('studentForm');
+const adminLoginModal = document.getElementById('adminLoginModal');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', async function() {
+console.log('页面初始化开始');
+
+// 等待多语言初始化完成
+if (window.i18n && !window.i18n.initialized) {
+await new Promise(resolve => {
+document.addEventListener('i18n:initialized', resolve, { once: true });
+});
+}
+
+// 先初始化其他功能
+await loadExamTemplates();
+await loadVerificationFields();
+await checkAdminStatus();
+await loadExamConfigs();
+initEventListeners();
+
+// 最后生成设备信息，确保DOM元素已完全就绪
+setTimeout(async () => {
+    await generateDeviceInfo();
+}, 100);
+
+console.log('页面初始化完成');
+});
+
+// 绑定多语言更新事件
+document.addEventListener('i18n:languageChanged', () => {
+// 重新加载动态内容的翻译
+updateDynamicTranslations();
+});
+
+// 更新动态翻译内容
+function updateDynamicTranslations() {
+    // 更新考试须知
+    const currentLang = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+    
+    if (currentLang === 'en') {
+        // 英文翻译
+        const timeLimitElement = document.getElementById('examTimeLimit');
+        const questionCountElement = document.getElementById('examQuestionCount');
+        const subjectsElement = document.getElementById('examSubjects');
+        
+        if (timeLimitElement && timeLimitElement.textContent.includes('考试时间限制')) {
+            timeLimitElement.textContent = timeLimitElement.textContent.replace('考试时间限制：', 'Time Limit: ').replace('分钟', ' minutes');
+        }
+        
+        if (questionCountElement && questionCountElement.textContent.includes('题目数量')) {
+            questionCountElement.textContent = questionCountElement.textContent.replace('题目数量：', 'Questions: ').replace('题（包含选择题、简答题等）', ' questions (multiple choice, short answer, etc.)');
+        }
+        
+        if (subjectsElement && subjectsElement.textContent.includes('考试科目')) {
+            subjectsElement.textContent = subjectsElement.textContent.replace('考试科目：', 'Subjects: ');
+        }
+    } else {
+        // 中文翻译（恢复原文）
+        const timeLimitElement = document.getElementById('examTimeLimit');
+        const questionCountElement = document.getElementById('examQuestionCount');
+        const subjectsElement = document.getElementById('examSubjects');
+        
+        if (timeLimitElement && timeLimitElement.textContent.includes('Time Limit')) {
+            timeLimitElement.textContent = timeLimitElement.textContent.replace('Time Limit: ', '考试时间限制：').replace(' minutes', '分钟');
+        }
+        
+        if (questionCountElement && questionCountElement.textContent.includes('Questions')) {
+            questionCountElement.textContent = questionCountElement.textContent.replace('Questions: ', '题目数量：').replace(' questions (multiple choice, short answer, etc.)', '题（包含选择题、简答题等）');
+        }
+        
+        if (subjectsElement && subjectsElement.textContent.includes('Subjects')) {
+            subjectsElement.textContent = subjectsElement.textContent.replace('Subjects: ', '考试科目：');
+        }
+    }
+}
+
+// 获取真实设备信息
+async function generateDeviceInfo() {
+try {
+    console.log('🔍 开始生成设备信息...');
+    
+    // 检查DOM状态
+    console.log('📋 DOM状态检查:');
+    console.log('- deviceId元素:', document.getElementById('deviceId'));
+    console.log('- deviceIP元素:', document.getElementById('deviceIP'));
+    console.log('- 所有ID:', Array.from(document.querySelectorAll('[id]')).map(el => el.id));
+    
+    // 先生成设备ID，这个比较快
+    const deviceId = await generateDeviceFingerprint();
+    console.log('🔢 生成的设备ID:', deviceId);
+    
+    // 设置设备ID - 使用更强大的查找方法
+    const setDeviceId = (id) => {
+        // 方法1：通过ID查找
+        let deviceIdElement = document.getElementById('deviceId');
+        
+        // 方法2：如果ID找不到，通过属性查找
+        if (!deviceIdElement) {
+            deviceIdElement = document.querySelector('span[id="deviceId"]');
+        }
+        
+        // 方法3：通过包含文本查找
+        if (!deviceIdElement) {
+            const allSpans = document.querySelectorAll('span');
+            deviceIdElement = Array.from(allSpans).find(span => 
+                span.className.includes('font-mono') && 
+                (span.textContent.includes('生成中') || span.textContent.includes('无法生成'))
+            );
+        }
+        
+        if (deviceIdElement) {
+            deviceIdElement.textContent = id;
+            console.log('✅ 设备ID已设置:', id);
+            return true;
+        } else {
+            console.warn('❌ deviceId 元素未找到');
+            return false;
+        }
+    };
+    
+    if (!setDeviceId(deviceId)) {
+        // 重试机制
+        setTimeout(() => {
+            if (!setDeviceId(deviceId)) {
+                console.error('❌ 重试失败，deviceId 元素仍未找到');
+            }
+        }, 500);
+    }
+
+    // 获取用户真实IP地址，使用多种方法
+    let deviceIP = '获取中...';
+    
+    // 方法1：通过本地服务器获取
+    try {
+        const serverResponse = await fetch('/api/get-client-ip');
+        if (serverResponse.ok) {
+            const serverData = await serverResponse.json();
+            if (serverData.success && serverData.ip) {
+                deviceIP = serverData.ip;
+            }
+        }
+    } catch (error) {
+        console.warn('通过服务器获取IP失败:', error);
+    }
+    
+    // 方法2：如果服务器方法失败，尝试WebRTC方法
+    if (deviceIP === '获取中...') {
+        try {
+            deviceIP = await getLocalIP();
+        } catch (error) {
+            console.warn('WebRTC获取IP失败:', error);
+        }
+    }
+    
+    // 方法3：如果WebRTC也失败，尝试外部API（作为最后备用）
+    if (deviceIP === '获取中...' || deviceIP === '无法获取') {
+        try {
+            const timeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('timeout')), 3000));
+            const ipResponse = await Promise.race([
+                fetch('https://api.ipify.org?format=json'),
+                timeout
+            ]);
+            const ipData = await ipResponse.json();
+            deviceIP = ipData.ip || '无法获取';
+        } catch (error) {
+            console.warn('外部API获取IP失败:', error);
+            deviceIP = '无法获取';
+        }
+    }
+
+    // 设置IP地址 - 使用更强大的查找方法
+    const setDeviceIP = (ip) => {
+        // 方法1：通过ID查找
+        let deviceIPElement = document.getElementById('deviceIP');
+        
+        // 方法2：如果ID找不到，通过属性查找
+        if (!deviceIPElement) {
+            deviceIPElement = document.querySelector('span[id="deviceIP"]');
+        }
+        
+        // 方法3：通过包含文本查找
+        if (!deviceIPElement) {
+            const allSpans = document.querySelectorAll('span');
+            deviceIPElement = Array.from(allSpans).find(span => 
+                span.className.includes('font-mono') && 
+                (span.textContent.includes('获取中') || span.textContent.includes('无法获取') || span.textContent.includes('127.0.0.1'))
+            );
+        }
+        
+        if (deviceIPElement) {
+            deviceIPElement.textContent = ip;
+            console.log('✅ 设备IP已设置:', ip);
+            return true;
+        } else {
+            console.warn('❌ deviceIP 元素未找到');
+            return false;
+        }
+    };
+    
+    if (!setDeviceIP(deviceIP)) {
+        // 重试机制
+        setTimeout(() => {
+            if (!setDeviceIP(deviceIP)) {
+                console.error('❌ 重试失败，deviceIP 元素仍未找到');
+            }
+        }, 500);
+    }
+    
+    console.log('设备信息生成完成:', { deviceIP, deviceId });
+} catch (error) {
+    console.error('生成设备信息失败:', error);
+    // 使用备用信息 - 使用相同的强大查找方法
+    const setFallbackInfo = () => {
+        // 设置备用IP
+        let deviceIPElement = document.getElementById('deviceIP') || 
+                             document.querySelector('span[id="deviceIP"]') ||
+                             Array.from(document.querySelectorAll('span')).find(span => 
+                                span.className.includes('font-mono') && 
+                                span.textContent.includes('获取中'));
+        if (deviceIPElement) {
+            deviceIPElement.textContent = '无法获取';
+        } else {
+            console.warn('设置备用IP信息时，deviceIP 元素仍未找到');
+        }
+        
+        // 设置备用设备ID
+        let deviceIdElement = document.getElementById('deviceId') || 
+                             document.querySelector('span[id="deviceId"]') ||
+                             Array.from(document.querySelectorAll('span')).find(span => 
+                                span.className.includes('font-mono') && 
+                                span.textContent.includes('生成中'));
+        if (deviceIdElement) {
+            deviceIdElement.textContent = '无法生成';
+        } else {
+            console.warn('设置备用设备ID信息时，deviceId 元素仍未找到');
+        }
+    };
+    
+    // 立即尝试设置
+    setFallbackInfo();
+    
+    // 如果失败，等待后重试
+    setTimeout(setFallbackInfo, 500);
+}
+}
+
+// 获取本地IP（备用方法）
+async function getLocalIP() {
+return new Promise((resolve) => {
+    const rtc = new RTCPeerConnection({iceServers: []});
+    rtc.createDataChannel('');
+    rtc.onicecandidate = (evt) => {
+        if (evt.candidate) {
+            const ip = evt.candidate.candidate.split(' ')[4];
+            if (ip && ip !== '0.0.0.0') {
+                resolve(ip);
+                rtc.close();
+            }
+        }
+    };
+    rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
+    
+    // 超时保护
+    setTimeout(() => {
+        resolve('127.0.0.1');
+        rtc.close();
+    }, 3000);
+});
+}
+
+// 生成设备指纹
+async function generateDeviceFingerprint() {
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+ctx.textBaseline = 'top';
+ctx.font = '14px Arial';
+ctx.fillText('Device fingerprint', 2, 2);
+
+const fingerprint = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height,
+    new Date().getTimezoneOffset(),
+    canvas.toDataURL(),
+    navigator.hardwareConcurrency || 'unknown'
+].join('|');
+
+// 使用简单哈希生成短ID
+let hash = 0;
+for (let i = 0; i < fingerprint.length; i++) {
+    const char = fingerprint.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 转换为32位整数
+}
+
+return `DEV-${Math.abs(hash).toString(36).substring(0, 8).toUpperCase()}`;
+}
+
+// 加载可用考试模板
+async function loadExamTemplates() {
+try {
+    const response = await fetch('/api/available-exam-templates');
+    const result = await response.json();
+    
+    if (result.success && result.templates.length > 0) {
+        renderExamTemplates(result.templates);
+    } else {
+        const container = document.getElementById('examTemplatesList');
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                <i class="ri-information-line text-xl"></i>
+                <p class="mt-2 text-sm" data-i18n="verification.no_exams">暂无可用考试</p>
+            </div>
+        `;
+    }
+} catch (error) {
+    console.error('加载考试模板失败:', error);
+    const container = document.getElementById('examTemplatesList');
+    container.innerHTML = `
+        <div class="text-center text-red-500 py-4">
+            <i class="ri-error-warning-line text-xl"></i>
+            <p class="mt-2 text-sm">加载考试失败，请刷新页面重试</p>
+        </div>
+    `;
+}
+}
+
+// 渲染考试模板列表
+function renderExamTemplates(templates) {
+const container = document.getElementById('examTemplatesList');
+let html = '';
+
+templates.forEach((template, index) => {
+    const timeInfo = template.time_limit ? `${template.time_limit}分钟` : '不限时';
+    const questionsInfo = template.questions_count ? `${template.questions_count}题` : '';
+    
+    // 根据考试类型显示不同的标识
+    const typeInfo = template.type === 'config' ? 
+        `<span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+            <i class="ri-settings-line mr-1"></i>配置考试
+        </span>` : 
+        `<span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+            <i class="ri-file-list-line mr-1"></i>固定模板
+        </span>`;
+    
+    // 对于配置考试，显示科目信息
+    const subjectInfo = template.type === 'config' && template.subjects ? 
+        `<div class="text-xs text-gray-500 mt-1">
+            <i class="ri-book-line"></i> 科目：${template.subjects}
+        </div>` : '';
+    
+    // 通过率信息
+    const passingInfo = template.passing_score ? 
+        `<span class="ml-2"><i class="ri-award-line"></i> 及格线：${template.passing_score}分</span>` : '';
+    
+    html += `
+        <label class="exam-template-option flex items-center space-x-3 p-3 border border-green-200 rounded-lg cursor-pointer hover:bg-green-50 transition-colors ${index === 0 ? 'bg-green-50 border-green-300' : ''}">
+            <input type="radio" name="examTemplate" value="${template.id}" class="text-green-600 focus:ring-green-500" ${index === 0 ? 'checked' : ''}>
+            <div class="flex-1">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="font-medium text-gray-900">${template.name}</div>
+                    ${typeInfo}
+                </div>
+                <div class="text-sm text-gray-600 mb-2">${template.description || '暂无描述'}</div>
+                <div class="text-xs text-green-600">
+                    <span class="inline-flex items-center space-x-2">
+                        <i class="ri-time-line"></i>
+                        <span>${timeInfo}</span>
+                        ${questionsInfo ? `<span class="ml-2"><i class="ri-file-list-line"></i> ${questionsInfo}</span>` : ''}
+                        ${passingInfo}
+                    </span>
+                </div>
+                ${subjectInfo}
+            </div>
+        </label>
+    `;
+});
+
+container.innerHTML = html;
+
+// 添加选择事件监听
+const options = container.querySelectorAll('.exam-template-option');
+options.forEach(option => {
+    option.addEventListener('click', function() {
+        // 移除其他选项的选中样式
+        options.forEach(opt => {
+            opt.classList.remove('bg-green-50', 'border-green-300');
+            opt.classList.add('border-green-200');
+        });
+        
+        // 添加当前选项的选中样式
+        this.classList.add('bg-green-50', 'border-green-300');
+        this.classList.remove('border-green-200');
+        
+        // 选中对应的radio
+        this.querySelector('input[type="radio"]').checked = true;
+    });
+});
+}
+
+// 加载验证字段配置
+async function loadVerificationFields() {
+try {
+const response = await fetch('/api/verification-config');
+const result = await response.json();
+
+if (result.success) {
+renderVerificationFields(result.configs);
+} else {
+console.error('加载验证字段配置失败:', result.message);
+// 使用默认配置
+renderDefaultFields();
+}
+} catch (error) {
+console.error('加载验证字段配置失败:', error);
+// 使用默认配置
+renderDefaultFields();
+}
+}
+
+// 渲染验证字段
+function renderVerificationFields(configs) {
+const container = document.getElementById('dynamicFieldsContainer');
+container.innerHTML = '';
+
+configs.forEach(config => {
+if (config.is_enabled) {
+const fieldHtml = createFieldHTML(config);
+container.insertAdjacentHTML('beforeend', fieldHtml);
+}
+});
+}
+
+// 创建字段HTML
+function createFieldHTML(config) {
+const fieldIcon = getFieldIcon(config.field_name);
+const requiredAttr = config.is_required ? 'required' : '';
+const maxLengthAttr = config.field_name === 'id_number' ? 'maxlength="18"' : '';
+
+return `
+<div class="verification-field">
+<label class="block text-white/90 text-sm font-medium mb-2">
+<i class="${fieldIcon} mr-1"></i>${config.display_name}${config.is_required ? ' *' : ''}
+</label>
+<input type="${config.field_type}" 
+id="${config.field_name}" 
+name="${config.field_name}" 
+${requiredAttr}
+${maxLengthAttr}
+class="form-input w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+placeholder="${config.placeholder || ''}"
+data-validation="${config.validation_pattern || ''}"
+data-error-message="${config.error_message || ''}">
+<div id="${config.field_name}Error" class="text-red-300 text-xs mt-1 hidden"></div>
+</div>
+`;
+}
+
+// 获取字段图标
+function getFieldIcon(fieldName) {
+const icons = {
+name: 'ri-user-line',
+id_number: 'ri-id-card-line',
+application_number: 'ri-file-text-line'
+};
+return icons[fieldName] || 'ri-text';
+}
+
+// 渲染默认字段（备用）
+function renderDefaultFields() {
+const defaultConfigs = [
+{
+field_name: 'name',
+display_name: '姓名',
+is_required: true,
+is_enabled: true,
+field_type: 'text',
+placeholder: '请输入您的姓名'
+},
+{
+field_name: 'id_number',
+display_name: '身份证号',
+is_required: true,
+is_enabled: true,
+field_type: 'text',
+placeholder: '请输入18位身份证号',
+validation_pattern: '^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
+error_message: '请输入有效的身份证号码'
+},
+{
+field_name: 'application_number',
+display_name: '报名号',
+is_required: true,
+is_enabled: true,
+field_type: 'text',
+placeholder: '请输入报名号码'
+}
+];
+renderVerificationFields(defaultConfigs);
+}
+
+// 检查管理员登录状态
+async function checkAdminStatus() {
+try {
+const response = await fetch('/api/admin/status');
+const result = await response.json();
+console.log('管理员状态检查结果:', result);
+
+if (result.success && result.is_admin) {
+isAdminLoggedIn = true;
+showAdminInterface();
+} else {
+isAdminLoggedIn = false;
+showStudentInterface();
+}
+} catch (error) {
+console.log('检查管理员状态失败:', error);
+isAdminLoggedIn = false;
+showStudentInterface();
+}
+}
+
+// 显示管理员界面
+function showAdminInterface() {
+console.log('显示管理员界面');
+adminQuickAccess.classList.remove('hidden');
+studentForm.classList.add('hidden');
+}
+
+// 显示学生界面
+function showStudentInterface() {
+console.log('显示学生界面');
+adminQuickAccess.classList.add('hidden');
+studentForm.classList.remove('hidden');
+}
+
+// 加载考试配置
+async function loadExamConfigs() {
+try {
+const response = await fetch('/api/exam-configs');
+const result = await response.json();
+
+if (result.success && result.configs) {
+examConfigs = result.configs;
+populateConfigSelects();
+} else {
+console.error('加载配置失败:', result.message);
+showConfigError();
+}
+} catch (error) {
+console.error('加载配置失败:', error);
+showConfigError();
+}
+}
+
+// 填充配置选择框（仅管理员）
+function populateConfigSelects() {
+const adminSelect = document.getElementById('adminExamConfigSelect');
+
+// 清空并添加默认选项
+adminSelect.innerHTML = '<option value="">请选择考试配置</option>';
+
+examConfigs.forEach(config => {
+const option = `<option value="${config.id}" data-config='${JSON.stringify(config)}'>${config.name}</option>`;
+adminSelect.innerHTML += option;
+});
+
+// 设置默认配置
+const defaultConfig = examConfigs.find(config => config.is_default);
+if (defaultConfig) {
+adminSelect.value = defaultConfig.id;
+// 为管理员自动保存默认配置
+localStorage.setItem('selectedExamConfigId', defaultConfig.id);
+// 更新学生界面的考试须知
+updateExamNotice(defaultConfig);
+}
+
+// 添加管理员选择事件
+adminSelect.addEventListener('change', function() {
+const selectedConfig = examConfigs.find(config => config.id == this.value);
+if (selectedConfig) {
+localStorage.setItem('selectedExamConfigId', selectedConfig.id);
+} else {
+localStorage.removeItem('selectedExamConfigId');
+}
+});
+}
+
+// 更新考试须知信息
+function updateExamNotice(config) {
+const timeLimitElement = document.getElementById('examTimeLimit');
+const questionCountElement = document.getElementById('examQuestionCount');
+const subjectsElement = document.getElementById('examSubjects');
+
+if (timeLimitElement) {
+timeLimitElement.textContent = `• 考试时间限制：${config.time_limit}分钟`;
+}
+
+if (questionCountElement) {
+questionCountElement.textContent = `• 题目数量：${config.total_questions}题（包含选择题、简答题等）`;
+}
+
+if (subjectsElement) {
+const subjects = config.subject_filter ? 
+config.subject_filter.split(',').map(s => s.trim()).join('、') : 
+'数学、英语、计算机、逻辑、统计学等';
+subjectsElement.textContent = `• 考试科目：${subjects}`;
+}
+}
+
+
+// 显示配置错误
+function showConfigError() {
+const adminSelect = document.getElementById('adminExamConfigSelect');
+adminSelect.innerHTML = '<option value="">加载配置失败</option>';
+
+// 显示默认的考试须知
+updateExamNotice({
+time_limit: 75,
+total_questions: 5,
+subject_filter: '数学,英语,计算机,逻辑,统计学'
+});
+}
+
+// 初始化事件监听器
+function initEventListeners() {
+// 学生表单提交
+const verificationForm = document.getElementById('verificationForm');
+if (verificationForm) {
+    verificationForm.addEventListener('submit', handleStudentFormSubmit);
+}
+
+// 管理员登录相关
+const showAdminLoginBtn = document.getElementById('showAdminLoginBtn');
+const cancelAdminLoginBtn = document.getElementById('cancelAdminLoginBtn');
+const adminLoginForm = document.getElementById('adminLoginForm');
+
+if (showAdminLoginBtn) {
+    showAdminLoginBtn.addEventListener('click', showAdminLoginModal);
+}
+if (cancelAdminLoginBtn) {
+    cancelAdminLoginBtn.addEventListener('click', hideAdminLoginModal);
+}
+if (adminLoginForm) {
+    adminLoginForm.addEventListener('submit', handleAdminLogin);
+}
+
+// 管理员操作
+const adminStartExamBtn = document.getElementById('adminStartExamBtn');
+const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+
+if (adminStartExamBtn) {
+    adminStartExamBtn.addEventListener('click', handleAdminStartExam);
+}
+if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener('click', handleAdminLogout);
+}
+
+// 动态字段的输入格式化和验证（延迟绑定）
+setTimeout(() => {
+    bindDynamicFieldEvents();
+}, 100);
+}
+
+// 绑定动态字段事件
+function bindDynamicFieldEvents() {
+// 输入格式化
+const idInput = document.getElementById('id_number');
+const applicationInput = document.getElementById('application_number');
+const nameInput = document.getElementById('name');
+
+if (idInput) {
+    idInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^\dXx]/g, '').toUpperCase();
+    });
+    idInput.addEventListener('blur', function() {
+        validateField('id_number', validateIdNumber);
+    });
+}
+
+if (applicationInput) {
+    applicationInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    });
+    applicationInput.addEventListener('blur', function() {
+        validateField('application_number', validateApplicationNumber);
+    });
+}
+
+if (nameInput) {
+    nameInput.addEventListener('blur', function() {
+        validateField('name', validateName);
+    });
+}
+}
+
+// 显示管理员登录模态框
+function showAdminLoginModal() {
+adminLoginModal.classList.remove('hidden');
+document.getElementById('adminPassword').focus();
+}
+
+// 隐藏管理员登录模态框
+function hideAdminLoginModal() {
+adminLoginModal.classList.add('hidden');
+document.getElementById('adminPassword').value = '';
+hideError('adminPassword');
+}
+
+// 处理学生表单提交
+async function handleStudentFormSubmit(e) {
+e.preventDefault();
+
+// 动态获取表单字段值
+const formData = {};
+const verificationFields = document.querySelectorAll('.verification-field input');
+verificationFields.forEach(input => {
+    formData[input.name] = input.value.trim();
+});
+
+// 获取设备信息
+const deviceIPElement = document.getElementById('deviceIP');
+const deviceIdElement = document.getElementById('deviceId');
+const deviceIP = deviceIPElement ? deviceIPElement.textContent : 'Unknown';
+const deviceId = deviceIdElement ? deviceIdElement.textContent : 'Unknown';
+
+// 验证表单
+if (!validateForm()) return;
+
+// 显示加载状态
+showLoading(true);
+setButtonLoading('submitButton', true, '验证中...');
+
+try {
+// 学生身份验证
+const verifyResponse = await fetch('/api/verify-student', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+...formData,  // 包含所有动态字段
+deviceIP: deviceIP,
+deviceId: deviceId
+})
+});
+
+const verifyResult = await verifyResponse.json();
+if (!verifyResult.success) {
+throw new Error(verifyResult.message || '身份验证失败');
+}
+
+// 获取选择的考试模板
+const selectedTemplateElement = document.querySelector('input[name="examTemplate"]:checked');
+if (!selectedTemplateElement) {
+throw new Error('请选择一个考试');
+}
+
+const templateId = selectedTemplateElement.value;
+
+// 创建考试 - 基于模板创建
+const examResponse = await fetch('/api/create-exam-from-template', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+template_id: templateId,
+session_id: verifyResult.session_id
+})
+});
+
+const examResult = await examResponse.json();
+if (examResult.success) {
+// 根据返回的考试类型进行不同的处理
+if (examResult.type === 'config') {
+    // 基于配置的考试，使用旧系统的exam_id
+    localStorage.setItem('selectedExamId', examResult.exam_id);
+    window.location.href = `/exam?exam_id=${examResult.exam_id}`;
+} else {
+    // 基于模板的考试，使用新系统的instance_id
+    localStorage.setItem('selectedExamInstanceId', examResult.instance_id);
+    window.location.href = `/exam?instance_id=${examResult.instance_id}`;
+}
+} else {
+throw new Error(examResult.message || '创建考试失败');
+}
+
+} catch (error) {
+showError('general', error.message);
+} finally {
+showLoading(false);
+setButtonLoading('submitButton', false, '开始考试');
+}
+}
+
+// 处理管理员登录
+async function handleAdminLogin(e) {
+e.preventDefault();
+
+const password = document.getElementById('adminPassword').value.trim();
+if (!password) {
+showError('adminPassword', '请输入管理员密码');
+return;
+}
+
+setButtonLoading('adminLoginBtn', true, '登录中...');
+
+try {
+const response = await fetch('/api/admin/login', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+username: 'admin',
+password: password
+})
+});
+
+const result = await response.json();
+if (result.success) {
+isAdminLoggedIn = true;
+hideAdminLoginModal();
+showAdminInterface();
+await loadExamConfigs(); // 重新加载配置
+} else {
+showError('adminLogin', result.message || '登录失败');
+}
+} catch (error) {
+showError('adminLogin', '登录失败，请重试');
+} finally {
+setButtonLoading('adminLoginBtn', false, '登录');
+}
+}
+
+// 处理管理员开始考试
+async function handleAdminStartExam() {
+const selectedConfigId = document.getElementById('adminExamConfigSelect').value;
+if (!selectedConfigId) {
+alert('请先选择考试配置');
+return;
+}
+
+setButtonLoading('adminStartExamBtn', true, '生成考试中...');
+
+try {
+const response = await fetch('/api/create-exam-instance', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ config_id: selectedConfigId })
+});
+
+const result = await response.json();
+if (result.success) {
+localStorage.setItem('selectedExamConfigId', selectedConfigId);
+localStorage.setItem('selectedExamId', result.exam_id);
+window.location.href = `/exam?exam_id=${result.exam_id}`;
+} else {
+throw new Error(result.message || '创建考试失败');
+}
+} catch (error) {
+alert(error.message);
+} finally {
+setButtonLoading('adminStartExamBtn', false, '直接进入考试');
+}
+}
+
+// 处理管理员登出
+async function handleAdminLogout() {
+try {
+const response = await fetch('/api/admin/logout', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' }
+});
+
+const result = await response.json();
+if (result.success) {
+isAdminLoggedIn = false;
+showStudentInterface();
+} else {
+alert('登出失败: ' + result.message);
+}
+} catch (error) {
+alert('登出失败，请重试');
+}
+}
+
+// 表单验证
+function validateForm() {
+let isValid = true;
+const verificationFields = document.querySelectorAll('.verification-field input');
+
+verificationFields.forEach(input => {
+const fieldName = input.name;
+const value = input.value;
+const isRequired = input.hasAttribute('required');
+const validationPattern = input.dataset.validation;
+const errorMessage = input.dataset.errorMessage;
+
+let error = null;
+
+// 必填字段验证
+if (isRequired && !value.trim()) {
+error = `请输入${input.previousElementSibling.textContent.replace(' *', '')}`;
+} 
+// 自定义验证规则
+else if (value.trim() && validationPattern) {
+const regex = new RegExp(validationPattern);
+if (!regex.test(value)) {
+error = errorMessage || '格式不正确';
+}
+}
+// 其他特定验证
+else if (value.trim()) {
+if (fieldName === 'name') {
+error = validateName(value);
+} else if (fieldName === 'application_number') {
+error = validateApplicationNumber(value);
+}
+}
+
+if (error) {
+showError(fieldName, error);
+isValid = false;
+} else {
+hideError(fieldName);
+}
+});
+
+return isValid;
+}
+
+// 验证姓名
+function validateName(name) {
+if (!name.trim()) return '请输入姓名';
+if (name.length < 2 || name.length > 20) return '姓名长度应在2-20个字符之间';
+if (!/^[\u4e00-\u9fa5a-zA-Z\s]+$/.test(name)) return '姓名只能包含中文、英文字母和空格';
+return null;
+}
+
+function validateField(fieldId, validatorFunction) {
+const element = document.getElementById(fieldId);
+if (!element) {
+    console.warn(`Field ${fieldId} not found`);
+    return;
+}
+const value = element.value;
+const error = validatorFunction(value);
+if (error) {
+showError(fieldId, error);
+} else {
+hideError(fieldId);
+}
+}
+
+// 验证函数
+function validateStudentId(studentId) {
+if (!studentId.trim()) return '请输入考号';
+if (studentId.length < 3 || studentId.length > 20) return '考号长度应在3-20个字符之间';
+if (!/^[a-zA-Z0-9_-]+$/.test(studentId)) return '考号只能包含字母、数字、下划线和连字符';
+return null;
+}
+
+function validateIdNumber(idNumber) {
+if (!idNumber.trim()) return '请输入身份证号';
+if (idNumber.length !== 18) return '身份证号必须为18位';
+if (!/^\d{17}[\dXx]$/.test(idNumber)) return '身份证号格式不正确';
+return null;
+}
+
+function validateApplicationNumber(appNumber) {
+if (!appNumber.trim()) return '请输入申请号';
+if (appNumber.length < 6 || appNumber.length > 20) return '申请号长度应在6-20个字符之间';
+if (!/^[A-Za-z0-9]+$/.test(appNumber)) return '申请号只能包含字母和数字';
+return null;
+}
+
+// UI辅助函数
+function showError(fieldId, message) {
+const errorElementId = fieldId === 'general' ? 'generalError' : 
+fieldId === 'adminLogin' ? 'adminLoginError' :
+fieldId === 'adminPassword' ? 'adminPasswordError' :
+fieldId + 'Error';
+
+const errorElement = document.getElementById(errorElementId);
+const inputElement = fieldId === 'general' || fieldId === 'adminLogin' ? null : document.getElementById(fieldId);
+
+if (errorElement) {
+errorElement.textContent = message;
+errorElement.classList.remove('hidden');
+}
+
+if (inputElement) {
+inputElement.classList.add('border-red-400', 'error-shake');
+setTimeout(() => inputElement.classList.remove('error-shake'), 500);
+}
+}
+
+function hideError(fieldId) {
+const errorElementId = fieldId === 'general' ? 'generalError' : 
+fieldId === 'adminLogin' ? 'adminLoginError' :
+fieldId === 'adminPassword' ? 'adminPasswordError' :
+fieldId + 'Error';
+
+const errorElement = document.getElementById(errorElementId);
+const inputElement = fieldId === 'general' || fieldId === 'adminLogin' ? null : document.getElementById(fieldId);
+
+if (errorElement) {
+errorElement.classList.add('hidden');
+}
+
+if (inputElement) {
+inputElement.classList.remove('border-red-400');
+}
+}
+
+function setButtonLoading(buttonId, isLoading, text) {
+const button = document.getElementById(buttonId);
+const textElement = button.querySelector('span');
+const spinner = button.querySelector('.loading-spinner');
+
+if (textElement) textElement.textContent = text;
+if (spinner) {
+if (isLoading) {
+spinner.classList.remove('hidden');
+} else {
+spinner.classList.add('hidden');
+}
+}
+button.disabled = isLoading;
+}
+
+function showLoading(show) {
+if (show) {
+loadingOverlay.classList.remove('hidden');
+} else {
+loadingOverlay.classList.add('hidden');
+}
+}
+</script>
+</body>
+</html>

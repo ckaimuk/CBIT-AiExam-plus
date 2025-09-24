@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="exam.title">考试进行中 - IMBA 智能考试系统</title>
+<link rel="icon" type="image/x-icon" id="faviconLink" href="/favicon.ico">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<!-- CodeMirror for code editing -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/selection/active-line.min.js"></script>
+<!-- MathJax for mathematical formula rendering -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true,
+    processEnvironments: true
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    ignoreHtmlClass: 'tex2jax_ignore',
+    processHtmlClass: 'tex2jax_process'
+  },
+  startup: {
+    ready: () => {
+      console.log('🧮 MathJax is loaded and ready.');
+      MathJax.startup.defaultReady();
+    }
+  }
+};
+</script>
+<script async src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script async id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#1A237E',
+secondary: '#3F51B5'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<style>
+:where([class^="ri-"])::before {
+content: "\f3c2";
+}
+.exam-bg {
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+.timer-warning {
+animation: pulse 2s infinite;
+}
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.5; }
+}
+.question-card {
+transition: all 0.3s ease;
+}
+.question-card:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+.answer-input {
+transition: all 0.3s ease;
+}
+.answer-input:focus {
+box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
+}
+</style>
+</head>
+<body class="exam-bg min-h-screen">
+<div class="min-h-screen flex flex-col">
+<!-- Header -->
+<div class="bg-white shadow-sm border-b sticky top-0 z-50">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<!-- Logo -->
+<div class="flex items-center space-x-3">
+<img id="systemLogo" src="https://static.readdy.ai/image/3c1ff9a008dc8b425236e4faed5d7924/c0ad19844b74c75ecb76a8cc5a6f9bd3.jfif" alt="IMBA Logo" class="w-8 h-8 object-contain">
+<div id="systemName" class="font-bold text-lg text-primary" data-i18n="system.name">IMBA 智能考试</div>
+</div>
+<!-- Language Toggle -->
+<button id="languageToggle" class="text-gray-600 hover:text-primary transition-colors px-3 py-2 rounded-lg border border-gray-200 mr-4">
+<i class="ri-global-line mr-1"></i>
+<span class="language-display">中</span>
+</button>
+<!-- Timer -->
+<div class="flex items-center space-x-4">
+<div class="text-sm text-gray-600" data-i18n="exam.time_remaining">剩余时间</div>
+<div id="timer" class="text-2xl font-bold text-primary timer-warning">75:00</div>
+</div>
+<!-- Progress -->
+<div class="hidden md:flex items-center space-x-4">
+<div class="text-sm text-gray-600" data-i18n="exam.progress">进度</div>
+<div class="w-32 bg-gray-200 rounded-full h-2">
+<div id="progressBar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+</div>
+<div id="progressText" class="text-sm text-gray-600">0/20</div>
+</div>
+<!-- Exit Button -->
+<button id="exitExam" class="bg-red-500 text-white px-4 py-2 rounded-button hover:bg-red-600 transition-colors">
+<i class="ri-logout-box-line mr-1"></i><span data-i18n="exam.exit">退出考试</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Main Content -->
+<div class="flex-1 flex">
+<!-- Sidebar -->
+<div class="w-64 bg-white shadow-sm border-r hidden lg:block">
+<div class="p-6">
+<h3 class="font-semibold text-gray-900 mb-4" data-i18n="exam.question_navigation">题目导航</h3>
+<div id="questionNav" class="space-y-2">
+<!-- 题目导航按钮将通过JavaScript生成 -->
+</div>
+</div>
+</div>
+<!-- Exam Content -->
+<div class="flex-1 p-6">
+<div class="max-w-4xl mx-auto">
+<!-- Current Question -->
+<div id="currentQuestion" class="question-card bg-white rounded-xl shadow-lg p-8 mb-6">
+<!-- 题目内容将通过JavaScript加载 -->
+</div>
+<!-- Navigation -->
+<div class="flex justify-between items-center">
+<button id="prevBtn" class="bg-gray-500 text-white px-6 py-2 !rounded-button hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+<i class="ri-arrow-left-line mr-2"></i><span data-i18n="exam.previous">上一题</span>
+</button>
+<div class="flex space-x-2">
+<button id="markBtn" class="bg-yellow-500 text-white px-4 py-2 !rounded-button hover:bg-yellow-600 transition-colors">
+<i class="ri-bookmark-line mr-2"></i><span data-i18n="exam.mark">标记</span>
+</button>
+<button id="nextBtn" class="bg-primary text-white px-6 py-2 !rounded-button hover:bg-opacity-90 transition-colors">
+<span data-i18n="exam.next">下一题</span><i class="ri-arrow-right-line ml-2"></i>
+</button>
+<button id="submitSuggestion" class="bg-green-600 text-white px-6 py-2 !rounded-button hover:bg-green-700 transition-colors hidden">
+<i class="ri-flag-line mr-2"></i><span data-i18n="exam.submit_suggestion">建议提交</span>
+</button>
+</div>
+</div>
+<!-- Submit Button -->
+<div class="mt-8 text-center">
+<button id="submitExam" class="bg-red-600 text-white px-8 py-3 !rounded-button font-semibold hover:bg-red-700 transition-colors">
+<i class="ri-send-plane-line mr-2"></i><span data-i18n="exam.submit">提交考试</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Submit Confirmation Modal -->
+<div id="submitModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+<div class="flex items-center justify-center min-h-screen p-4">
+<div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+<div class="text-center">
+<div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+<i class="ri-alert-line text-red-600 text-2xl"></i>
+</div>
+<h3 class="text-lg font-semibold text-gray-900 mb-2" data-i18n="exam.submit_confirm_title">确认提交考试</h3>
+<p class="text-gray-600 mb-6" data-i18n="exam.submit_confirm_message">提交后将无法修改答案，确定要提交吗？</p>
+<div class="flex space-x-4">
+<button id="cancelSubmit" class="flex-1 bg-gray-300 text-gray-700 py-2 !rounded-button hover:bg-gray-400 transition-colors">
+<span data-i18n="exam.cancel">取消</span>
+</button>
+<button id="confirmSubmit" class="flex-1 bg-red-600 text-white py-2 !rounded-button hover:bg-red-700 transition-colors">
+<span data-i18n="exam.confirm_submit">确认提交</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Exit Confirmation Modal -->
+<div id="exitModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+<div class="flex items-center justify-center min-h-screen p-4">
+<div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+<div class="text-center">
+<div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+<i class="ri-alert-line text-orange-600 text-2xl"></i>
+</div>
+<h3 class="text-lg font-semibold text-gray-900 mb-2" data-i18n="exam.exit_confirm_title">确认退出考试</h3>
+<p class="text-gray-600 mb-6" data-i18n="exam.exit_confirm_message">退出后您将无法继续作答，已答题目将不会保存。确定要退出吗？</p>
+<div class="flex space-x-4">
+<button id="cancelExit" class="flex-1 bg-gray-300 text-gray-700 py-2 !rounded-button hover:bg-gray-400 transition-colors">
+<span data-i18n="exam.cancel">取消</span>
+</button>
+<button id="confirmExit" class="flex-1 bg-orange-600 text-white py-2 !rounded-button hover:bg-orange-700 transition-colors">
+<span data-i18n="exam.confirm_exit">确认退出</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 多语言支持脚本 -->
+<script src="/static/js/i18n.js"></script>
+
+<script>
+class ExamInterface {
+constructor() {
+this.currentQuestionIndex = 0;
+this.questions = [];
+this.answers = {};
+this.markedQuestions = new Set();
+this.examId = null;
+this.timeRemaining = 75 * 60; // 75分钟，单位：秒
+this.timer = null;
+this.isSubmitting = false;
+this.init();
+}
+init() {
+this.loadExamData();
+this.setupEventListeners();
+this.startTimer();
+}
+async loadExamData() {
+try {
+// 从URL参数获取考试ID或实例ID
+const urlParams = new URLSearchParams(window.location.search);
+this.examId = urlParams.get('exam_id');
+this.instanceId = urlParams.get('instance_id');
+
+// 支持新旧两种模式
+if (!this.examId && !this.instanceId) {
+alert(t('exam.invalid_id', '无效的考试ID'));
+window.location.href = '/';
+return;
+}
+
+// 确定使用哪种模式
+this.useInstance = !!this.instanceId;
+// 加载考试题目
+const apiUrl = this.useInstance ? 
+    `/api/exam-instance-questions/${this.instanceId}` : 
+    `/api/exam-questions/${this.examId}`;
+const response = await fetch(apiUrl);
+if (!response.ok) {
+throw new Error(t('exam.load_failed', '加载考试失败'));
+}
+const data = await response.json();
+this.questions = data.questions;
+
+// 获取时间限制，支持新旧两种数据结构
+let timeLimit = 75; // 默认75分钟
+if (this.useInstance && data.instance_info) {
+    // 如果是考试实例，优先使用服务器计算的剩余时间
+    if (data.instance_info.time_remaining !== undefined) {
+        this.timeRemaining = data.instance_info.time_remaining;
+    } else {
+        timeLimit = data.instance_info.time_limit || 75;
+        this.timeRemaining = timeLimit * 60;
+    }
+} else if (data.time_limit) {
+    timeLimit = data.time_limit;
+    this.timeRemaining = timeLimit * 60;
+} else {
+    this.timeRemaining = timeLimit * 60;
+}
+this.renderQuestion();
+this.renderNavigation();
+} catch (error) {
+console.error('加载考试数据失败:', error);
+alert(t('exam.load_failed_retry', '加载考试失败，请刷新页面重试'));
+}
+}
+setupEventListeners() {
+// 导航按钮
+document.getElementById('prevBtn').addEventListener('click', () => this.previousQuestion());
+document.getElementById('nextBtn').addEventListener('click', () => this.nextQuestion());
+document.getElementById('markBtn').addEventListener('click', () => this.toggleMark());
+document.getElementById('submitExam').addEventListener('click', () => this.showSubmitModal());
+document.getElementById('submitSuggestion').addEventListener('click', () => this.showSubmitModal());
+document.getElementById('cancelSubmit').addEventListener('click', () => this.hideSubmitModal());
+document.getElementById('confirmSubmit').addEventListener('click', () => this.submitExam());
+// 退出按钮
+document.getElementById('exitExam').addEventListener('click', () => this.showExitModal());
+document.getElementById('cancelExit').addEventListener('click', () => this.hideExitModal());
+document.getElementById('confirmExit').addEventListener('click', () => this.exitExam());
+// 键盘快捷键
+document.addEventListener('keydown', (e) => {
+if (e.key === 'ArrowLeft') this.previousQuestion();
+if (e.key === 'ArrowRight') this.nextQuestion();
+if (e.key === 'm' || e.key === 'M') this.toggleMark();
+if (e.key === 'Enter' && e.ctrlKey) this.showSubmitModal();
+});
+// 浏览器关闭/刷新确认
+window.addEventListener('beforeunload', (e) => this.handleBeforeUnload(e));
+}
+startTimer() {
+this.timer = setInterval(() => {
+this.timeRemaining--;
+this.updateTimer();
+if (this.timeRemaining <= 0) {
+this.autoSubmit();
+}
+}, 1000);
+}
+updateTimer() {
+const minutes = Math.floor(this.timeRemaining / 60);
+const seconds = this.timeRemaining % 60;
+const timerElement = document.getElementById('timer');
+timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+// 时间警告
+if (this.timeRemaining <= 300) { // 最后5分钟
+timerElement.classList.add('text-red-600');
+timerElement.classList.add('timer-warning');
+} else if (this.timeRemaining <= 900) { // 最后15分钟
+timerElement.classList.add('text-yellow-600');
+}
+}
+renderQuestion() {
+if (this.questions.length === 0) return;
+const question = this.questions[this.currentQuestionIndex];
+const container = document.getElementById('currentQuestion');
+const currentAnswer = this.answers[question.id] || '';
+const isLastQuestion = this.currentQuestionIndex === this.questions.length - 1;
+
+container.innerHTML = `
+<div class="mb-6">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-semibold text-gray-900">${t('exam.question', '第')} ${this.currentQuestionIndex + 1} ${t('exam.question_unit', '题')} ${isLastQuestion ? `<span class="text-red-600 text-base font-normal">(${t('exam.last_question', '最后一题')})</span>` : ''}</h2>
+<div class="flex items-center space-x-2">
+<span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">${question.subject}</span>
+<span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">${question.difficulty}</span>
+<span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">${question.cognitive_level}</span>
+</div>
+</div>
+<div class="prose max-w-none">
+<div class="text-gray-700 text-lg leading-relaxed math-content" data-original-text="${question.content.replace(/"/g, '&quot;')}">${question.content}</div>
+</div>
+${isLastQuestion ? `<div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"><p class="text-yellow-800 text-sm"><i class="ri-information-line mr-1"></i>${t('exam.last_question_tip', '这是最后一题，答题完成后建议提交考试。')}</p></div>` : ''}
+</div>
+<div class="answer-section">
+${this.renderAnswerInput(question, currentAnswer)}
+</div>
+`;
+// 更新进度和按钮状态
+this.updateProgress();
+this.updateNavigationButtons();
+
+// 渲染数学公式
+this.renderMathJax();
+}
+
+// 添加MathJax渲染方法
+renderMathJax() {
+if (window.MathJax && window.MathJax.typesetPromise) {
+    const container = document.getElementById('currentQuestion');
+    if (!container) {
+        console.warn('⚠️ currentQuestion 容器不存在');
+        return;
+    }
+    
+    // 重新渲染页面中的数学公式
+    window.MathJax.typesetPromise([container])
+        .then(() => {
+            console.log('🧮 数学公式渲染完成');
+            
+            // 检查是否有渲染错误的元素，如果有则尝试修复
+            const errorElements = container.querySelectorAll('.mjx-merror, .MathJax_Error');
+            if (errorElements.length > 0) {
+                console.warn(`⚠️ 发现 ${errorElements.length} 个数学公式错误，尝试修复...`);
+                this.fixMathErrors(container);
+            }
+        })
+        .catch((err) => {
+            console.warn('⚠️ 数学公式渲染失败:', err);
+            // 尝试清理错误的数学公式，显示原始文本
+            this.fallbackMathRender(container);
+        });
+} else {
+    // 如果MathJax还没有加载完成，延迟渲染
+    setTimeout(() => this.renderMathJax(), 100);
+}
+}
+
+// 修复数学公式错误
+fixMathErrors(container) {
+const errorElements = container.querySelectorAll('.mjx-merror, .MathJax_Error');
+errorElements.forEach(errorElem => {
+    try {
+        // 尝试获取原始文本并重新渲染
+        const parentElem = errorElem.closest('.math-content') || errorElem.parentElement;
+        if (parentElem && parentElem.dataset.originalText) {
+            const originalText = parentElem.dataset.originalText;
+            console.log('🔧 尝试修复公式:', originalText);
+            
+            // 简单的公式修复：移除可能有问题的字符
+            const cleanedText = originalText
+                .replace(/[^\w\s\$\(\)\[\]\{\}\+\-\*\/\=\^\\_\\\,\.\|]/g, '') // 移除特殊字符
+                .replace(/\$\$+/g, '$') // 规范化美元符号
+                .replace(/\\\\/g, '\\'); // 规范化反斜杠
+            
+            if (cleanedText !== originalText) {
+                parentElem.innerHTML = cleanedText;
+                // 重新渲染这个元素
+                window.MathJax.typesetPromise([parentElem]).catch(e => {
+                    console.warn('修复后的公式仍然有错误:', e);
+                    parentElem.innerHTML = originalText.replace(/\$/g, ''); // 移除所有数学标记显示原文
+                });
+            }
+        } else {
+            // 如果无法获取原始文本，显示友好的错误信息
+            errorElem.innerHTML = '<span class="text-red-500 text-sm">[数学公式解析错误]</span>';
+        }
+    } catch (e) {
+        console.warn('修复数学公式时出错:', e);
+    }
+});
+}
+
+// 降级数学公式渲染
+fallbackMathRender(container) {
+const mathElements = container.querySelectorAll('[data-original-text]');
+mathElements.forEach(elem => {
+    try {
+        const originalText = elem.dataset.originalText;
+        // 移除数学标记，显示纯文本
+        const cleanText = originalText.replace(/\$+/g, '').replace(/\\\([^)]*\\\)/g, '').replace(/\\\[[^\]]*\\\]/g, '');
+        elem.innerHTML = cleanText;
+        elem.className += ' math-fallback text-gray-600';
+    } catch (e) {
+        console.warn('降级渲染失败:', e);
+    }
+});
+}
+renderAnswerInput(question, currentAnswer) {
+console.log('题目类型:', question.type_key, '选项:', question.options);
+if (question.type_key === 'multiple_choice' || question.type === '选择题') {
+return this.renderMultipleChoice(question, currentAnswer);
+} else if (question.type_key === 'short_answer' || question.type === '简答题') {
+return this.renderShortAnswer(question, currentAnswer);
+} else if (question.type_key === 'programming' || question.type === '编程题') {
+return this.renderProgramming(question, currentAnswer);
+}
+// 默认按选择题处理（如果有选项的话）
+if (question.options && question.options.length > 0) {
+return this.renderMultipleChoice(question, currentAnswer);
+}
+return this.renderShortAnswer(question, currentAnswer);
+}
+renderMultipleChoice(question, currentAnswer) {
+console.log('渲染选择题:', question);
+let html = '<div class="space-y-3">';
+if (question.options && question.options.length > 0) {
+question.options.forEach((option, index) => {
+const optionId = `option_${question.id}_${index}`;
+const isChecked = currentAnswer === option;
+const optionLetter = String.fromCharCode(65 + index); // A, B, C, D
+// 安全地转义选项内容，避免JavaScript注入和语法错误
+const escapedOption = option.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+html += `
+<label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${isChecked ? 'border-primary bg-blue-50' : 'border-gray-200'}" onclick="examInterface.selectOption(${question.id}, ${index})">
+<input type="radio" name="answer_${question.id}" value="${escapedOption}" class="sr-only" ${isChecked ? 'checked' : ''}>
+<div class="flex items-center space-x-3">
+<div class="w-6 h-6 border-2 rounded-full flex items-center justify-center ${isChecked ? 'border-primary bg-primary' : 'border-gray-300'}">
+${isChecked ? '<i class="ri-check-line text-white text-sm"></i>' : ''}
+</div>
+<span class="font-medium text-gray-700 w-8">${optionLetter}.</span>
+<span class="text-gray-700 flex-1 math-content" data-original-text="${option.replace(/"/g, '&quot;')}">${option}</span>
+</div>
+</label>
+`;
+});
+} else {
+html += `<div class="text-gray-500 text-center py-4">${t('exam.no_options', '暂无选项')}</div>`;
+}
+html += '</div>';
+return html;
+}
+renderShortAnswer(question, currentAnswer) {
+return `
+<div>
+<textarea 
+id="answer_${question.id}" 
+class="answer-input w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none" 
+rows="4" 
+placeholder="${t('exam.answer_placeholder', '请输入您的答案...')}">${currentAnswer}</textarea>
+</div>
+`;
+}
+renderProgramming(question, currentAnswer) {
+const editorId = `code_editor_${question.id}`;
+const textareaId = `answer_${question.id}`;
+
+// 延迟初始化CodeMirror，确保DOM元素已经创建
+setTimeout(() => {
+    this.initCodeEditor(question.id, currentAnswer || '');
+}, 100);
+
+return `
+<div>
+<div class="mb-2">
+<label class="block text-sm font-medium text-gray-700 mb-2">${t('exam.programming_code', '编程代码')}</label>
+<div class="border border-gray-300 rounded-lg overflow-hidden">
+    <textarea 
+    id="${textareaId}" 
+    class="answer-input hidden" 
+    rows="10">${currentAnswer || ''}</textarea>
+    <div id="${editorId}" class="h-64"></div>
+</div>
+</div>
+<div class="text-xs text-gray-500 flex items-center justify-between">
+<div>
+<i class="ri-information-line mr-1"></i>
+${t('exam.code_tip', '支持Python语法，请确保代码可以正常运行')}
+</div>
+<div class="text-xs text-gray-400">
+<i class="ri-keyboard-line mr-1"></i>
+Tab: 缩进 | Ctrl+/: 注释 | Ctrl+Z: 撤销
+</div>
+</div>
+</div>
+`;
+}
+renderNavigation() {
+const container = document.getElementById('questionNav');
+let html = '';
+this.questions.forEach((question, index) => {
+const isAnswered = this.answers[question.id];
+const isMarked = this.markedQuestions.has(question.id);
+const isCurrent = index === this.currentQuestionIndex;
+html += `
+<button 
+class="w-full p-3 text-left rounded-lg transition-colors ${isCurrent ? 'bg-primary text-white' : isAnswered ? 'bg-green-100 text-green-800' : isMarked ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+onclick="examInterface.goToQuestion(${index})"
+>
+<div class="flex items-center justify-between">
+<span class="font-medium">${t('exam.question', '第')} ${index + 1} ${t('exam.question_unit', '题')}</span>
+<div class="flex space-x-1">
+${isAnswered ? '<i class="ri-check-line text-sm"></i>' : ''}
+${isMarked ? '<i class="ri-bookmark-fill text-sm"></i>' : ''}
+</div>
+</div>
+</button>
+`;
+});
+container.innerHTML = html;
+}
+updateProgress() {
+const answeredCount = Object.keys(this.answers).length;
+const progress = (answeredCount / this.questions.length) * 100;
+document.getElementById('progressBar').style.width = `${progress}%`;
+document.getElementById('progressText').textContent = `${answeredCount}/${this.questions.length}`;
+}
+selectOption(questionId, optionIndex) {
+// 获取当前题目
+const question = this.questions.find(q => q.id == questionId);
+if (!question || !question.options || optionIndex >= question.options.length) {
+console.error('无效的题目或选项索引');
+return;
+}
+// 获取选项内容
+const option = question.options[optionIndex];
+// 更新答案
+this.answers[questionId] = option;
+// 重新渲染当前题目以更新选中状态
+this.renderQuestion();
+this.updateProgress();
+this.renderNavigation();
+}
+
+saveAnswer() {
+const question = this.questions[this.currentQuestionIndex];
+let answer = '';
+
+if (question.type_key === 'multiple_choice') {
+    const selected = document.querySelector(`input[name="answer_${question.id}"]:checked`);
+    answer = selected ? selected.value : '';
+} else if (question.type_key === 'programming' || question.type === '编程题') {
+    // 对于编程题，从CodeMirror编辑器获取答案
+    if (this.codeEditors && this.codeEditors[question.id]) {
+        answer = this.codeEditors[question.id].getValue();
+    } else {
+        // 如果编辑器未初始化，从textarea获取
+        const input = document.getElementById(`answer_${question.id}`);
+        answer = input ? input.value : '';
+    }
+} else {
+    // 其他题型从input获取
+    const input = document.getElementById(`answer_${question.id}`);
+    answer = input ? input.value : '';
+}
+
+if (answer && answer.trim()) {
+    this.answers[question.id] = answer;
+} else {
+    delete this.answers[question.id];
+}
+
+this.updateProgress();
+this.renderNavigation();
+}
+
+// 初始化代码编辑器
+initCodeEditor(questionId, initialValue = '') {
+    const editorId = `code_editor_${questionId}`;
+    const textareaId = `answer_${questionId}`;
+    const editorElement = document.getElementById(editorId);
+    const textareaElement = document.getElementById(textareaId);
+    
+    if (!editorElement || !textareaElement) {
+        console.warn(`代码编辑器元素未找到: ${editorId}`);
+        return;
+    }
+    
+    // 如果编辑器已经初始化，先销毁
+    if (this.codeEditors && this.codeEditors[questionId]) {
+        try {
+            // 获取编辑器的DOM元素并手动清理
+            const editor = this.codeEditors[questionId];
+            if (editor.getWrapperElement && editor.getWrapperElement()) {
+                const wrapper = editor.getWrapperElement();
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.removeChild(wrapper);
+                }
+            }
+            // 如果有toTextArea方法则调用
+            if (typeof editor.toTextArea === 'function') {
+                editor.toTextArea();
+            }
+        } catch (e) {
+            console.warn('编辑器销毁失败，忽略错误:', e);
+        }
+        delete this.codeEditors[questionId];
+    }
+    
+    // 初始化编辑器数组
+    if (!this.codeEditors) {
+        this.codeEditors = {};
+    }
+    
+    // 设置初始值
+    textareaElement.value = initialValue;
+    
+    // 创建CodeMirror编辑器
+    const editor = CodeMirror(editorElement, {
+        value: initialValue,
+        mode: 'python',
+        theme: 'default',
+        lineNumbers: true,
+        indentUnit: 4,
+        indentWithTabs: false,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        styleActiveLine: true,
+        lineWrapping: true,
+        extraKeys: {
+            "Ctrl-/": "toggleComment",
+            "Cmd-/": "toggleComment",
+            "Tab": function(cm) {
+                if (cm.somethingSelected()) {
+                    cm.indentSelection("add");
+                } else {
+                    cm.replaceSelection("    "); // 4个空格缩进
+                }
+            },
+            "Shift-Tab": function(cm) {
+                cm.indentSelection("subtract");
+            },
+            "Enter": function(cm) {
+                // 智能缩进
+                const cursor = cm.getCursor();
+                const line = cm.getLine(cursor.line);
+                const indentMatch = line.match(/^(\s*)/);
+                const currentIndent = indentMatch ? indentMatch[1] : '';
+                
+                // 检查是否需要增加缩进（如果行尾是 : ）
+                let newIndent = currentIndent;
+                if (line.trim().endsWith(':')) {
+                    newIndent += '    '; // 增加4个空格
+                }
+                
+                cm.replaceSelection('\n' + newIndent);
+            }
+        }
+    });
+    
+    // 设置编辑器样式
+    editor.setSize(null, 250); // 设置高度
+    
+    // 监听变化并同步到隐藏的textarea
+    editor.on('change', () => {
+        const value = editor.getValue();
+        textareaElement.value = value;
+        // 保存答案
+        this.answers[questionId] = value;
+        this.updateProgress();
+    });
+    
+    // 阻止编辑器内的键盘事件冒泡到父元素
+    editor.on('keydown', (cm, event) => {
+        // 阻止导航键（左右上下键、Page Up/Down等）冒泡
+        const navigationKeys = [
+            'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+            'PageUp', 'PageDown', 'Home', 'End'
+        ];
+        
+        if (navigationKeys.includes(event.key)) {
+            event.stopPropagation();
+        }
+        
+        // 阻止一些组合键的冒泡
+        if (event.ctrlKey || event.metaKey) {
+            event.stopPropagation();
+        }
+    });
+    
+    // 阻止编辑器焦点事件冒泡
+    editor.on('focus', (cm, event) => {
+        if (event) {
+            event.stopPropagation();
+        }
+    });
+    
+    // 阻止编辑器点击事件冒泡
+    const editorWrapper = editor.getWrapperElement();
+    if (editorWrapper) {
+        editorWrapper.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+        
+        editorWrapper.addEventListener('keydown', (event) => {
+            // 确保导航键不会触发页面级别的导航
+            const navigationKeys = [
+                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                'PageUp', 'PageDown', 'Home', 'End'
+            ];
+            
+            if (navigationKeys.includes(event.key)) {
+                event.stopPropagation();
+            }
+        });
+    }
+    
+    // 存储编辑器引用
+    this.codeEditors[questionId] = editor;
+    
+    console.log(`代码编辑器初始化完成: ${questionId}`);
+}
+previousQuestion() {
+this.saveAnswer();
+if (this.currentQuestionIndex > 0) {
+this.currentQuestionIndex--;
+this.renderQuestion();
+this.updateNavigationButtons();
+this.renderNavigation(); // 更新导航按钮的高亮状态
+}
+}
+nextQuestion() {
+this.saveAnswer();
+if (this.currentQuestionIndex < this.questions.length - 1) {
+this.currentQuestionIndex++;
+this.renderQuestion();
+this.updateNavigationButtons();
+this.renderNavigation(); // 更新导航按钮的高亮状态
+}
+}
+goToQuestion(index) {
+this.saveAnswer();
+this.currentQuestionIndex = index;
+this.renderQuestion();
+this.updateNavigationButtons();
+this.renderNavigation(); // 更新导航按钮的高亮状态
+}
+toggleMark() {
+const question = this.questions[this.currentQuestionIndex];
+if (this.markedQuestions.has(question.id)) {
+this.markedQuestions.delete(question.id);
+} else {
+this.markedQuestions.add(question.id);
+}
+this.renderNavigation();
+}
+updateNavigationButtons() {
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const submitSuggestion = document.getElementById('submitSuggestion');
+const markBtn = document.getElementById('markBtn');
+const submitExam = document.getElementById('submitExam');
+
+const isLastQuestion = this.currentQuestionIndex === this.questions.length - 1;
+
+if (isLastQuestion) {
+    // 最后一题：隐藏所有导航按钮，只显示提交考试按钮
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    submitSuggestion.style.display = 'none';
+    markBtn.style.display = 'none';
+    
+    // 突出显示提交按钮（最后一题）
+    submitExam.classList.remove('bg-orange-600', 'hover:bg-orange-700', 'bg-red-600', 'hover:bg-red-700');
+    submitExam.classList.add('bg-green-600', 'hover:bg-green-700', 'text-lg', 'px-12', 'py-4');
+    submitExam.innerHTML = `<i class="ri-send-plane-line mr-2"></i><span data-i18n="exam.submit_final">${t('exam.submit_final', '提交考试')}</span>`;
+} else {
+    // 非最后一题：显示正常的导航按钮
+    prevBtn.style.display = 'block';
+    nextBtn.style.display = 'block';
+    markBtn.style.display = 'block';
+    submitSuggestion.style.display = 'none';
+    
+    // 显示提前提交按钮（橙色警告样式）
+    submitExam.classList.remove('bg-green-600', 'hover:bg-green-700', 'text-lg', 'px-12', 'py-4', 'bg-red-600', 'hover:bg-red-700');
+    submitExam.classList.add('bg-orange-600', 'hover:bg-orange-700');
+    submitExam.innerHTML = `<i class="ri-alert-line mr-2"></i><span data-i18n="exam.submit_early">${t('exam.submit_early', '提前提交')}</span>`;
+    
+    // 设置上一题按钮状态
+    prevBtn.disabled = this.currentQuestionIndex === 0;
+    nextBtn.disabled = false;
+}
+}
+showSubmitModal() {
+const isLastQuestion = this.currentQuestionIndex === this.questions.length - 1;
+const modal = document.getElementById('submitModal');
+
+// 更新模态框内容
+const iconContainer = modal.querySelector('.w-16.h-16');
+const title = modal.querySelector('[data-i18n="exam.submit_confirm_title"]');
+const message = modal.querySelector('[data-i18n="exam.submit_confirm_message"]');
+const confirmBtn = modal.querySelector('#confirmSubmit');
+
+if (isLastQuestion) {
+    // 最后一题：正常提交
+    iconContainer.className = 'w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4';
+    iconContainer.innerHTML = '<i class="ri-check-line text-green-600 text-2xl"></i>';
+    title.textContent = t('exam.submit_final_confirm_title', '完成考试');
+    message.textContent = t('exam.submit_final_confirm_message', '您已完成所有题目，确定要提交考试吗？');
+    confirmBtn.className = 'flex-1 bg-green-600 text-white py-2 !rounded-button hover:bg-green-700 transition-colors';
+    confirmBtn.innerHTML = `<span data-i18n="exam.confirm_submit_final">${t('exam.confirm_submit_final', '提交考试')}</span>`;
+} else {
+    // 非最后一题：提前提交警告
+    iconContainer.className = 'w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4';
+    iconContainer.innerHTML = '<i class="ri-alert-line text-orange-600 text-2xl"></i>';
+    title.textContent = t('exam.submit_early_confirm_title', '提前提交考试');
+    message.textContent = t('exam.submit_early_confirm_message', '您还有未完成的题目，提前提交可能影响成绩。确定要提交吗？');
+    confirmBtn.className = 'flex-1 bg-orange-600 text-white py-2 !rounded-button hover:bg-orange-700 transition-colors';
+    confirmBtn.innerHTML = `<span data-i18n="exam.confirm_submit_early">${t('exam.confirm_submit_early', '确认提前提交')}</span>`;
+}
+
+modal.classList.remove('hidden');
+}
+hideSubmitModal() {
+document.getElementById('submitModal').classList.add('hidden');
+}
+showExitModal() {
+document.getElementById('exitModal').classList.remove('hidden');
+}
+hideExitModal() {
+document.getElementById('exitModal').classList.add('hidden');
+}
+exitExam() {
+clearInterval(this.timer);
+window.removeEventListener('beforeunload', this.handleBeforeUnload);
+window.location.href = '/';
+}
+async submitExam() {
+if (this.isSubmitting) return;
+this.isSubmitting = true;
+this.saveAnswer();
+try {
+const response = await fetch('/api/submit-exam', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify(this.useInstance ? {
+instance_id: this.instanceId,
+answers: this.answers
+} : {
+exam_id: this.examId,
+answers: this.answers
+})
+});
+if (!response.ok) {
+throw new Error(t('exam.submit_failed', '提交失败'));
+}
+const result = await response.json();
+if (result.success) {
+clearInterval(this.timer);
+// 根据后端返回的重定向URL进行跳转
+const redirectUrl = result.redirect_url || `/results/${this.examId}`;
+window.location.href = redirectUrl;
+} else {
+alert(t('exam.submit_failed', '提交失败') + ': ' + result.message);
+}
+} catch (error) {
+console.error('提交考试失败:', error);
+alert(t('exam.submit_failed_retry', '提交失败，请重试'));
+} finally {
+this.isSubmitting = false;
+}
+}
+async autoSubmit() {
+clearInterval(this.timer);
+alert(t('exam.time_up_auto_submit', '考试时间已到，系统将自动提交您的答案'));
+await this.submitExam();
+}
+
+handleBeforeUnload(e) {
+// 如果考试正在进行且未提交，显示确认提示
+if (!this.isSubmitting && this.questions.length > 0) {
+const message = t('exam.leave_warning', '您正在进行考试，退出后将无法继续作答。确定要离开吗？');
+e.preventDefault();
+e.returnValue = message;
+return message;
+}
+}
+}
+
+// 全局变量声明
+let examInterface = null;
+
+// 初始化多语言和考试界面
+document.addEventListener('DOMContentLoaded', async function() {
+    // 等待多语言初始化完成
+    if (window.i18n && !window.i18n.initialized) {
+        await new Promise(resolve => {
+            document.addEventListener('i18n:initialized', resolve, { once: true });
+        });
+    }
+    
+    // 初始化考试界面
+    examInterface = new ExamInterface();
+    window.examInterface = examInterface; // 设置为全局变量
+    
+    // 绑定多语言更新事件
+    document.addEventListener('i18n:languageChanged', () => {
+        // 重新渲染当前题目以更新语言
+        if (examInterface && examInterface.questions.length > 0) {
+            examInterface.renderQuestion();
+            examInterface.renderNavigation();
+        }
+    });
+});
+
+// 备用初始化（如果DOMContentLoaded已经触发）
+if (document.readyState === 'loading') {
+    // 上面的事件监听器会处理
+} else {
+    // DOM已加载，直接初始化
+    setTimeout(() => {
+        if (!examInterface) {
+            examInterface = new ExamInterface();
+            window.examInterface = examInterface;
+        }
+    }, 100);
+}
+</script>
+</body>
+</html>

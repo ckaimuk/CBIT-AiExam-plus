@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title data-i18n="completion.page_title">考试完成 - IMBA 智能考试系统</title>
+<link rel="icon" type="image/x-icon" id="faviconLink" href="/favicon.ico">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#1A237E',
+secondary: '#3F51B5'
+},
+fontFamily: {
+'sans': ['Inter', 'system-ui', 'sans-serif']
+}
+}
+}
+}
+</script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.completion-bg {
+background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.success-icon {
+animation: scaleIn 0.6s ease-out;
+}
+
+@keyframes scaleIn {
+0% { transform: scale(0); opacity: 0; }
+50% { transform: scale(1.1); opacity: 0.8; }
+100% { transform: scale(1); opacity: 1; }
+}
+
+.fade-in {
+animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+0% { opacity: 0; transform: translateY(20px); }
+100% { opacity: 1; transform: translateY(0); }
+}
+
+.button-shine {
+position: relative;
+overflow: hidden;
+}
+
+.button-shine::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+transition: left 0.5s;
+}
+
+.button-shine:hover::before {
+left: 100%;
+}
+</style>
+</head>
+
+<body class="completion-bg min-h-screen">
+<div class="min-h-screen flex items-center justify-center px-4">
+<div class="max-w-2xl w-full">
+<!-- Success Icon -->
+<div class="text-center mb-8">
+<div class="success-icon inline-flex items-center justify-center w-24 h-24 bg-green-100 rounded-full mb-6">
+<i class="ri-check-line text-4xl text-green-600"></i>
+</div>
+<h1 class="text-4xl font-bold text-gray-900 mb-4 fade-in" data-i18n="completion.title">考试已完成！</h1>
+<p class="text-xl text-gray-600 fade-in" data-i18n="completion.congratulations">恭喜您顺利完成本次考试</p>
+<!-- Language Toggle -->
+<button id="languageToggle" class="mt-4 text-gray-600 hover:text-primary transition-colors px-3 py-2 rounded-lg border border-gray-200">
+<i class="ri-global-line mr-1"></i>
+<span class="language-display">中</span>
+</button>
+</div>
+
+<!-- Completion Card -->
+<div class="bg-white rounded-2xl shadow-xl p-8 mb-8 fade-in">
+<div class="text-center">
+<div class="flex items-center justify-center mb-6">
+<div class="flex items-center space-x-2 text-sm text-gray-500">
+<i class="ri-time-line"></i>
+<span data-i18n="completion.completion_time">完成时间：</span>
+<span id="completionTime" class="font-medium text-gray-900">--</span>
+</div>
+</div>
+
+<div class="bg-blue-50 rounded-xl p-6 mb-6">
+<div class="flex items-center justify-center mb-4">
+<i class="ri-information-line text-2xl text-blue-600 mr-3"></i>
+<h3 class="text-lg font-semibold text-blue-900" data-i18n="completion.notice_title">温馨提示</h3>
+</div>
+<div class="text-blue-800 space-y-2">
+<p data-i18n="completion.notice1">✓ 您的答案已成功提交并保存</p>
+<p data-i18n="completion.notice2">✓ 系统正在处理您的答卷</p>
+<p data-i18n="completion.notice3">✓ 考试结果将在稍后通过相关渠道通知您</p>
+</div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+<div class="bg-gray-50 rounded-lg p-4 text-center">
+<div class="text-2xl font-bold text-primary" id="questionCount">--</div>
+<div class="text-sm text-gray-600" data-i18n="completion.total_questions">题目总数</div>
+</div>
+<div class="bg-gray-50 rounded-lg p-4 text-center">
+<div class="text-2xl font-bold text-green-600" id="answeredCount">--</div>
+<div class="text-sm text-gray-600" data-i18n="completion.answered_questions">已答题目</div>
+</div>
+<div class="bg-gray-50 rounded-lg p-4 text-center">
+<div class="text-2xl font-bold text-blue-600" id="timeSpent">--</div>
+<div class="text-sm text-gray-600" data-i18n="completion.time_spent">用时</div>
+</div>
+</div>
+
+<!-- 重要说明 -->
+<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+<div class="flex items-start">
+<i class="ri-alert-line text-yellow-600 text-xl mr-3 flex-shrink-0 mt-0.5"></i>
+<div class="text-yellow-800">
+<p class="font-medium mb-2" data-i18n="completion.important_notice">重要说明：</p>
+<ul class="text-sm space-y-1">
+<li data-i18n="completion.notice_item1">• 本次考试已正式结束，无法再次进入或修改答案</li>
+<li data-i18n="completion.notice_item2">• 请等待官方通知获取考试结果</li>
+<li data-i18n="completion.notice_item3">• 如有疑问，请联系相关负责人</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Action Buttons -->
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button onclick="window.location.href='/'" 
+class="button-shine bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-800 transition-all duration-300 transform hover:scale-105">
+<i class="ri-home-line mr-2"></i><span data-i18n="completion.back_home">返回首页</span>
+</button>
+<button onclick="window.print()" 
+class="button-shine bg-gray-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-gray-700 transition-all duration-300 transform hover:scale-105">
+<i class="ri-printer-line mr-2"></i><span data-i18n="completion.print_confirmation">打印确认单</span>
+</button>
+</div>
+
+<!-- Footer -->
+<div class="text-center mt-8 text-gray-500 text-sm fade-in">
+<p data-i18n="completion.footer_text">感谢您参与本次考试 | IMBA 智能考试系统</p>
+</div>
+</div>
+</div>
+
+<!-- 多语言支持脚本 -->
+<script src="/static/js/i18n.js"></script>
+
+<script>
+class CompletionPage {
+constructor() {
+this.examId = null;
+this.instanceId = null;
+this.examData = null;
+this.useInstance = false;
+this.init();
+}
+
+async init() {
+// 获取考试ID或实例ID
+const urlParams = new URLSearchParams(window.location.search);
+this.examId = urlParams.get('exam_id');
+this.instanceId = urlParams.get('instance_id');
+
+// 支持新旧两种模式
+if (!this.examId && !this.instanceId) {
+console.warn('未找到考试ID或实例ID，使用默认显示');
+this.setupDefaultDisplay();
+return;
+}
+
+this.useInstance = !!this.instanceId;
+await this.loadExamData();
+this.setupDisplay();
+}
+
+async loadExamData() {
+try {
+// 根据模式获取考试信息
+const apiUrl = this.useInstance ? 
+    `/api/exam-instance-status/${this.instanceId}` : 
+    `/api/exam-status/${this.examId}`;
+    
+console.log(`加载考试数据: ${apiUrl}`);
+const response = await fetch(apiUrl);
+
+if (response.ok) {
+const data = await response.json();
+console.log('API返回数据:', data);
+if (data.success) {
+this.examData = data;
+console.log('✅ 成功加载考试数据');
+}
+}
+} catch (error) {
+console.warn('无法加载考试数据:', error);
+}
+}
+
+setupDisplay() {
+// 设置完成时间
+const completionTime = this.examData?.completed_at ? 
+    new Date(this.examData.completed_at).toLocaleString('zh-CN') :
+    new Date().toLocaleString('zh-CN');
+document.getElementById('completionTime').textContent = completionTime;
+
+if (this.examData) {
+// 显示真实的题目统计
+document.getElementById('questionCount').textContent = this.examData.total_questions || '--';
+document.getElementById('answeredCount').textContent = this.examData.questions_answered || '--';
+document.getElementById('timeSpent').textContent = this.calculateTimeSpent();
+console.log(`📊 显示考试统计: ${this.examData.questions_answered}/${this.examData.total_questions} 题目，用时 ${this.calculateTimeSpent()}`);
+} else {
+this.setupDefaultDisplay();
+}
+}
+
+setupDefaultDisplay() {
+const now = new Date();
+document.getElementById('completionTime').textContent = now.toLocaleString('zh-CN');
+document.getElementById('questionCount').textContent = '5';
+document.getElementById('answeredCount').textContent = '5';
+document.getElementById('timeSpent').textContent = '45分钟';
+console.warn('⚠️ 使用默认显示数据');
+}
+
+calculateTimeSpent() {
+if (this.examData && this.examData.time_spent_minutes !== undefined) {
+const minutes = Math.round(this.examData.time_spent_minutes);
+return minutes + '分钟';
+}
+// 默认值
+return '45分钟';
+}
+}
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', async function() {
+// 等待多语言初始化完成
+if (window.i18n && !window.i18n.initialized) {
+await new Promise(resolve => {
+document.addEventListener('i18n:initialized', resolve, { once: true });
+});
+}
+
+new CompletionPage();
+});
+
+// 绑定多语言更新事件
+document.addEventListener('i18n:languageChanged', () => {
+// 页面内容会自动更新，这里可以处理特殊的动态内容
+console.log('Language changed in completion page');
+});
+
+// 防止返回到考试页面
+if (window.history.length > 1) {
+window.history.replaceState(null, null, window.location.href);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  cbit-autoexam:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: cbit-autoexam
+    ports:
+      - "8080:8080"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=prod-secret-key-2024-cbit-autoexam
+      - DATABASE_URL=sqlite:///instance/exam.db
+    volumes:
+      - ./instance:/app/instance
+      - ./frontend/static/uploads:/app/frontend/static/uploads
+      - ./static/uploads:/app/static/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health", "||", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - cbit-network
+
+networks:
+  cbit-network:
+    driver: bridge
+
+volumes:
+  exam_data:
+    driver: local

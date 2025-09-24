@@ -1,0 +1,2500 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="exam_management.title">考试管理 - IMBA 智能考试系统</title>
+    <link rel="icon" type="image/x-icon" id="faviconLink" href="/favicon.ico">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <script src="/static/js/i18n.js"></script>
+    <script>
+    tailwind.config = {
+    theme: {
+    extend: {
+    colors: {
+    primary: '#4f46e5',
+    secondary: '#06b6d4',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444'
+    },
+    fontFamily: {
+    'sans': ['Inter', 'system-ui', 'sans-serif']
+    },
+    backdropBlur: {
+    'xs': '2px',
+    'sm': '4px',
+    'md': '8px',
+    'lg': '12px',
+    'xl': '16px',
+    '2xl': '24px',
+    '3xl': '40px'
+    }
+    }
+    }
+    }
+    </script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #a5b4fc;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Glass Card Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Modern Button Effects */
+        .btn-modern {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Card Hover Effects */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Loading Animation */
+        @keyframes pulse-loading {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-pulse {
+            animation: pulse-loading 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(79, 70, 229, 0.6);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 70, 229, 0.8);
+        }
+
+        /* Fade-in Animation */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        /* Status Badge Effects */
+        .status-badge {
+            background: linear-gradient(135deg, var(--success), #059669);
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.inactive {
+            background: linear-gradient(135deg, var(--error), #dc2626);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+    <style>
+    body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+
+    .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    }
+
+    .card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .exam-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    }
+
+    .exam-card:hover {
+    border-left-color: #2563eb;
+    transform: translateX(4px);
+    }
+
+    .filter-chip {
+    transition: all 0.2s ease;
+    }
+
+    .filter-chip:hover {
+    transform: translateY(-1px);
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-completed {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-expired {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+        .status-inactive {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #4338ca, #6d28d9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #4b5563, #374151);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- Navigation -->
+<nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-16">
+<div class="flex items-center space-x-4">
+<a href="/admin/dashboard" class="flex items-center space-x-3">
+<img src="/static/uploads/image_d914576716ef4c93a7a30ee6a3b84a14.jpg" 
+alt="IMBA Logo" class="w-8 h-8 object-contain">
+<span class="font-bold text-xl text-primary" data-i18n="exam_management.title">考试管理</span>
+</a>
+</div>
+<div class="flex items-center space-x-4">
+<!-- Language Toggle -->
+<button id="languageToggle" class="text-gray-600 hover:text-primary transition-colors px-3 py-2 rounded-lg border border-gray-200">
+<i class="ri-global-line mr-1"></i>
+<span class="language-display">中</span>
+</button>
+<a href="/admin/dashboard" class="text-gray-600 hover:text-primary transition-colors">
+<i class="ri-dashboard-line mr-1"></i><span data-i18n="nav.admin_panel">管理面板</span>
+</a>
+<a href="/exam_config_management.html" class="text-gray-600 hover:text-primary transition-colors">
+<i class="ri-settings-3-line mr-1"></i><span data-i18n="nav.exam_config">考试配置</span>
+</a>
+<button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+<i class="ri-logout-box-line mr-1"></i><span data-i18n="nav.logout">退出登录</span>
+</button>
+</div>
+</div>
+</div>
+</nav>
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Page Header -->
+<div class="mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+<div>
+<h1 class="text-3xl font-bold text-gray-900 mb-2" data-i18n="exam_management.title">考试管理</h1>
+<p class="text-gray-600" data-i18n="exam_management.description">管理考试模板和学生信息，查看考试统计数据</p>
+</div>
+</div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+<i class="ri-file-list-3-line text-blue-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="exam_management.total_templates">总考试数</p>
+<p class="text-2xl font-bold text-gray-900" id="totalTemplates">-</p>
+</div>
+</div>
+</div>
+
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+<i class="ri-group-line text-green-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="exam_management.total_participants">总参与人数</p>
+<p class="text-2xl font-bold text-gray-900" id="totalParticipants">-</p>
+</div>
+</div>
+</div>
+
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+<i class="ri-medal-line text-purple-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="exam_management.avg_score">平均分</p>
+<p class="text-2xl font-bold text-gray-900" id="avgScore">-</p>
+</div>
+</div>
+</div>
+
+<div class="card p-6">
+<div class="flex items-center">
+<div class="flex-shrink-0">
+<div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+<i class="ri-timer-line text-orange-600"></i>
+</div>
+</div>
+<div class="ml-4">
+<p class="text-sm font-medium text-gray-500" data-i18n="exam_management.active_exams">进行中考试</p>
+<p class="text-2xl font-bold text-gray-900" id="activeExams">-</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="card p-0 mb-6">
+<div class="border-b border-gray-200">
+<nav class="flex space-x-8 px-6">
+<button id="examTemplatesTab" class="border-b-2 border-primary text-primary font-medium py-4 px-1 whitespace-nowrap" onclick="switchTab('examTemplates')">
+<i class="ri-file-list-3-line mr-2"></i>
+<span data-i18n="exam_management.exam_templates">考试管理</span>
+</button>
+</nav>
+</div>
+</div>
+
+        <!-- 考试模板管理页面 -->
+        <div id="examTemplatesPage" class="fade-in">
+            <!-- 考试模板列表 -->
+            <div class="glass-card rounded-xl shadow-xl transition-all duration-300">
+                <div class="px-6 py-4 border-b border-gray-200/30">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold gradient-text" data-i18n="exam_management.exam_list">考试列表</h2>
+                    </div>
+                </div>
+
+                <!-- 加载状态 -->
+                <div id="loadingState" class="text-center py-12 loading-pulse">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mb-4">
+                        <i class="ri-loader-4-line text-2xl text-white animate-spin"></i>
+                    </div>
+                    <p class="text-gray-600 font-medium" data-i18n="common.loading">正在加载考试数据...</p>
+                </div>
+
+                <!-- 空状态 -->
+                <div id="emptyState" class="text-center py-16 hidden">
+                    <div class="w-24 h-24 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ri-file-list-3-line text-4xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">暂无考试模板</h3>
+                    <p class="text-gray-500" data-i18n="exam_management.no_exams">还没有创建任何考试模板</p>
+                </div>
+
+                <!-- 考试模板列表 -->
+                <div id="examTemplatesList" class="hidden p-6 space-y-6"></div>
+            </div>
+        </div>
+
+                        
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 学生网格 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="studentsGrid">
+                <!-- 动态加载学生卡片 -->
+            </div>
+
+            <!-- 加载状态 -->
+            <div id="studentsLoading" class="glass-card rounded-2xl p-12 text-center hidden border border-white/20">
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="relative">
+                        <div class="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin"></div>
+                        <div class="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">正在加载学生数据</h3>
+                        <p class="text-gray-500">请稍候，正在获取最新的学生信息...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="studentsEmpty" class="glass-card rounded-2xl p-16 text-center hidden border border-white/20">
+                <div class="flex flex-col items-center space-y-6">
+                    <div class="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                        <i class="ri-user-line text-6xl text-gray-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">暂无学生数据</h3>
+                        <p class="text-gray-500 mb-6">学生信息将在此处显示</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分页 -->
+            <div id="studentsPagination" class="mt-12 glass-card rounded-2xl p-6 border border-white/20">
+                <div class="flex items-center justify-between">
+                    <!-- 移动端分页 -->
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <button id="prevPageMobile" class="relative inline-flex items-center px-6 py-3 bg-white/80 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 hover:bg-white transition-all duration-200 backdrop-blur-sm shadow-sm hover:shadow-md">
+                            <i class="ri-arrow-left-line mr-2"></i>
+                            上一页
+                        </button>
+                        <button id="nextPageMobile" class="ml-3 relative inline-flex items-center px-6 py-3 bg-white/80 border border-gray-300 text-sm font-medium rounded-xl text-gray-700 hover:bg-white transition-all duration-200 backdrop-blur-sm shadow-sm hover:shadow-md">
+                            下一页
+                            <i class="ri-arrow-right-line ml-2"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 桌面端分页 -->
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div class="flex items-center space-x-2">
+                            <div class="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                                <i class="ri-file-list-3-line text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">
+                                    显示第 <span id="currentStart" class="text-blue-600 font-bold">1</span> 到 <span id="currentEnd" class="text-blue-600 font-bold">20</span> 项
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    共 <span id="totalItems" class="font-medium">0</span> 项记录
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-xl shadow-sm space-x-1" id="paginationNav">
+                                <!-- 分页按钮将动态生成 -->
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 考试详情模态框 -->
+    <div id="examDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="examDetailTitle" class="text-lg font-medium text-gray-900">考试详情</h3>
+                <button onclick="hideExamDetailModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+            <div id="examDetailContent" class="max-h-96 overflow-y-auto">
+                <!-- 详情内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 学生答题详情模态框 -->
+    <div id="studentAnswersModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="studentAnswersTitle" class="text-lg font-medium text-gray-900">学生答题详情</h3>
+                <button onclick="hideStudentAnswersModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+            <div id="studentAnswersContent" class="max-h-96 overflow-y-auto">
+                <!-- 答题详情内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 题型评分统计模态框 -->
+    <div id="typeScoresModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="typeScoresTitle" class="text-lg font-medium text-gray-900 flex items-center">
+                    <i class="ri-bar-chart-line text-blue-600 mr-2"></i>
+                    题型评分统计
+                </h3>
+                <div class="flex space-x-2">
+                    <button id="exportTypeScoresBtn" onclick="exportTypeScores()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                        <i class="ri-download-line mr-1"></i>
+                        导出数据
+                    </button>
+                    <button onclick="hideTypeScoresModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="typeScoresContent" class="max-h-96 overflow-y-auto">
+                <!-- 题型评分内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 学生个人题型评分模态框 -->
+    <div id="studentTypeScoresModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-5xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="studentTypeScoresTitle" class="text-lg font-medium text-gray-900 flex items-center">
+                    <i class="ri-user-line text-green-600 mr-2"></i>
+                    学生个人题型评分
+                </h3>
+                <div class="flex space-x-2">
+                    <button id="exportStudentTypeScoresBtn" onclick="exportStudentTypeScores()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                        <i class="ri-download-line mr-1"></i>
+                        导出数据
+                    </button>
+                    <button onclick="hideStudentTypeScoresModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="studentTypeScoresContent" class="max-h-96 overflow-y-auto">
+                <!-- 学生个人题型评分内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 所有学生答题记录模态框 -->
+    <div id="allAnswersModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-5 mx-auto p-5 border w-11/12 max-w-7xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <i class="ri-eye-line text-green-600 mr-2"></i>
+                    所有学生答题记录
+                </h3>
+                <button onclick="hideAllAnswersModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- 标签页切换 -->
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="-mb-px flex space-x-8">
+                    <a href="#" id="summaryTab" onclick="switchAnswersTab('summary')" 
+                       class="border-b-2 border-blue-500 text-blue-600 py-2 px-1 text-sm font-medium">
+                        学生概览
+                    </a>
+                    <a href="#" id="detailsTab" onclick="switchAnswersTab('details')" 
+                       class="border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">
+                        详细答题记录
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- 学生概览页面 -->
+            <div id="summarySection" class="max-h-96 overflow-y-auto">
+                <div class="mb-4 flex justify-between items-center">
+                    <p class="text-gray-600">点击学生名称查看详细答题情况</p>
+                </div>
+                <div id="studentsSummaryContent" class="space-y-3">
+                    <!-- 学生概览内容 -->
+                </div>
+            </div>
+            
+            <!-- 详细答题记录页面 -->
+            <div id="detailsSection" class="max-h-96 overflow-y-auto hidden">
+                <div class="mb-4 flex justify-between items-center">
+                    <p class="text-gray-600">所有学生的答题记录详情</p>
+                </div>
+                <div id="allAnswersContent" class="overflow-x-auto">
+                    <!-- 所有答题记录表格 -->
+                </div>
+                <!-- 分页 -->
+                <div id="answerspagination" class="mt-4 flex items-center justify-center">
+                    <!-- 分页按钮 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 多语言支持脚本已在head中导入 -->
+
+    <script>
+        // 全局变量
+        let currentTab = 'examTemplates';
+        let examTemplates = [];
+        let students = [];
+        let currentStudentPage = 1;
+        let editingStudentId = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            setupLogoutButton();
+            
+            
+            // 等待i18n初始化完成
+            if (window.i18n && window.i18n.initialized) {
+                initializeAfterI18n();
+            } else {
+                document.addEventListener('i18n:initialized', initializeAfterI18n);
+            }
+            
+            // 监听语言切换事件
+            document.addEventListener('i18n:languageChanged', function(event) {
+                const newLanguage = event.detail.language;
+                updateContentForLanguage(newLanguage);
+            });
+        });
+
+        // 检查管理员权限
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/admin/status');
+                const result = await response.json();
+                
+                if (!result.success || !result.is_admin) {
+                    alert('请先登录管理员账户');
+                    window.location.href = '/admin/login';
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('检查管理员状态失败:', error);
+                alert('权限验证失败，请重新登录');
+                window.location.href = '/admin/login';
+                return false;
+            }
+        }
+
+        async function initializeAfterI18n() {
+            // 首先检查管理员权限
+            if (!(await checkAdminStatus())) {
+                return; // 如果权限验证失败，停止后续初始化
+            }
+            
+            // i18n已初始化，开始加载数据
+            loadExamTemplates();
+            // 学生数据已迁移到student_records.html
+        }
+
+        function updateContentForLanguage(language) {
+            
+            // 重新渲染数据以应用新语言
+            if (currentTab === 'examTemplates') {
+                displayExamTemplates();
+            } else if (currentTab === 'students' && students.length > 0) {
+                displayStudents(students, { page: currentStudentPage });
+            }
+            
+            // 确保统计卡片文本也被更新
+            updateStatistics();
+        }
+
+
+        // 语言相关函数已移至统一的i18n.js管理
+
+        // 通用UI函数
+        function showLoading(show, message = '正在加载...') {
+            const loadingState = document.getElementById('loadingState');
+            const examTemplatesList = document.getElementById('examTemplatesList');
+            const emptyState = document.getElementById('emptyState');
+            const studentsLoading = document.getElementById('studentsLoading');
+            
+            if (show) {
+                // 显示加载状态
+                if (loadingState) {
+                    loadingState.classList.remove('hidden');
+                    const loadingText = loadingState.querySelector('p');
+                    if (loadingText) loadingText.textContent = message;
+                }
+                if (studentsLoading) studentsLoading.classList.remove('hidden');
+                if (examTemplatesList) examTemplatesList.classList.add('hidden');
+                if (emptyState) emptyState.classList.add('hidden');
+            } else {
+                // 隐藏加载状态
+                if (loadingState) loadingState.classList.add('hidden');
+                if (studentsLoading) studentsLoading.classList.add('hidden');
+            }
+            
+            console.log(show ? `显示加载: ${message}` : '隐藏加载');
+        }
+
+        function showSuccess(message) {
+            console.log(`成功: ${message}`);
+            // 这里可以添加成功提示的实现
+            alert(message);
+        }
+
+        function showError(message) {
+            console.log(`错误: ${message}`);
+            // 这里可以添加错误提示的实现
+            alert(message);
+        }
+
+        function showMessage(message, type = 'info') {
+            console.log(`${type}: ${message}`);
+            // 这里可以添加消息提示的实现
+            alert(message);
+        }
+
+        // 学生加载状态管理
+        function showStudentsLoading(show) {
+            const studentsLoading = document.getElementById('studentsLoading');
+            const studentsGrid = document.getElementById('studentsGrid');
+            const studentsEmpty = document.getElementById('studentsEmpty');
+            
+            if (show) {
+                if (studentsLoading) studentsLoading.classList.remove('hidden');
+                if (studentsGrid) studentsGrid.classList.add('hidden');
+                if (studentsEmpty) studentsEmpty.classList.add('hidden');
+            } else {
+                if (studentsLoading) studentsLoading.classList.add('hidden');
+            }
+        }
+
+        // 显示学生网格
+        async function displayStudentsGrid(students) {
+            const studentsGrid = document.getElementById('studentsGrid');
+            const studentsEmpty = document.getElementById('studentsEmpty');
+            
+            if (!students || students.length === 0) {
+                if (studentsGrid) studentsGrid.classList.add('hidden');
+                if (studentsEmpty) studentsEmpty.classList.remove('hidden');
+                return;
+            }
+            
+            if (studentsGrid) {
+                studentsGrid.classList.remove('hidden');
+                studentsGrid.innerHTML = students.map(student => createStudentCard(student)).join('');
+            }
+            if (studentsEmpty) studentsEmpty.classList.add('hidden');
+        }
+
+        // 删除重复的createStudentCard函数，使用下面的完整版本
+
+        // 删除重复的函数，使用下面完整的版本
+
+        // 删除重复函数，使用下面接受student对象的版本
+
+        // 删除重复函数，使用下面接受student对象的版本
+
+        // 更新学生统计信息
+        async function updateStudentsStatistics(students) {
+            if (!students) return;
+            
+            const totalStudents = students.length;
+            const activeStudents = students.filter(s => s.status === '活跃' || s.total_exams > 0).length;
+            const avgExams = totalStudents > 0 ? students.reduce((sum, s) => sum + (s.total_exams || 0), 0) / totalStudents : 0;
+            const avgScore = totalStudents > 0 ? students.reduce((sum, s) => sum + (s.avg_score || 0), 0) / totalStudents : 0;
+            
+            const totalStudentsEl = document.getElementById('totalStudentsCount');
+            const activeStudentsEl = document.getElementById('activeStudentsCount');
+            const avgExamEl = document.getElementById('avgExamCount');
+            const overallAvgScoreEl = document.getElementById('overallAvgScore');
+            const studentCountBadge = document.getElementById('studentCountBadge');
+            
+            if (totalStudentsEl) totalStudentsEl.textContent = totalStudents;
+            if (activeStudentsEl) activeStudentsEl.textContent = activeStudents;
+            if (avgExamEl) avgExamEl.textContent = avgExams.toFixed(1);
+            if (overallAvgScoreEl) overallAvgScoreEl.textContent = avgScore.toFixed(1) + '%';
+            if (studentCountBadge) studentCountBadge.textContent = `${totalStudents} 名学生`;
+        }
+
+        // 更新学生分页
+        function updateStudentsPagination(pagination) {
+            const paginationContainer = document.getElementById('studentsPagination');
+            if (!paginationContainer || !pagination || pagination.pages <= 1) {
+                if (paginationContainer) paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = `
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button ${!pagination.has_prev ? 'disabled' : ''} 
+                            onclick="loadStudents(${pagination.page - 1})"
+                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 ${!pagination.has_prev ? 'opacity-50 cursor-not-allowed' : ''}">
+                        上一页
+                    </button>
+                    <button ${!pagination.has_next ? 'disabled' : ''} 
+                            onclick="loadStudents(${pagination.page + 1})"
+                            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 ${!pagination.has_next ? 'opacity-50 cursor-not-allowed' : ''}">
+                        下一页
+                    </button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            显示第 <span class="font-medium">${((pagination.page - 1) * pagination.per_page) + 1}</span> 到 
+                            <span class="font-medium">${Math.min(pagination.page * pagination.per_page, pagination.total)}</span> 项，
+                            共 <span class="font-medium">${pagination.total}</span> 项
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            ${pagination.has_prev ? `
+                                <button onclick="loadStudents(${pagination.page - 1})"
+                                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </button>
+                            ` : ''}
+                            
+                            ${Array.from({length: Math.min(pagination.pages, 7)}, (_, i) => {
+                                const pageNum = i + 1;
+                                const isCurrentPage = pageNum === pagination.page;
+                                return `
+                                    <button onclick="loadStudents(${pageNum})"
+                                            class="relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                                isCurrentPage 
+                                                    ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
+                                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                            }">
+                                        ${pageNum}
+                                    </button>
+                                `;
+                            }).join('')}
+                            
+                            ${pagination.has_next ? `
+                                <button onclick="loadStudents(${pagination.page + 1})"
+                                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </button>
+                            ` : ''}
+                        </nav>
+                    </div>
+                </div>
+            `;
+            
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+
+
+
+        // 格式化日期时间函数
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            try {
+                const date = new Date(dateString);
+                const currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+                
+                if (currentLanguage === 'en') {
+                    return date.toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } else {
+                    return date.toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            } catch (error) {
+                console.error('日期格式化错误:', error);
+                return dateString;
+            }
+        }
+
+        // 学生答题详情查看函数
+        async function viewStudentAnswers(studentId, studentName) {
+            try {
+                const response = await fetch(`/api/student-answers/${studentId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayStudentAnswers(data.answers, studentName);
+                } else {
+                    showError(data.message || '获取答题详情失败');
+                }
+            } catch (error) {
+                console.error('获取学生答题详情失败:', error);
+                showError('获取失败，请重试');
+            }
+        }
+
+        // 显示学生答题详情
+        function displayStudentAnswers(answers, studentName) {
+            const modal = document.getElementById('studentAnswersModal');
+            const title = document.getElementById('studentAnswersTitle');
+            const content = document.getElementById('studentAnswersContent');
+            
+            if (!modal || !title || !content) {
+                console.error('答题详情模态框元素未找到');
+                return;
+            }
+            
+            title.textContent = `${studentName} - 答题详情`;
+            
+            if (!answers || answers.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="ri-file-list-line text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">该学生暂无考试记录</p>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = answers.map(exam => `
+                    <div class="mb-6 border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-lg font-semibold text-gray-900">${exam.exam_name || '考试'}</h4>
+                            <div class="flex items-center space-x-4">
+                                <span class="px-2 py-1 text-xs rounded-full ${exam.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                    ${exam.status === 'completed' ? '已完成' : '进行中'}
+                                </span>
+                                <span class="text-sm text-gray-500">得分: ${exam.score}/${exam.total_score} (${exam.percentage}%)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            ${exam.questions.map((q, index) => `
+                                <div class="border-l-4 ${q.is_correct ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'} pl-4 py-2">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <p class="font-medium text-gray-900 mb-2">
+                                                <span class="mr-2">${index + 1}.</span>
+                                                ${q.question_text}
+                                            </p>
+                                            <div class="text-sm">
+                                                <p class="mb-1">
+                                                    <span class="font-medium text-gray-700">学生答案:</span>
+                                                    <span class="${q.is_correct ? 'text-green-700' : 'text-red-700'}">${q.student_answer || '未作答'}</span>
+                                                </p>
+                                                ${!q.is_correct ? `
+                                                    <p>
+                                                        <span class="font-medium text-gray-700">正确答案:</span>
+                                                        <span class="text-green-700">${q.correct_answer}</span>
+                                                    </p>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <i class="ri-${q.is_correct ? 'check' : 'close'}-circle-fill text-xl ${q.is_correct ? 'text-green-500' : 'text-red-500'}"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span>答题时间: ${exam.completed_at ? formatDateTime(exam.completed_at) : '未完成'}</span>
+                                <span>用时: ${exam.time_spent_minutes ? exam.time_spent_minutes + '分钟' : '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 隐藏学生答题详情模态框
+        function hideStudentAnswersModal() {
+            const modal = document.getElementById('studentAnswersModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 标签页切换
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 只保留考试模板标签页，始终显示考试模板页面
+            document.getElementById('examTemplatesPage').style.display = 'block';
+            
+            // 加载考试模板数据
+            loadExamTemplates();
+        }
+
+        // 加载考试模板数据
+        async function loadExamTemplates() {
+            try {
+                showLoading(true);
+                const response = await fetch('/api/exam-templates-with-participants');
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        // 权限问题，重定向到登录页面
+                        window.location.href = '/admin/login';
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    examTemplates = data.templates || [];
+                    displayExamTemplates();
+                    updateStatistics();
+                } else {
+                    console.warn('加载考试数据失败:', data.message);
+                    examTemplates = [];
+                    displayExamTemplates();
+                    updateStatistics();
+                    showError(data.message || '加载考试数据失败');
+                }
+            } catch (error) {
+                console.error('加载考试数据失败:', error);
+                examTemplates = [];
+                displayExamTemplates();
+                updateStatistics();
+                showError('加载失败，请检查网络连接');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 显示考试模板
+        function displayExamTemplates() {
+            const container = document.getElementById('examTemplatesList');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (examTemplates.length === 0) {
+                container.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            
+            const currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+            const t = window.i18n ? window.i18n.translate.bind(window.i18n) : (key) => key;
+            
+            container.innerHTML = examTemplates.map(template => `
+                <div class="card p-6 fade-in">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <h3 class="text-xl font-semibold text-gray-900">${template.name}</h3>
+                                <span class="status-${template.is_active ? 'active' : 'inactive'}">
+                                    ${template.is_active ? (currentLanguage === 'en' ? 'Active' : '启用') : (currentLanguage === 'en' ? 'Inactive' : '停用')}
+                                </span>
+                            </div>
+                            <p class="text-gray-600 mb-3">${template.description || ''}</p>
+                            
+                            <!-- 考试信息 -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <div class="text-lg font-semibold text-gray-900">${template.statistics.total_participants}</div>
+                                    <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Participants' : '参与人数'}</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <div class="text-lg font-semibold text-gray-900">${template.statistics.completed_count}</div>
+                                    <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Completed' : '已完成'}</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <div class="text-lg font-semibold text-gray-900">${template.statistics.avg_score}%</div>
+                                    <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Average Score' : '平均分'}</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <div class="text-lg font-semibold text-gray-900">${template.time_limit}${currentLanguage === 'en' ? ' min' : '分钟'}</div>
+                                    <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Time Limit' : '时间限制'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col space-y-2 ml-6">
+                            <button onclick="showExamDetail('${template.id}')" class="btn-primary text-sm">
+                                <i class="ri-eye-line mr-1"></i>
+                                ${currentLanguage === 'en' ? 'View Details' : '查看详情'}
+                            </button>
+                            <button onclick="showTypeScores('${template.id}')" class="btn-secondary text-sm">
+                                <i class="ri-bar-chart-line mr-1"></i>
+                                ${currentLanguage === 'en' ? 'Type Scores' : '题型评分'}
+                            </button>
+                            <button onclick="exportExamData('${template.id}')" class="btn-secondary text-sm">
+                                <i class="ri-download-line mr-1"></i>
+                                ${currentLanguage === 'en' ? 'Export Data' : '导出数据'}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 最近参与学生 -->
+                    ${template.participants.length > 0 ? `
+                        <div class="border-t border-gray-200 pt-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">${currentLanguage === 'en' ? 'Recent Participants' : '最近参与学生'}</h4>
+                            <div class="space-y-2">
+                                ${template.participants.slice(0, 3).map(participant => `
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <i class="ri-user-line text-blue-600"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium text-gray-900">${participant.student_name}</div>
+                                                <div class="text-xs text-gray-500">${participant.student_id_number}</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-medium ${participant.status === 'completed' ? 'text-green-600' : participant.status === 'expired' ? 'text-red-600' : 'text-orange-600'}">
+                                                ${participant.percentage}%
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                ${participant.completed_at ? formatDateTime(participant.completed_at) : participant.status === 'expired' ? (currentLanguage === 'en' ? 'Expired' : '已过期') : (currentLanguage === 'en' ? 'In Progress' : '进行中')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                                ${template.participants.length > 3 ? `
+                                    <div class="text-center">
+                                        <button onclick="showExamDetail('${template.id}')" class="text-blue-600 hover:text-blue-800 text-sm">
+                                            ${currentLanguage === 'en' ? `View all ${template.participants.length} participants` : `查看全部 ${template.participants.length} 人`}
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="border-t border-gray-200 pt-4 text-center text-gray-500">
+                            <i class="ri-user-line text-2xl"></i>
+                            <p class="mt-2">${currentLanguage === 'en' ? 'No participants yet' : '暂无参与学生'}</p>
+                        </div>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        // 更新统计信息
+        function updateStatistics() {
+            const totalTemplates = examTemplates?.length || 0;
+            const totalParticipants = examTemplates?.reduce((sum, template) => 
+                sum + (template.statistics?.total_participants || 0), 0) || 0;
+            const totalCompleted = examTemplates?.reduce((sum, template) => 
+                sum + (template.statistics?.completed_count || 0), 0) || 0;
+            const totalActiveExams = examTemplates?.reduce((sum, template) => 
+                sum + (template.statistics?.active_count || 0), 0) || 0;
+            
+            // 计算整体平均分
+            let overallAvgScore = 0;
+            if (totalCompleted > 0 && examTemplates) {
+                const totalScore = examTemplates.reduce((sum, template) => {
+                    return sum + ((template.statistics?.avg_score || 0) * (template.statistics?.completed_count || 0));
+                }, 0);
+                overallAvgScore = totalScore / totalCompleted;
+            }
+            
+            // 安全地更新DOM元素
+            const totalTemplatesEl = document.getElementById('totalTemplates');
+            const totalParticipantsEl = document.getElementById('totalParticipants');
+            const avgScoreEl = document.getElementById('avgScore');
+            const activeExamsEl = document.getElementById('activeExams');
+            
+            if (totalTemplatesEl) totalTemplatesEl.textContent = totalTemplates;
+            if (totalParticipantsEl) totalParticipantsEl.textContent = totalParticipants;
+            if (avgScoreEl) avgScoreEl.textContent = Math.round(overallAvgScore) + '%';
+            if (activeExamsEl) activeExamsEl.textContent = totalActiveExams;
+        }
+
+
+        // 退出登录
+        function setupLogoutButton() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function() {
+                    try {
+                        const response = await fetch('/api/admin/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            window.location.href = '/admin/login';
+                        } else {
+                            alert('退出登录失败');
+                        }
+                    } catch (error) {
+                        console.error('退出登录失败:', error);
+                        // 即使API失败，也重定向到登录页面
+                        window.location.href = '/admin/login';
+                    }
+                });
+            }
+        }
+
+        // 显示考试详情
+        function showExamDetail(templateId) {
+            const template = examTemplates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            const currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+            const t = window.i18n ? window.i18n.translate.bind(window.i18n) : (key) => key;
+            
+            document.getElementById('examDetailTitle').textContent = template.name + (currentLanguage === 'en' ? ' - Details' : ' - 详情');
+            
+            const content = document.getElementById('examDetailContent');
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- 考试基本信息 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">${template.statistics.total_participants}</div>
+                            <div class="text-sm text-blue-800">${t('exam_management.total_participants', currentLanguage === 'en' ? 'Total Participants' : '总参与人数')}</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">${template.statistics.completed_count}</div>
+                            <div class="text-sm text-green-800">${currentLanguage === 'en' ? 'Completed' : '已完成'}</div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-600">${template.statistics.avg_score}%</div>
+                            <div class="text-sm text-purple-800">${t('exam_management.avg_score', currentLanguage === 'en' ? 'Average Score' : '平均分')}</div>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-orange-600">${template.statistics.active_count}</div>
+                            <div class="text-sm text-orange-800">${currentLanguage === 'en' ? 'In Progress' : '进行中'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 参与学生列表 -->
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-900 mb-4">${currentLanguage === 'en' ? 'All Participants' : '所有参与学生'}</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${currentLanguage === 'en' ? 'Student' : '学生'}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${t('student.id_number', currentLanguage === 'en' ? 'Student ID' : '学号')}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${currentLanguage === 'en' ? 'Score' : '分数'}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${currentLanguage === 'en' ? 'Status' : '状态'}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${currentLanguage === 'en' ? 'Time' : '用时'}</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${currentLanguage === 'en' ? 'Completed At' : '完成时间'}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    ${template.participants.map(participant => `
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <i class="ri-user-line text-blue-600"></i>
+                                                    </div>
+                                                    <div class="ml-3">
+                                                        <div class="font-medium text-gray-900">${participant.student_name}</div>
+                                                        <div class="text-sm text-gray-500">${participant.student_application_number}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${participant.student_id_number}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="font-medium ${participant.percentage >= 60 ? 'text-green-600' : 'text-red-600'}">
+                                                    ${participant.percentage}%
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="status-${participant.status}">
+                                                    ${participant.status === 'completed' ? (currentLanguage === 'en' ? 'Completed' : '已完成') : (currentLanguage === 'en' ? 'In Progress' : '进行中')}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                ${participant.time_spent_minutes > 0 ? participant.time_spent_minutes + (currentLanguage === 'en' ? ' min' : '分钟') : '-'}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                ${participant.completed_at ? formatDateTime(participant.completed_at) : '-'}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('examDetailModal').classList.remove('hidden');
+        }
+
+        function hideExamDetailModal() {
+            document.getElementById('examDetailModal').classList.add('hidden');
+        }
+
+        // 显示题型评分统计
+        async function showTypeScores(templateId) {
+            try {
+                // 提取数字ID（如果templateId是 "config_2" 格式，提取出 "2"）
+                let configId = templateId;
+                if (typeof templateId === 'string' && templateId.startsWith('config_')) {
+                    configId = templateId.replace('config_', '');
+                }
+                
+                const response = await fetch(`/api/exam-template/${configId}/type-scores`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTypeScores(data.type_scores, templateId);
+                } else {
+                    showError(data.message || '获取题型评分统计失败');
+                }
+            } catch (error) {
+                console.error('获取题型评分统计失败:', error);
+                showError('获取失败，请重试');
+            }
+        }
+
+        // 显示题型评分统计
+        function displayTypeScores(typeScores, templateId) {
+            const modal = document.getElementById('typeScoresModal');
+            const title = document.getElementById('typeScoresTitle');
+            const content = document.getElementById('typeScoresContent');
+            
+            if (!modal || !title || !content) {
+                console.error('题型评分模态框元素未找到');
+                return;
+            }
+            
+            const template = examTemplates.find(t => t.id === templateId);
+            const templateName = template ? template.name : '考试';
+            const currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+            
+            title.innerHTML = `
+                <i class="ri-bar-chart-line text-blue-600 mr-2"></i>
+                ${templateName} - ${currentLanguage === 'en' ? 'Question Type Scores' : '题型评分统计'}
+            `;
+            
+            // 保存当前数据供导出使用
+            window.currentTypeScores = {
+                templateId: templateId,
+                originalTemplateId: templateId,  // 保存原始ID用于导出
+                templateName: templateName,
+                typeScores: typeScores
+            };
+            
+            if (!typeScores || Object.keys(typeScores).length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="ri-bar-chart-line text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'No type score data available' : '暂无题型评分数据'}</p>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        ${Object.entries(typeScores).map(([type, stats]) => `
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                                        <i class="ri-${getTypeIcon(type)} text-blue-600 mr-2"></i>
+                                        ${stats.type_name}
+                                    </h4>
+                                    <span class="text-2xl font-bold ${getScoreColor(stats.percentage)}">
+                                        ${stats.percentage}%
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-blue-600">${parseFloat(stats.total_score).toFixed(2)}</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Total Score' : '总得分'}</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-purple-600">${stats.max_score}</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Max Score' : '总分值'}</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-green-600">${stats.question_count}</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Questions' : '题目数量'}</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-orange-600">${stats.accuracy}%</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Accuracy' : '正确率'}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 进度条 -->
+                                <div class="mt-4">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>${currentLanguage === 'en' ? 'Score Progress' : '得分进度'}</span>
+                                        <span>${stats.total_score}/${stats.max_score}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300" 
+                                             style="width: ${stats.percentage}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 隐藏题型评分模态框
+        function hideTypeScoresModal() {
+            const modal = document.getElementById('typeScoresModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 获取题型图标
+        function getTypeIcon(questionType) {
+            const icons = {
+                'multiple_choice': 'checkbox-circle-line',
+                'short_answer': 'edit-line',
+                'programming': 'code-line',
+                'essay': 'article-line',
+                'fill_blank': 'input-cursor-move'
+            };
+            return icons[questionType] || 'question-line';
+        }
+
+        // 获取分数颜色
+        function getScoreColor(percentage) {
+            if (percentage >= 90) return 'text-green-600';
+            if (percentage >= 80) return 'text-blue-600';
+            if (percentage >= 70) return 'text-yellow-600';
+            if (percentage >= 60) return 'text-orange-600';
+            return 'text-red-600';
+        }
+
+        // 显示学生个人题型评分
+        async function showStudentTypeScores(studentId, studentName) {
+            try {
+                const response = await fetch(`/api/student/${studentId}/type-scores`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayStudentTypeScores(data.type_scores, data.student_name, studentId);
+                } else {
+                    showError(data.message || '获取学生题型评分失败');
+                }
+            } catch (error) {
+                console.error('获取学生题型评分失败:', error);
+                showError('获取失败，请重试');
+            }
+        }
+
+        // 显示学生个人题型评分
+        function displayStudentTypeScores(typeScores, studentName, studentId) {
+            const modal = document.getElementById('studentTypeScoresModal');
+            const title = document.getElementById('studentTypeScoresTitle');
+            const content = document.getElementById('studentTypeScoresContent');
+            
+            if (!modal || !title || !content) {
+                console.error('学生题型评分模态框元素未找到');
+                return;
+            }
+            
+            const currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+            
+            title.innerHTML = `
+                <i class="ri-user-line text-green-600 mr-2"></i>
+                ${studentName} - ${currentLanguage === 'en' ? 'Personal Type Scores' : '个人题型评分'}
+            `;
+            
+            // 保存当前数据供导出使用
+            window.currentStudentTypeScores = {
+                studentName: studentName,
+                studentId: studentId,
+                typeScores: typeScores
+            };
+            
+            if (!typeScores || Object.keys(typeScores).length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="ri-bar-chart-line text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">${currentLanguage === 'en' ? 'No personal type score data available' : '该学生暂无题型评分数据'}</p>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <!-- 总体概览 -->
+                        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 mb-6">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="ri-trophy-line text-yellow-500 mr-2"></i>
+                                ${currentLanguage === 'en' ? 'Overall Performance' : '总体表现'}
+                            </h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600">${Object.keys(typeScores).length}</div>
+                                    <div class="text-sm text-gray-600">${currentLanguage === 'en' ? 'Types Attempted' : '参与题型'}</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-blue-600">${Object.values(typeScores).reduce((sum, stats) => sum + stats.question_count, 0)}</div>
+                                    <div class="text-sm text-gray-600">${currentLanguage === 'en' ? 'Total Questions' : '总题目数'}</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-purple-600">${Object.values(typeScores).reduce((sum, stats) => sum + stats.exam_count, 0)}</div>
+                                    <div class="text-sm text-gray-600">${currentLanguage === 'en' ? 'Total Exams' : '考试次数'}</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold ${getScoreColor(Object.values(typeScores).reduce((sum, stats) => sum + stats.percentage, 0) / Object.keys(typeScores).length)}">${Math.round(Object.values(typeScores).reduce((sum, stats) => sum + stats.percentage, 0) / Object.keys(typeScores).length)}%</div>
+                                    <div class="text-sm text-gray-600">${currentLanguage === 'en' ? 'Average Score' : '平均得分'}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${Object.entries(typeScores).map(([type, stats]) => `
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+                                        <i class="ri-${getTypeIcon(type)} text-blue-600 mr-2"></i>
+                                        ${stats.type_name}
+                                    </h4>
+                                    <span class="text-2xl font-bold ${getScoreColor(stats.percentage)}">
+                                        ${stats.percentage}%
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-blue-600">${parseFloat(stats.total_score).toFixed(2)}</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Total Score' : '总得分'}</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-purple-600">${stats.max_score}</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Max Score' : '总分值'}</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-green-600">${stats.question_count}</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Questions' : '题目数量'}</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-orange-600">${stats.accuracy}%</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Accuracy' : '正确率'}</div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded-lg text-center">
+                                        <div class="text-xl font-bold text-indigo-600">${stats.avg_score_per_question}</div>
+                                        <div class="text-xs text-gray-600">${currentLanguage === 'en' ? 'Avg/Question' : '平均分/题'}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 进度条 -->
+                                <div class="mb-4">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>${currentLanguage === 'en' ? 'Score Progress' : '得分进度'}</span>
+                                        <span>${stats.total_score}/${stats.max_score} (${stats.exam_count} ${currentLanguage === 'en' ? 'exams' : '次考试'})</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-green-500 to-blue-600 h-2 rounded-full transition-all duration-300" 
+                                             style="width: ${stats.percentage}%"></div>
+                                    </div>
+                                </div>
+
+                                <!-- 详细题目得分 -->
+                                ${stats.detailed_scores && stats.detailed_scores.length > 0 ? `
+                                    <div class="mt-4">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h5 class="text-md font-medium text-gray-800 flex items-center">
+                                                <i class="ri-list-check text-blue-500 mr-2"></i>
+                                                ${currentLanguage === 'en' ? 'Detailed Question Scores' : '详细题目得分'}
+                                            </h5>
+                                            <button onclick="toggleDetailedScores('${type}')" class="text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                                                <span id="toggle-${type}">${currentLanguage === 'en' ? 'Show Details' : '展开详情'}</span>
+                                                <i id="icon-${type}" class="ri-arrow-down-s-line ml-1"></i>
+                                            </button>
+                                        </div>
+                                        <div id="details-${type}" class="hidden space-y-2 max-h-60 overflow-y-auto">
+                                            ${stats.detailed_scores.map((question, index) => `
+                                                <div class="bg-white border border-gray-200 rounded-lg p-3 text-sm">
+                                                    <div class="flex items-center justify-between mb-2">
+                                                        <span class="font-medium text-gray-700">
+                                                            ${currentLanguage === 'en' ? 'Question' : '题目'} ${index + 1}
+                                                        </span>
+                                                        <div class="flex items-center space-x-2">
+                                                            <span class="font-bold ${getScoreColor(question.percentage)}">
+                                                                ${question.score}/${question.max_score}
+                                                            </span>
+                                                            <span class="text-xs px-2 py-1 rounded-full ${question.is_correct ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                                                ${question.percentage}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-gray-600 text-xs mb-2" title="${question.question_text}">
+                                                        ${question.question_text}
+                                                    </div>
+                                                    <div class="flex justify-between items-center text-xs text-gray-500">
+                                                        <span>${currentLanguage === 'en' ? 'Exam Date' : '考试时间'}: ${question.exam_date}</span>
+                                                        <span class="flex items-center">
+                                                            <i class="ri-${question.is_correct ? 'check-line text-green-500' : 'close-line text-red-500'} mr-1"></i>
+                                                            ${question.is_correct ? (currentLanguage === 'en' ? 'Correct' : '正确') : (currentLanguage === 'en' ? 'Incorrect' : '错误')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 隐藏学生个人题型评分模态框
+        function hideStudentTypeScoresModal() {
+            const modal = document.getElementById('studentTypeScoresModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 切换详细得分显示
+        function toggleDetailedScores(questionType) {
+            const detailsDiv = document.getElementById(`details-${questionType}`);
+            const toggleSpan = document.getElementById(`toggle-${questionType}`);
+            const iconSpan = document.getElementById(`icon-${questionType}`);
+            const currentLanguage = window.i18n ? window.i18n.getCurrentLanguage() : 'zh';
+            
+            if (detailsDiv && toggleSpan && iconSpan) {
+                if (detailsDiv.classList.contains('hidden')) {
+                    // 展开
+                    detailsDiv.classList.remove('hidden');
+                    toggleSpan.textContent = currentLanguage === 'en' ? 'Hide Details' : '收起详情';
+                    iconSpan.className = 'ri-arrow-up-s-line ml-1';
+                } else {
+                    // 收起
+                    detailsDiv.classList.add('hidden');
+                    toggleSpan.textContent = currentLanguage === 'en' ? 'Show Details' : '展开详情';
+                    iconSpan.className = 'ri-arrow-down-s-line ml-1';
+                }
+            }
+        }
+
+        // 导出考试题型评分数据（包含所有学生详细信息）
+        async function exportTypeScores() {
+            if (!window.currentTypeScores) {
+                showError('没有可导出的数据');
+                return;
+            }
+
+            const { templateId, templateName, typeScores } = window.currentTypeScores;
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            
+            try {
+                // 尝试获取所有学生的详细题型得分，优先尝试config_前缀格式
+                let response, detailedData;
+                
+                // 如果templateId不以config_开头，先尝试加上前缀
+                if (!templateId.toString().startsWith('config_')) {
+                    response = await fetch(`/api/exam-template/config_${templateId}/detailed-scores`);
+                    detailedData = await response.json();
+                    
+                    if (!detailedData.success) {
+                        // 如果失败，尝试原始ID
+                        response = await fetch(`/api/exam-template/${templateId}/detailed-scores`);
+                        detailedData = await response.json();
+                    }
+                } else {
+                    // 如果已经有config_前缀，直接使用
+                    response = await fetch(`/api/exam-template/${templateId}/detailed-scores`);
+                    detailedData = await response.json();
+                }
+                
+                if (detailedData.success && detailedData.students_data) {
+                    // 创建包含所有学生详细信息的CSV内容
+                    const csvContent = generateDetailedTypeScoresCSV(typeScores, templateName, detailedData.students_data);
+                    
+                    // 下载文件
+                    downloadCSV(csvContent, `详细题型评分统计_${templateName}_${timestamp}.csv`);
+                } else {
+                    // 如果获取详细数据失败，使用原有的导出方式
+                    const csvContent = generateTypeScoresCSV(typeScores, templateName);
+                    downloadCSV(csvContent, `题型评分统计_${templateName}_${timestamp}.csv`);
+                }
+            } catch (error) {
+                console.error('获取详细数据失败:', error);
+                // 如果获取详细数据失败，使用原有的导出方式
+                const csvContent = generateTypeScoresCSV(typeScores, templateName);
+                downloadCSV(csvContent, `题型评分统计_${templateName}_${timestamp}.csv`);
+            }
+        }
+
+        // 导出学生个人题型评分数据
+        function exportStudentTypeScores() {
+            if (!window.currentStudentTypeScores) {
+                showError('没有可导出的数据');
+                return;
+            }
+
+            const { studentName, typeScores } = window.currentStudentTypeScores;
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            
+            // 创建CSV内容
+            const csvContent = generateStudentTypeScoresCSV(typeScores, studentName);
+            
+            // 下载文件
+            downloadCSV(csvContent, `学生题型评分_${studentName}_${timestamp}.csv`);
+        }
+
+        // 生成考试题型评分CSV
+        function generateTypeScoresCSV(typeScores, templateName) {
+            const headers = ['题型', '题型名称', '总得分', '总分值', '得分率(%)', '题目数量', '学生数量', '正确数量', '正确率(%)'];
+            
+            let csvContent = '\uFEFF'; // BOM for UTF-8
+            csvContent += headers.join(',') + '\n';
+            
+            Object.entries(typeScores).forEach(([type, stats]) => {
+                const row = [
+                    type,
+                    stats.type_name,
+                    stats.total_score,
+                    stats.max_score,
+                    stats.percentage,
+                    stats.question_count,
+                    stats.student_count,
+                    stats.correct_count,
+                    stats.accuracy
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+            
+            // 添加汇总信息
+            csvContent += '\n汇总信息:\n';
+            csvContent += `考试名称:,${templateName}\n`;
+            csvContent += `导出时间:,${new Date().toLocaleString('zh-CN')}\n`;
+            csvContent += `题型数量:,${Object.keys(typeScores).length}\n`;
+            
+            const totalQuestions = Object.values(typeScores).reduce((sum, stats) => sum + stats.question_count, 0);
+            const totalMaxScore = Object.values(typeScores).reduce((sum, stats) => sum + stats.max_score, 0);
+            const totalScore = Object.values(typeScores).reduce((sum, stats) => sum + stats.total_score, 0);
+            const avgPercentage = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100 * 10) / 10 : 0;
+            
+            csvContent += `总题目数:,${totalQuestions}\n`;
+            csvContent += `总分值:,${totalMaxScore}\n`;
+            csvContent += `总得分:,${totalScore}\n`;
+            csvContent += `总体得分率:,${avgPercentage}%\n`;
+            
+            return csvContent;
+        }
+
+        // 生成简洁的题型评分CSV（只包含核心信息）
+        function generateDetailedTypeScoresCSV(typeScores, templateName, studentsData) {
+            let csvContent = '\uFEFF'; // BOM for UTF-8
+            
+            // 简洁导出：只包含您要求的核心信息
+            csvContent += `考试名称: ${templateName}\n`;
+            csvContent += `导出时间: ${new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}\n\n`;
+            
+            // 获取所有题型并排序
+            const allTypes = new Set();
+            Object.values(studentsData).forEach(student => {
+                Object.keys(student.type_scores || {}).forEach(type => allTypes.add(type));
+            });
+            const sortedTypes = Array.from(allTypes).sort();
+            
+            // 构建简洁的表头：学生姓名,考试日期,考号,总分,总分满分,总分百分比,各题型得分...
+            let header = ['学生姓名', '考试日期', '考号', '总分', '总满分', '总百分比(%)'];
+            sortedTypes.forEach(type => {
+                const typeName = typeScores[type]?.type_name || type;
+                header.push(`${typeName}得分`);
+                header.push(`${typeName}满分`);
+                header.push(`${typeName}百分比(%)`);
+            });
+            csvContent += header.join(',') + '\n';
+            
+            // 构建数据行
+            Object.values(studentsData).forEach((student, index) => {
+                // 使用考试实例ID或考试ID作为考号
+                const examId = student.instance_id ? `EXAM_${student.instance_id}` : 
+                              student.exam_id ? `EXAM_${student.exam_id}` : 
+                              `ADMIN_${Date.now().toString().slice(-10)}`;
+                const examDate = student.exam_date || '未知时间';
+                const totalPercentage = student.total_max_score > 0 ? ((student.total_score / student.total_max_score) * 100) : 0;
+                
+                let row = [
+                    `"${student.student_name}"`, // 引号保护中文名字
+                    `"${examDate}"`,
+                    examId,
+                    student.total_score.toFixed(2),
+                    student.total_max_score,
+                    totalPercentage.toFixed(1)
+                ];
+                
+                // 添加各题型得分
+                sortedTypes.forEach(type => {
+                    const typeData = student.type_scores?.[type];
+                    if (typeData) {
+                        const typePercentage = typeData.max_score > 0 ? ((typeData.total_score / typeData.max_score) * 100) : 0;
+                        row.push(typeData.total_score.toFixed(2));
+                        row.push(typeData.max_score);
+                        row.push(typePercentage.toFixed(1));
+                    } else {
+                        row.push('0.00', '0', '0.0');
+                    }
+                });
+                
+                csvContent += row.join(',') + '\n';
+            });
+            
+            return csvContent;
+        }
+
+        // 生成学生个人题型评分CSV
+        function generateStudentTypeScoresCSV(typeScores, studentName) {
+            let csvContent = '\uFEFF'; // BOM for UTF-8
+            
+            // 第一部分：题型总分统计
+            csvContent += '=== 学生题型总分统计 ===\n';
+            csvContent += '题型,题型名称,总得分,总分值,得分率(%),题目数量,考试次数,正确数量,正确率(%),平均分/题\n';
+            
+            Object.entries(typeScores).forEach(([type, stats]) => {
+                const avgScorePerQuestion = stats.question_count > 0 ? (stats.total_score / stats.question_count).toFixed(2) : '0.00';
+                const row = [
+                    type,
+                    stats.type_name,
+                    stats.total_score.toFixed(2),
+                    stats.max_score,
+                    stats.percentage.toFixed(1),
+                    stats.question_count,
+                    stats.exam_count || 1,
+                    stats.correct_count,
+                    stats.accuracy.toFixed(1),
+                    avgScorePerQuestion
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+            
+            // 第二部分：详细题目得分
+            csvContent += '\n=== 详细题目得分 ===\n';
+            csvContent += '题型,题目序号,题目内容,得分,满分,得分率(%),是否正确,考试时间\n';
+            
+            Object.entries(typeScores).forEach(([type, stats]) => {
+                if (stats.detailed_scores && stats.detailed_scores.length > 0) {
+                    stats.detailed_scores.forEach((question, index) => {
+                        const detailRow = [
+                            stats.type_name,
+                            index + 1,
+                            `"${(question.question_text || '').replace(/"/g, '""')}"`, // 处理CSV中的引号
+                            question.score.toFixed(2),
+                            question.max_score,
+                            question.percentage.toFixed(1),
+                            question.is_correct ? '正确' : '错误',
+                            question.exam_date || 'N/A'
+                        ];
+                        csvContent += detailRow.join(',') + '\n';
+                    });
+                }
+            });
+            
+            // 第三部分：汇总信息
+            csvContent += '\n=== 汇总信息 ===\n';
+            csvContent += `学生姓名:,${studentName}\n`;
+            csvContent += `导出时间:,${new Date().toLocaleString('zh-CN')}\n`;
+            csvContent += `参与题型:,${Object.keys(typeScores).length}\n`;
+            
+            const totalQuestions = Object.values(typeScores).reduce((sum, stats) => sum + stats.question_count, 0);
+            const totalExams = Object.values(typeScores).reduce((sum, stats) => sum + (stats.exam_count || 1), 0);
+            const totalMaxScore = Object.values(typeScores).reduce((sum, stats) => sum + stats.max_score, 0);
+            const totalScore = Object.values(typeScores).reduce((sum, stats) => sum + stats.total_score, 0);
+            const avgPercentage = totalMaxScore > 0 ? ((totalScore / totalMaxScore) * 100).toFixed(1) : '0.0';
+            
+            csvContent += `总题目数:,${totalQuestions}\n`;
+            csvContent += `总考试次数:,${totalExams}\n`;
+            csvContent += `总分值:,${totalMaxScore}\n`;
+            csvContent += `总得分:,${totalScore.toFixed(2)}\n`;
+            csvContent += `总体得分率:,${avgPercentage}%\n`;
+            
+            // 第四部分：题型分数分布
+            csvContent += '\n=== 题型分数分布 ===\n';
+            csvContent += '题型名称,得分,满分,得分率(%),得分贡献度%\n';
+            
+            Object.entries(typeScores).forEach(([type, stats]) => {
+                const contribution = totalScore > 0 ? ((stats.total_score / totalScore) * 100).toFixed(1) : '0.0';
+                const row = [
+                    stats.type_name,
+                    stats.total_score.toFixed(2),
+                    stats.max_score,
+                    stats.percentage.toFixed(1),
+                    contribution
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+            
+            return csvContent;
+        }
+
+        // 下载CSV文件
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showSuccess('数据导出成功！');
+            } else {
+                showError('浏览器不支持文件下载');
+            }
+        }
+
+        // 导出考试数据
+        function exportExamData(templateId) {
+            const template = examTemplates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            // 创建CSV数据
+            const headers = ['姓名', '学号', '申请号', '分数', '状态', '用时(分钟)', '完成时间'];
+            const rows = template.participants.map(p => [
+                p.student_name,
+                p.student_id_number,
+                p.student_application_number,
+                p.percentage + '%',
+                p.status === 'completed' ? '已完成' : '进行中',
+                p.time_spent_minutes || '-',
+                p.completed_at ? formatDateTime(p.completed_at) : '-'
+            ]);
+            
+            const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+            
+            // 下载文件
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${template.name}_参与学生数据.csv`;
+            link.click();
+            
+            showSuccess('数据导出成功');
+        }
+
+        // 学生管理功能 - 重新设计
+        let currentStudentsPage = 1;
+        let studentsPerPage = 20;
+
+        async function loadStudents(page = 1) {
+            currentStudentsPage = page;
+            
+            showStudentsLoading(true);
+            
+            try {
+                const response = await fetch(`/api/students-management?page=${page}&per_page=${studentsPerPage}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    students = data.students;
+                    await Promise.all([
+                        displayStudentsGrid(data.students),
+                        updateStudentsPagination(data.pagination || {
+                            page: page, 
+                            per_page: studentsPerPage, 
+                            total: data.students.length, 
+                            pages: 1, 
+                            has_next: false, 
+                            has_prev: false
+                        }),
+                        updateStudentsStatistics(data.students)
+                    ]);
+                    showStudentsLoading(false); // 成功后隐藏loading
+                } else {
+                    console.warn('加载学生数据失败:', data.message);
+                    showStudentsLoading(false); // 失败也要隐藏loading
+                    if (response.status === 403) {
+                        showError('请先登录管理员账户');
+                    } else {
+                        showError(data.message || '加载学生数据失败');
+                    }
+                }
+            } catch (error) {
+                console.error('加载学生数据失败:', error);
+                showStudentsLoading(false); // 异常也要隐藏loading
+                if (error.message.includes('403')) {
+                    showError('请先登录管理员账户');
+                } else {
+                    showError('加载失败，请检查网络连接');
+                }
+            }
+        }
+
+        function displayStudents(students, pagination) {
+            // 使用新的displayStudentsGrid函数
+            displayStudentsGrid(students);
+            updateStudentsPagination(pagination);
+            updateStudentsStatistics(students);
+        }
+
+        // 新的学生网格显示函数
+        function displayStudentsGrid(studentsList) {
+            const grid = document.getElementById('studentsGrid');
+            const emptyState = document.getElementById('studentsEmpty');
+            
+            if (!studentsList || studentsList.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            grid.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            
+            grid.innerHTML = studentsList.map(student => createStudentCard(student)).join('');
+            
+            // 更新学生数量标识
+            document.getElementById('studentCountBadge').textContent = `${studentsList.length} 名学生`;
+        }
+
+        // 创建学生卡片
+        function createStudentCard(student) {
+            const statusBadge = getStudentStatusBadge(student);
+            const scoreBadge = getStudentScoreBadge(student);
+            const activityStatus = getStudentActivityStatus(student);
+            
+            return `
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200"
+                     data-student-id="${student.id}">
+                    
+                    <!-- 学生头像和基本信息 -->
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                            ${student.name ? student.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900">${student.name || '未知学生'}</h3>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="text-sm text-gray-500">ID: ${student.id}</span>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            ${activityStatus}
+                        </div>
+                    </div>
+                    
+                    <!-- 统计信息 -->
+                    <div class="mt-6 grid grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">${student.exam_count || 0}</div>
+                            <div class="text-xs text-gray-500">考试次数</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold ${scoreBadge.class}">${student.average_score ? student.average_score.toFixed(1) + '%' : '-'}</div>
+                            <div class="text-xs text-gray-500">平均分</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-sm font-bold text-purple-600">${student.device_ip || student.ip_address || '-'}</div>
+                            <div class="text-xs text-gray-500">IP地址</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 最后活动时间 -->
+                    <div class="mt-4 text-center">
+                        <div class="text-sm text-gray-600">
+                            最后活动: ${student.last_exam ? formatDateTime(student.last_exam) : '无记录'}
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="mt-6 flex space-x-2">
+                        <button onclick="viewStudentAnswers(${student.id}, '${student.name}')" 
+                                class="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
+                            <i class="ri-file-list-3-line mr-1"></i>
+                            答题详情
+                        </button>
+                        <button onclick="showStudentTypeScores(${student.id}, '${student.name}')" 
+                                class="flex-1 bg-purple-50 text-purple-600 hover:bg-purple-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
+                            <i class="ri-bar-chart-line mr-1"></i>
+                            题型评分
+                        </button>
+                        <button onclick="deleteStudentConfirm(${student.id})" 
+                                class="flex-1 bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center">
+                            <i class="ri-delete-bin-line mr-1"></i>
+                            删除
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 获取学生状态标识
+        function getStudentStatusBadge(student) {
+            const isActive = student.exam_count > 0; // 简单的活跃判断逻辑
+            if (isActive) {
+                return '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">活跃</span>';
+            } else {
+                return '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">非活跃</span>';
+            }
+        }
+
+        // 获取学生分数标识
+        function getStudentScoreBadge(student) {
+            if (!student.average_score) return { class: 'text-gray-600' };
+            
+            if (student.average_score >= 90) return { class: 'text-green-600' };
+            if (student.average_score >= 80) return { class: 'text-blue-600' };
+            if (student.average_score >= 60) return { class: 'text-yellow-600' };
+            return { class: 'text-red-600' };
+        }
+
+        // 获取学生活动状态
+        function getStudentActivityStatus(student) {
+            const daysSinceLastExam = student.last_exam ? 
+                Math.floor((new Date() - new Date(student.last_exam)) / (1000 * 60 * 60 * 24)) : 999;
+            
+            if (daysSinceLastExam <= 1) {
+                return '<span class="w-3 h-3 bg-green-500 rounded-full" title="今日活跃"></span>';
+            } else if (daysSinceLastExam <= 7) {
+                return '<span class="w-3 h-3 bg-yellow-500 rounded-full" title="本周活跃"></span>';
+            } else {
+                return '<span class="w-3 h-3 bg-gray-400 rounded-full" title="长期未活跃"></span>';
+            }
+        }
+
+        // 更新学生统计信息
+        function updateStudentsStatistics(studentsList) {
+            const totalStudents = studentsList.length;
+            const activeStudents = studentsList.filter(s => s.exam_count > 0).length;
+            const totalExams = studentsList.reduce((sum, s) => sum + (s.exam_count || 0), 0);
+            const avgExamCount = totalStudents > 0 ? (totalExams / totalStudents).toFixed(1) : 0;
+            const validScores = studentsList.filter(s => s.average_score !== null && s.average_score !== undefined);
+            const overallAvgScore = validScores.length > 0 ? 
+                (validScores.reduce((sum, s) => sum + s.average_score, 0) / validScores.length).toFixed(1) : 0;
+
+            document.getElementById('totalStudentsCount').textContent = totalStudents;
+            document.getElementById('activeStudentsCount').textContent = activeStudents;
+            document.getElementById('avgExamCount').textContent = avgExamCount;
+            document.getElementById('overallAvgScore').textContent = overallAvgScore + '%';
+        }
+
+        // 显示/隐藏加载状态
+        function showStudentsLoading(show) {
+            const loading = document.getElementById('studentsLoading');
+            const grid = document.getElementById('studentsGrid');
+            const empty = document.getElementById('studentsEmpty');
+            
+            if (show) {
+                loading.classList.remove('hidden');
+                grid.classList.add('hidden');
+                empty.classList.add('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+
+
+
+        // 删除学生确认函数
+        function deleteStudentConfirm(studentId) {
+            deleteStudent(studentId);
+        }
+
+
+
+        // 编辑学生功能（占位）
+        function editStudent(studentId) {
+            showError('编辑学生功能正在开发中');
+        }
+
+        // 删除学生功能
+        async function deleteStudent(studentId) {
+            if (!confirm('确定要删除这名学生吗？此操作将同时删除其关联的考试记录。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/delete-student/${studentId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('删除成功');
+                    loadStudents(currentStudentsPage);
+                } else {
+                    showError('删除失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('删除学生失败:', error);
+                showError('删除失败，请重试');
+            }
+        }
+
+
+
+        // 隐藏考试详情模态框
+        function hideExamDetailModal() {
+            const modal = document.getElementById('examDetailModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 显示所有学生答题记录模态框
+        async function showAllAnswersModal() {
+            const modal = document.getElementById('allAnswersModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // 默认显示学生概览标签页
+                switchAnswersTab('summary');
+                await loadStudentsSummary();
+            }
+        }
+
+        // 隐藏所有学生答题记录模态框
+        function hideAllAnswersModal() {
+            const modal = document.getElementById('allAnswersModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 切换答题记录标签页
+        function switchAnswersTab(tab) {
+            // 更新标签页样式
+            const summaryTab = document.getElementById('summaryTab');
+            const detailsTab = document.getElementById('detailsTab');
+            const summarySection = document.getElementById('summarySection');
+            const detailsSection = document.getElementById('detailsSection');
+            
+            if (tab === 'summary') {
+                summaryTab.className = 'border-b-2 border-blue-500 text-blue-600 py-2 px-1 text-sm font-medium';
+                detailsTab.className = 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium';
+                summarySection.classList.remove('hidden');
+                detailsSection.classList.add('hidden');
+                loadStudentsSummary();
+            } else {
+                summaryTab.className = 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium';
+                detailsTab.className = 'border-b-2 border-blue-500 text-blue-600 py-2 px-1 text-sm font-medium';
+                summarySection.classList.add('hidden');
+                detailsSection.classList.remove('hidden');
+                loadAllAnswersDetails();
+            }
+        }
+
+        // 加载学生概览
+        async function loadStudentsSummary() {
+            try {
+                const response = await fetch('/api/admin/all-student-answers-summary');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayStudentsSummary(data.students);
+                } else {
+                    showError('获取学生概览失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('获取学生概览失败:', error);
+                showError('获取失败，请重试');
+            }
+        }
+
+        // 显示学生概览
+        function displayStudentsSummary(students) {
+            const container = document.getElementById('studentsSummaryContent');
+            
+            if (!students || students.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="ri-user-line text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">暂无学生数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = students.map(student => `
+                <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="ri-user-line text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900 cursor-pointer hover:text-blue-600" 
+                                    onclick="viewStudentAnswers(${student.id}, '${student.name}')">
+                                    ${student.name}
+                                </h4>
+                                <p class="text-sm text-gray-500">学号: ${student.student_id}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center space-x-4 text-sm">
+                                <div class="text-center">
+                                    <p class="font-medium text-gray-900">${student.total_exams}</p>
+                                    <p class="text-gray-500">考试次数</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="font-medium ${student.avg_score >= 60 ? 'text-green-600' : 'text-red-600'}">${student.avg_score}%</p>
+                                    <p class="text-gray-500">平均分</p>
+                                </div>
+                                <div class="text-center">
+                                    <span class="px-2 py-1 text-xs rounded-full ${student.status === '活跃' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                        ${student.status}
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">
+                                最近考试: ${student.last_exam_at ? formatDateTime(student.last_exam_at) : '无'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 加载所有答题详情
+        async function loadAllAnswersDetails(page = 1) {
+            try {
+                const response = await fetch(`/api/all-student-answers?page=${page}&per_page=20`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayAllAnswersDetails(data.answers);
+                    updateAnswersPagination(data.pagination);
+                } else {
+                    showError('获取答题详情失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('获取答题详情失败:', error);
+                showError('获取失败，请重试');
+            }
+        }
+
+        // 显示所有答题详情
+        function displayAllAnswersDetails(answers) {
+            const container = document.getElementById('allAnswersContent');
+            
+            if (!answers || answers.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="ri-question-answer-line text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">暂无答题记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">考试</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">题目</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学生答案</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">正确答案</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">结果</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">答题时间</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${answers.map(answer => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    ${answer.student_name}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${answer.exam_name}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" title="${answer.question_text}">
+                                    ${answer.question_text}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" title="${answer.student_answer || '未作答'}">
+                                    ${answer.student_answer || '未作答'}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-green-600 max-w-xs truncate" title="${answer.correct_answer}">
+                                    ${answer.correct_answer}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                        answer.is_correct ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }">
+                                        ${answer.is_correct ? '正确' : '错误'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    ${answer.answered_at ? formatDateTime(answer.answered_at) : '-'}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 更新答题记录分页
+        function updateAnswersPagination(pagination) {
+            const container = document.getElementById('answerspagination');
+            
+            if (!pagination || pagination.pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let buttonsHTML = '';
+            
+            // 上一页按钮
+            if (pagination.has_prev) {
+                buttonsHTML += `<button onclick="loadAllAnswersDetails(${pagination.page - 1})" class="mx-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">上一页</button>`;
+            }
+            
+            // 页码按钮
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page) {
+                    buttonsHTML += `<button class="mx-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md">${i}</button>`;
+                } else {
+                    buttonsHTML += `<button onclick="loadAllAnswersDetails(${i})" class="mx-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">${i}</button>`;
+                }
+            }
+            
+            // 下一页按钮
+            if (pagination.has_next) {
+                buttonsHTML += `<button onclick="loadAllAnswersDetails(${pagination.page + 1})" class="mx-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">下一页</button>`;
+            }
+            
+            container.innerHTML = buttonsHTML;
+        }
+
+
+        // 废弃的旧函数但保持兼容
+        function updatePagination(pagination) {
+            updateStudentsPagination(pagination);
+        }
+
+        function updateStudentsPagination(pagination) {
+            const paginationContainer = document.getElementById('studentsPagination');
+            if (!paginationContainer) return;
+            
+            // 简化版分页实现，直接清空内容
+            paginationContainer.innerHTML = `
+                <div class="text-sm text-gray-700">
+                    共 ${pagination.total || 0} 条记录
+                </div>
+            `;
+        }
+
+        // 页面初始化完成后调用
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('考试管理页面初始化...');
+            
+            // 等待i18n初始化完成
+            if (window.i18n && !window.i18n.initialized) {
+                document.addEventListener('i18n:initialized', function() {
+                    // 初始化页面
+                    switchTab('examTemplates');
+                }, { once: true });
+            } else {
+                // 直接初始化
+                switchTab('examTemplates');
+            }
+        });
+        
+    </script>
+</body>
+</html>
