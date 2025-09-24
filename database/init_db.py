@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-数据库初始化脚本
+数据库初始化脚本 - 修复版本
 """
 
 import os
@@ -23,11 +23,19 @@ def init_database():
         db.create_all()
         print("数据库表创建成功")
         
-        # 添加示例题目（可选）
-        add_sample_questions()
+        # 添加示例题目（在应用上下文中）
+        try:
+            add_sample_questions()
+            print("示例题目添加成功")
+        except Exception as e:
+            print(f"添加示例题目时出现警告: {e}")
         
-        # 添加默认考试配置
-        add_default_exam_config()
+        # 添加默认考试配置（在应用上下文中）
+        try:
+            add_default_exam_config()
+            print("默认考试配置添加成功")
+        except Exception as e:
+            print(f"添加考试配置时出现警告: {e}")
         
         print("数据库初始化完成")
         print("管理员账户信息:")
@@ -35,7 +43,7 @@ def init_database():
         print("密码: imbagogo")
 
 def add_sample_questions():
-    """添加示例题目"""
+    """添加示例题目 - 必须在Flask应用上下文中调用"""
     sample_questions = [
         {
             'subject': '统计学',
@@ -73,37 +81,48 @@ def add_sample_questions():
     ]
     
     for q_data in sample_questions:
-        question = Question(**q_data)
-        db.session.add(question)
+        try:
+            question = Question(**q_data)
+            db.session.add(question)
+        except Exception as e:
+            print(f"添加示例题目时跳过错误: {e}")
     
-    db.session.commit()
-    print("示例题目添加成功")
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(f"提交示例题目时出现错误: {e}")
+        db.session.rollback()
 
 def add_default_exam_config():
-    """添加默认考试配置"""
-    # 检查是否已有默认配置
-    existing_config = ExamConfig.query.filter_by(is_default=True, is_active=True).first()
-    if existing_config:
-        print("默认考试配置已存在")
-        return
-    
-    # 创建默认考试配置
-    default_config = ExamConfig(
-        name='默认考试配置',
-        description='系统默认的考试配置，包含5道题目，75分钟时间限制',
-        total_questions=5,
-        time_limit=75,
-        subject_filter='数学,英语,计算机,逻辑,统计学',
-        difficulty_filter='简单,中等,困难',
-        type_filter='multiple_choice,short_answer,programming',
-        is_default=True,
-        is_active=True
-    )
-    
-    db.session.add(default_config)
-    db.session.commit()
-    print("默认考试配置添加成功")
-
+    """添加默认考试配置 - 必须在Flask应用上下文中调用"""
+    try:
+        # 检查是否已有默认配置
+        existing_config = db.session.query(ExamConfig).filter_by(is_default=True, is_active=True).first()
+        if existing_config:
+            print("默认考试配置已存在")
+            return
+        
+        # 创建默认考试配置
+        default_config = ExamConfig(
+            name='默认考试配置',
+            description='系统默认的考试配置，包含5道题目，75分钟时间限制',
+            total_questions=5,
+            time_limit=75,
+            subject_filter='数学,英语,计算机,逻辑,统计学',
+            difficulty_filter='简单,中等,困难',
+            type_filter='multiple_choice,short_answer,programming',
+            is_default=True,
+            is_active=True
+        )
+        
+        db.session.add(default_config)
+        db.session.commit()
+    except Exception as e:
+        print(f"添加默认考试配置时出现错误: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
 
 if __name__ == '__main__':
     init_database()

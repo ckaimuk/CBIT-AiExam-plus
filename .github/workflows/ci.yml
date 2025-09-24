@@ -47,8 +47,11 @@ jobs:
     - name: Test database initialization
       env:
         PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/backend
+        FLASK_ENV: testing
       run: |
+        echo "Testing database initialization..."
         python database/init_db.py
+        echo "Database initialization completed successfully"
     
     - name: Test application startup
       env:
