@@ -18,12 +18,12 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -50,10 +50,24 @@ jobs:
     
     - name: Test application startup
       run: |
-        timeout 30s python run.py &
-        sleep 10
-        curl -f http://localhost:8080 || exit 1
-        pkill -f python || true
+        # 启动应用在后台
+        python run.py &
+        APP_PID=$!
+        
+        # 等待应用启动
+        echo "等待应用启动..."
+        for i in {1..30}; do
+          if curl -f http://localhost:8080 >/dev/null 2>&1; then
+            echo "应用启动成功"
+            kill $APP_PID 2>/dev/null || true
+            exit 0
+          fi
+          sleep 1
+        done
+        
+        echo "应用启动超时"
+        kill $APP_PID 2>/dev/null || true
+        exit 1
 
   docker-build:
     runs-on: ubuntu-latest
@@ -71,9 +85,29 @@ jobs:
     
     - name: Test Docker container
       run: |
+        # 启动Docker容器
         docker run -d --name test-container -p 8080:8080 cbit-autoexam:test
-        sleep 15
-        curl -f http://localhost:8080 || exit 1
+        
+        # 等待容器启动
+        echo "等待Docker容器启动..."
+        for i in {1..60}; do
+          if curl -f http://localhost:8080 >/dev/null 2>&1; then
+            echo "Docker容器启动成功"
+            break
+          fi
+          sleep 1
+        done
+        
+        # 检查容器状态
+        if ! curl -f http://localhost:8080 >/dev/null 2>&1; then
+          echo "Docker容器启动失败"
+          docker logs test-container
+          docker stop test-container
+          docker rm test-container
+          exit 1
+        fi
+        
+        # 清理
         docker stop test-container
         docker rm test-container
 
@@ -93,7 +127,7 @@ jobs:
         output: 'trivy-results.sarif'
     
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
