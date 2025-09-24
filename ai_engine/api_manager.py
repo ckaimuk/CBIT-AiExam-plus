@@ -101,9 +101,7 @@ class ApiManager:
 
             from sqlalchemy import create_engine, text
 
-            db_path = os.path.join(
-                os.path.dirname(__file__), "..", "instance", "exam.db"
-            )
+            db_path = os.path.join(os.path.dirname(__file__), "..", "instance", "exam.db")
             if os.path.exists(db_path):
                 engine = create_engine(f"sqlite:///{db_path}")
                 with engine.connect() as conn:
@@ -111,8 +109,8 @@ class ApiManager:
                     result = conn.execute(
                         text(
                             """
-                        SELECT provider_name, api_url, api_key, is_active, default_model, 
-                               headers_template, request_template 
+                        SELECT provider_name, api_url, api_key, is_active, default_model,
+                               headers_template, request_template
                         FROM api_providers WHERE is_verified = 1
                     """
                         )
@@ -128,12 +126,8 @@ class ApiManager:
                                 api_key=row[2],  # api_key
                                 api_url=row[1],  # api_url
                                 default_model=row[4],  # default_model
-                                headers_template=(
-                                    json.loads(row[5]) if row[5] else {}
-                                ),  # headers_template
-                                request_template=(
-                                    json.loads(row[6]) if row[6] else {}
-                                ),  # request_template
+                                headers_template=(json.loads(row[5]) if row[5] else {}),  # headers_template
+                                request_template=(json.loads(row[6]) if row[6] else {}),  # request_template
                             )
                             self.api_configs[provider] = api_config
 
@@ -159,14 +153,10 @@ class ApiManager:
 
             # 查询旧的API配置
             api_key_result = conn.execute(
-                text(
-                    "SELECT config_value FROM system_configs WHERE config_key = 'openrouterApiKey'"
-                )
+                text("SELECT config_value FROM system_configs WHERE config_key = 'openrouterApiKey'")
             ).fetchone()
             model_result = conn.execute(
-                text(
-                    "SELECT config_value FROM system_configs WHERE config_key = 'aiModel'"
-                )
+                text("SELECT config_value FROM system_configs WHERE config_key = 'aiModel'")
             ).fetchone()
 
             if api_key_result and api_key_result[0]:
@@ -176,9 +166,7 @@ class ApiManager:
                     provider=ApiProvider.OPENROUTER,
                     api_key=api_key_result[0],
                     api_url=config["api_url"],
-                    default_model=(
-                        model_result[0] if model_result else config["default_model"]
-                    ),
+                    default_model=(model_result[0] if model_result else config["default_model"]),
                     headers_template=config["headers_template"],
                     request_template=config["request_template"],
                 )
@@ -225,10 +213,7 @@ class ApiManager:
 
     def has_valid_api(self) -> bool:
         """检查是否有有效的API配置"""
-        if (
-            self.current_provider is not None
-            and self.current_provider in self.api_configs
-        ):
+        if self.current_provider is not None and self.current_provider in self.api_configs:
             return True
 
         # 如果没有激活的API，但有已验证的API，自动激活第一个
@@ -347,16 +332,12 @@ class ApiManager:
                                 or "google/" in model_id
                                 or "meta-llama/" in model_id
                             ):
-                                if not any(
-                                    m["id"] == model_id for m in recommended_models
-                                ):
+                                if not any(m["id"] == model_id for m in recommended_models):
                                     recommended_models.append(
                                         {
                                             "id": model_id,
                                             "name": model_name,
-                                            "context_length": model.get(
-                                                "context_length", 0
-                                            ),
+                                            "context_length": model.get("context_length", 0),
                                             "pricing": model.get("pricing", {}),
                                         }
                                     )
@@ -367,9 +348,7 @@ class ApiManager:
                     print(f"✅ 筛选出 {len(recommended_models)} 个推荐模型")
 
                     # 按提供商和名称排序
-                    recommended_models.sort(
-                        key=lambda x: (x["id"].split("/")[0], x["name"])
-                    )
+                    recommended_models.sort(key=lambda x: (x["id"].split("/")[0], x["name"]))
 
                     return {
                         "success": True,
@@ -377,9 +356,7 @@ class ApiManager:
                     }  # 返回所有筛选出的模型，不设上限
                 else:
                     error_text = response.text
-                    print(
-                        f"❌ OpenRouter API调用失败: {response.status_code} - {error_text}"
-                    )
+                    print(f"❌ OpenRouter API调用失败: {response.status_code} - {error_text}")
                     return {
                         "success": False,
                         "error": f"API验证失败: {response.status_code}",
@@ -458,9 +435,7 @@ class ApiManager:
                         "messages": [{"role": "user", "content": "test"}],
                         "max_tokens": 5,
                     }
-                    test_response = requests.post(
-                        config["api_url"], headers=headers, json=test_data, timeout=10
-                    )
+                    test_response = requests.post(config["api_url"], headers=headers, json=test_data, timeout=10)
 
                     if test_response.status_code == 200:
                         # API密钥有效，但无法获取模型列表，使用默认列表
@@ -485,9 +460,7 @@ class ApiManager:
                     "max_tokens": 5,
                     "messages": [{"role": "user", "content": "test"}],
                 }
-                response = requests.post(
-                    config["api_url"], headers=headers, json=test_data, timeout=10
-                )
+                response = requests.post(config["api_url"], headers=headers, json=test_data, timeout=10)
 
                 if response.status_code == 200:
                     # API验证成功，返回完整的Claude模型列表
@@ -517,9 +490,7 @@ class ApiManager:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def call_api(
-        self, messages: List[Dict[str, str]], model: str = None
-    ) -> Optional[str]:
+    def call_api(self, messages: List[Dict[str, str]], model: str = None) -> Optional[str]:
         """调用当前激活的API"""
         if not self.has_valid_api():
             print("❌ 没有可用的API配置")
@@ -560,9 +531,7 @@ class ApiManager:
             print(f"🤖 使用模型: {actual_model}")
             print(f"🔧 提供商: {config.provider.value}")
 
-            response = requests.post(
-                config.api_url, headers=headers, json=data, timeout=30
-            )
+            response = requests.post(config.api_url, headers=headers, json=data, timeout=30)
             print(f"📊 响应状态码: {response.status_code}")
 
             if response.status_code == 200:
@@ -593,9 +562,7 @@ class ApiManager:
         # 从数据库获取实际配置状态
         db_configs = {}
         try:
-            db_path = os.path.join(
-                os.path.dirname(__file__), "..", "instance", "exam.db"
-            )
+            db_path = os.path.join(os.path.dirname(__file__), "..", "instance", "exam.db")
             if os.path.exists(db_path):
                 engine = create_engine(f"sqlite:///{db_path}")
                 with engine.connect() as conn:
@@ -623,12 +590,8 @@ class ApiManager:
 
             # 从数据库获取实际状态
             db_info = db_configs.get(provider_name, {})
-            has_config = provider in self.api_configs or db_info.get(
-                "is_verified", False
-            )
-            is_active = provider == self.current_provider or db_info.get(
-                "is_active", False
-            )
+            has_config = provider in self.api_configs or db_info.get("is_verified", False)
+            is_active = provider == self.current_provider or db_info.get("is_active", False)
             default_model = db_info.get("default_model") or config["default_model"]
 
             providers.append(
@@ -649,9 +612,7 @@ class ApiManager:
 
         return providers
 
-    def save_provider_config(
-        self, provider: ApiProvider, api_key: str, model: str = None
-    ) -> bool:
+    def save_provider_config(self, provider: ApiProvider, api_key: str, model: str = None) -> bool:
         """保存API提供商配置到数据库"""
         try:
             import os
@@ -676,9 +637,7 @@ class ApiManager:
             # 回退到直接数据库连接
             from sqlalchemy import create_engine, text
 
-            db_path = os.path.join(
-                os.path.dirname(__file__), "..", "instance", "exam.db"
-            )
+            db_path = os.path.join(os.path.dirname(__file__), "..", "instance", "exam.db")
             if not os.path.exists(db_path):
                 print(f"❌ 数据库文件不存在: {db_path}")
                 return False
@@ -700,9 +659,7 @@ class ApiManager:
             with engine.begin() as conn:  # 使用begin()自动处理事务
                 # 检查是否已存在
                 existing = conn.execute(
-                    text(
-                        "SELECT id FROM api_providers WHERE provider_name = :provider"
-                    ),
+                    text("SELECT id FROM api_providers WHERE provider_name = :provider"),
                     {"provider": provider.value},
                 ).fetchone()
 
@@ -789,18 +746,14 @@ class ApiManager:
 
             from sqlalchemy import create_engine, text
 
-            db_path = os.path.join(
-                os.path.dirname(__file__), "..", "instance", "exam.db"
-            )
+            db_path = os.path.join(os.path.dirname(__file__), "..", "instance", "exam.db")
             if os.path.exists(db_path):
                 engine = create_engine(f"sqlite:///{db_path}")
 
                 with engine.begin() as conn:  # 使用begin()自动处理事务
                     # 检查提供商是否存在
                     check_result = conn.execute(
-                        text(
-                            "SELECT provider_name FROM api_providers WHERE provider_name = :provider"
-                        ),
+                        text("SELECT provider_name FROM api_providers WHERE provider_name = :provider"),
                         {"provider": provider.value},
                     ).fetchone()
 
@@ -813,9 +766,7 @@ class ApiManager:
 
                     # 激活指定提供商
                     result = conn.execute(
-                        text(
-                            "UPDATE api_providers SET is_active = 1 WHERE provider_name = :provider"
-                        ),
+                        text("UPDATE api_providers SET is_active = 1 WHERE provider_name = :provider"),
                         {"provider": provider.value},
                     )
 
@@ -831,9 +782,7 @@ class ApiManager:
             print(f"❌ 激活API提供商失败: {str(e)}")
             return False
 
-    def _save_with_flask_context(
-        self, provider: ApiProvider, api_key: str, model: str = None
-    ) -> bool:
+    def _save_with_flask_context(self, provider: ApiProvider, api_key: str, model: str = None) -> bool:
         """使用Flask上下文保存API配置"""
         try:
             import json
@@ -854,18 +803,14 @@ class ApiManager:
             print(f"✅ API验证成功，使用Flask ORM保存配置...")
 
             # 查找或创建API提供商记录
-            existing = ApiProviderModel.query.filter_by(
-                provider_name=provider.value
-            ).first()
+            existing = ApiProviderModel.query.filter_by(provider_name=provider.value).first()
 
             if existing:
                 # 更新现有配置
                 existing.api_key = api_key
                 existing.default_model = default_model
                 existing.is_verified = True
-                existing.supported_models = json.dumps(
-                    validation_result.get("models", [])
-                )
+                existing.supported_models = json.dumps(validation_result.get("models", []))
                 print(f"✅ 更新现有配置: {provider.value}")
             else:
                 # 创建新配置

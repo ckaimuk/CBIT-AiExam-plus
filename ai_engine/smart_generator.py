@@ -166,9 +166,7 @@ class SmartQuestionGenerator:
         # 确保难度配置已初始化
         self._init_difficulty_configs()
 
-        print(
-            f"🎯 开始生成题目 - 学科: {config.subject}, 难度: {config.difficulty.value}, 数量: {config.count}"
-        )
+        print(f"🎯 开始生成题目 - 学科: {config.subject}, 难度: {config.difficulty.value}, 数量: {config.count}")
 
         questions = []
         failed_attempts = 0
@@ -179,15 +177,9 @@ class SmartQuestionGenerator:
             retry_count = 0
             max_retries = 3
 
-            while (
-                not success
-                and retry_count < max_retries
-                and failed_attempts < max_failed_attempts
-            ):
+            while not success and retry_count < max_retries and failed_attempts < max_failed_attempts:
                 try:
-                    question = self._generate_ai_driven_question(
-                        config, i + retry_count
-                    )
+                    question = self._generate_ai_driven_question(config, i + retry_count)
                     if question and self._validate_question(question):
                         questions.append(question)
                         print(f"✅ 成功生成第 {i+1} 道题目")
@@ -195,27 +187,19 @@ class SmartQuestionGenerator:
                     else:
                         retry_count += 1
                         failed_attempts += 1
-                        print(
-                            f"⚠️  第 {i+1} 道题目生成失败，重试 {retry_count}/{max_retries}"
-                        )
+                        print(f"⚠️  第 {i+1} 道题目生成失败，重试 {retry_count}/{max_retries}")
                 except Exception as e:
                     retry_count += 1
                     failed_attempts += 1
-                    print(
-                        f"❌ 第 {i+1} 道题目生成异常 (重试 {retry_count}/{max_retries}): {str(e)}"
-                    )
+                    print(f"❌ 第 {i+1} 道题目生成异常 (重试 {retry_count}/{max_retries}): {str(e)}")
 
             if not success:
                 print(f"❌ 第 {i+1} 道题目最终生成失败")
 
-        print(
-            f"🎉 完成生成，共 {len(questions)} 道有效题目，失败 {failed_attempts} 次尝试"
-        )
+        print(f"🎉 完成生成，共 {len(questions)} 道有效题目，失败 {failed_attempts} 次尝试")
         return questions
 
-    def _generate_ai_driven_question(
-        self, config: GenerationConfig, index: int
-    ) -> Optional[Dict[str, Any]]:
+    def _generate_ai_driven_question(self, config: GenerationConfig, index: int) -> Optional[Dict[str, Any]]:
         """完全基于AI参数驱动的题目生成"""
         try:
             # 构建详细的AI提示词
@@ -368,17 +352,14 @@ Please return strictly in the following JSON format:
                 # 补充必要字段
                 return {
                     "subject": config.subject,
-                    "sub_tag": config.sub_domain
-                    or f"{config.subject}-{config.difficulty.value}",
+                    "sub_tag": config.sub_domain or f"{config.subject}-{config.difficulty.value}",
                     "language": config.language.value,
                     "difficulty": (
                         difficulty_config["name_zh"]
                         if config.language == Language.CHINESE
                         else difficulty_config["name_en"]
                     ),
-                    "cognitive_level": (
-                        "综合" if config.language == Language.CHINESE else "Synthesis"
-                    ),
+                    "cognitive_level": ("综合" if config.language == Language.CHINESE else "Synthesis"),
                     "question_type": config.question_type.value,
                     "content": ai_response.get("content", ""),
                     "options": ai_response.get("options", []),
@@ -387,28 +368,14 @@ Please return strictly in the following JSON format:
                     "keywords": ai_response.get("keywords", ["AI生成"]),
                     "points": config.points_per_question,
                     "scoring_criteria": {
-                        "full_credit": (
-                            "完全正确"
-                            if config.language == Language.CHINESE
-                            else "Completely correct"
-                        ),
-                        "partial_credit": (
-                            "部分正确"
-                            if config.language == Language.CHINESE
-                            else "Partially correct"
-                        ),
-                        "zero_credit": (
-                            "答案错误"
-                            if config.language == Language.CHINESE
-                            else "Incorrect answer"
-                        ),
+                        "full_credit": ("完全正确" if config.language == Language.CHINESE else "Completely correct"),
+                        "partial_credit": ("部分正确" if config.language == Language.CHINESE else "Partially correct"),
+                        "zero_credit": ("答案错误" if config.language == Language.CHINESE else "Incorrect answer"),
                     },
                     "time_limit": difficulty_config["time_limit_minutes"],
                     "auto_gradable": True,
                     "ai_generated": True,
-                    "difficulty_justification": ai_response.get(
-                        "difficulty_justification", ""
-                    ),
+                    "difficulty_justification": ai_response.get("difficulty_justification", ""),
                     "innovation_aspects": ai_response.get("innovation_aspects", ""),
                 }
             else:
@@ -520,9 +487,7 @@ Please return strictly in the following JSON format:
 
         return fixed_string
 
-    def _generate_ai_parameter_driven_response(
-        self, config: GenerationConfig, index: int
-    ) -> Dict[str, Any]:
+    def _generate_ai_parameter_driven_response(self, config: GenerationConfig, index: int) -> Dict[str, Any]:
         """完全基于AI参数生成题目，摆脱预设框架限制"""
 
         # 使用index和时间戳作为随机种子，确保每次生成不同的题目
@@ -715,16 +680,12 @@ Please return strictly in the following JSON format:
             topic_pool = subject_info["research_areas"]
 
         # 随机选择主题 - 使用index和随机因子增加多样性
-        topic_index = (index * 7 + random.randint(0, len(topic_pool) * 2)) % len(
-            topic_pool
-        )
+        topic_index = (index * 7 + random.randint(0, len(topic_pool) * 2)) % len(topic_pool)
         selected_topic = topic_pool[topic_index]
 
         # 生成题目内容
         if config.use_scenarios:
-            scenario_context = self._generate_scenario_context(
-                config.subject, selected_topic, config.difficulty
-            )
+            scenario_context = self._generate_scenario_context(config.subject, selected_topic, config.difficulty)
             content_prefix = f"在{scenario_context}中，"
         else:
             content_prefix = f"在{config.subject}的{selected_topic}研究中，"
@@ -838,17 +799,15 @@ Please return strictly in the following JSON format:
         # 如果有自定义prompt，优先使用自定义prompt生成内容
         if config.custom_prompt and config.custom_prompt.strip():
             # 基于自定义prompt生成更相关的题目内容
-            custom_content = self._generate_custom_prompt_content(
-                config, selected_topic, current_difficulty
-            )
+            custom_content = self._generate_custom_prompt_content(config, selected_topic, current_difficulty)
             if custom_content:
                 content = custom_content
             else:
                 # 在自定义prompt基础上添加困难度体现
-                difficulty_hint = self._get_difficulty_hint(
-                    config.difficulty, current_difficulty
+                difficulty_hint = self._get_difficulty_hint(config.difficulty, current_difficulty)
+                content = (
+                    f"{content_prefix}考虑{selected_topic}问题，设{param1}，{param2}。{difficulty_hint} {descriptor}"
                 )
-                content = f"{content_prefix}考虑{selected_topic}问题，设{param1}，{param2}。{difficulty_hint} {descriptor}"
         else:
             # 生成清晰的题目内容，避免prompt泄露
             if formula:
@@ -898,9 +857,7 @@ Please return strictly in the following JSON format:
         for i in range(4):
             theory_label = theory_labels[i % len(theory_labels)]
             approach = random.choice(approach_words)
-            concept = current_difficulty["concepts"][
-                i % len(current_difficulty["concepts"])
-            ]
+            concept = current_difficulty["concepts"][i % len(current_difficulty["concepts"])]
             result_type = random.choice(result_words)
 
             option = f"{theory_label}：{approach}{concept}的{result_type}"
@@ -934,9 +891,7 @@ Please return strictly in the following JSON format:
             "innovation_aspects": f"采用AI参数驱动生成，完全摆脱预设框架限制，每次生成独特的{selected_topic}相关问题",
         }
 
-    def _generate_scenario_context(
-        self, subject: str, topic: str, difficulty: DifficultyLevel
-    ) -> str:
+    def _generate_scenario_context(self, subject: str, topic: str, difficulty: DifficultyLevel) -> str:
         """生成场景上下文"""
         import random
 
@@ -1047,14 +1002,10 @@ Please return strictly in the following JSON format:
         # 使用topic和时间戳增加随机性
         import time
 
-        scenario_index = (
-            hash(topic + str(time.time())) + random.randint(0, 100)
-        ) % len(scenario_list)
+        scenario_index = (hash(topic + str(time.time())) + random.randint(0, 100)) % len(scenario_list)
         return scenario_list[scenario_index]
 
-    def _get_difficulty_hint(
-        self, difficulty: DifficultyLevel, current_difficulty: dict
-    ) -> str:
+    def _get_difficulty_hint(self, difficulty: DifficultyLevel, current_difficulty: dict) -> str:
         """获取困难度提示"""
         difficulty_hints = {
             DifficultyLevel.HIGH_SCHOOL: "这是一道基础题目，",
@@ -1089,15 +1040,8 @@ Please return strictly in the following JSON format:
         prompt_lower = config.custom_prompt.lower()
 
         # 数学相关关键词
-        if any(
-            keyword in prompt_lower
-            for keyword in ["微积分", "极限", "导数", "积分", "ε-δ", "epsilon", "delta"]
-        ):
-            if (
-                "极限" in prompt_lower
-                or "ε-δ" in prompt_lower
-                or "epsilon" in prompt_lower
-            ):
+        if any(keyword in prompt_lower for keyword in ["微积分", "极限", "导数", "积分", "ε-δ", "epsilon", "delta"]):
+            if "极限" in prompt_lower or "ε-δ" in prompt_lower or "epsilon" in prompt_lower:
                 # 生成极限相关题目
                 if config.use_scenarios:
                     scenario = random.choice(["工程计算", "物理建模", "数据分析"])
@@ -1105,19 +1049,16 @@ Please return strictly in the following JSON format:
                 else:
                     return f"根据ε-δ定义，证明函数f(x) = x² + 3x - 2在x→2时的极限为8。设ε = 0.1，求对应的δ值。"
 
-        elif any(
-            keyword in prompt_lower
-            for keyword in ["线性代数", "矩阵", "向量", "特征值"]
-        ):
+        elif any(keyword in prompt_lower for keyword in ["线性代数", "矩阵", "向量", "特征值"]):
             if config.use_scenarios:
                 scenario = random.choice(["机器学习", "图像处理", "控制系统"])
-                return f"在{scenario}中，给定矩阵A = [[2,1],[1,3]]，求其特征值和特征向量，并分析其在系统稳定性中的作用。"
+                return (
+                    f"在{scenario}中，给定矩阵A = [[2,1],[1,3]]，求其特征值和特征向量，并分析其在系统稳定性中的作用。"
+                )
             else:
                 return f"对于矩阵A = [[2,1],[1,3]]，计算其特征值λ₁和λ₂，并求对应的特征向量。"
 
-        elif any(
-            keyword in prompt_lower for keyword in ["概率", "统计", "分布", "期望"]
-        ):
+        elif any(keyword in prompt_lower for keyword in ["概率", "统计", "分布", "期望"]):
             if config.use_scenarios:
                 scenario = random.choice(["质量控制", "金融风险评估", "医学统计"])
                 return f"在{scenario}中，某随机变量X服从正态分布N(μ=5, σ²=4)，求P(3<X<7)的概率值。"
@@ -1125,9 +1066,7 @@ Please return strictly in the following JSON format:
                 return f"设随机变量X服从正态分布N(μ=5, σ²=4)，计算P(3<X<7)的概率值。"
 
         # 物理相关关键词
-        elif any(
-            keyword in prompt_lower for keyword in ["力学", "电磁学", "量子", "相对论"]
-        ):
+        elif any(keyword in prompt_lower for keyword in ["力学", "电磁学", "量子", "相对论"]):
             if config.use_scenarios:
                 scenario = random.choice(["实验设计", "工程应用", "理论研究"])
                 return f"在{scenario}中，考虑{selected_topic}问题，根据{current_difficulty['concepts'][0]}理论，分析其物理意义和应用价值。"
@@ -1135,10 +1074,7 @@ Please return strictly in the following JSON format:
                 return f"在{selected_topic}中，根据{current_difficulty['concepts'][0]}原理，分析相关物理现象。"
 
         # 计算机科学相关关键词
-        elif any(
-            keyword in prompt_lower
-            for keyword in ["算法", "数据结构", "编程", "复杂度"]
-        ):
+        elif any(keyword in prompt_lower for keyword in ["算法", "数据结构", "编程", "复杂度"]):
             if config.use_scenarios:
                 scenario = random.choice(["软件开发", "系统优化", "性能分析"])
                 return f"在{scenario}中，需要实现一个{selected_topic}算法，分析其时间复杂度和空间复杂度。"
@@ -1146,14 +1082,10 @@ Please return strictly in the following JSON format:
                 return f"设计一个{selected_topic}算法，分析其时间复杂度和空间复杂度。"
 
         # 如果没有匹配到特定关键词，返回基于prompt的通用内容
-        difficulty_hint = self._get_difficulty_hint(
-            config.difficulty, current_difficulty
-        )
+        difficulty_hint = self._get_difficulty_hint(config.difficulty, current_difficulty)
 
         if config.use_scenarios:
-            scenario = self._generate_scenario_context(
-                config.subject, selected_topic, config.difficulty
-            )
+            scenario = self._generate_scenario_context(config.subject, selected_topic, config.difficulty)
             return f"在{scenario}中，{config.custom_prompt}。{difficulty_hint}请基于{selected_topic}知识进行分析。"
         else:
             return f"{config.custom_prompt}。{difficulty_hint}请结合{selected_topic}的相关理论进行解答。"

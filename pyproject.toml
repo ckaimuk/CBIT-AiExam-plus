@@ -1,8 +1,15 @@
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-line_length = 88
+line_length = 120
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py311']
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203", "W503", "E501", "F541"]
+per-file-ignores = [
+    "ai_engine/*.py:E501,F541",
+]

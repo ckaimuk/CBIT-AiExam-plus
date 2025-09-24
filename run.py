@@ -14,9 +14,7 @@ load_dotenv()
 
 # 设置必要的环境变量
 os.environ["SECRET_KEY"] = "dev-secret-key"
-os.environ["DATABASE_URL"] = (
-    f'sqlite:///{os.path.join(os.path.dirname(__file__), "instance", "exam.db")}'
-)
+os.environ["DATABASE_URL"] = f'sqlite:///{os.path.join(os.path.dirname(__file__), "instance", "exam.db")}'
 os.environ["FLASK_ENV"] = "development"
 os.environ["FLASK_DEBUG"] = "True"
 

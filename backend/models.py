@@ -25,9 +25,7 @@ class Student(db.Model):
     device_id = db.Column(db.String(50))
     has_taken_exam = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 关系
     sessions = db.relationship("ExamSession", backref="student", lazy=True)
@@ -45,9 +43,7 @@ class ExamSession(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
     device_ip = db.Column(db.String(45))
     device_id = db.Column(db.String(50))
-    status = db.Column(
-        db.String(20), default="pending"
-    )  # pending, verified, active, completed
+    status = db.Column(db.String(20), default="pending")  # pending, verified, active, completed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 关系
@@ -63,13 +59,9 @@ class ExamTemplate(db.Model):
     __tablename__ = "exam_templates"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(
-        db.String(200), nullable=False
-    )  # 考试名称，如"2026年IMBA管理入学考试第一轮"
+    name = db.Column(db.String(200), nullable=False)  # 考试名称，如"2026年IMBA管理入学考试第一轮"
     description = db.Column(db.Text)  # 考试描述
-    config_id = db.Column(
-        db.Integer, db.ForeignKey("exam_configs.id"), nullable=True
-    )  # 关联的考试配置（可选）
+    config_id = db.Column(db.Integer, db.ForeignKey("exam_configs.id"), nullable=True)  # 关联的考试配置（可选）
     questions = db.Column(db.Text)  # JSON格式存储题目
     time_limit = db.Column(db.Integer, default=75)  # 时间限制（分钟）
     total_questions = db.Column(db.Integer, default=20)  # 总题目数
@@ -79,9 +71,7 @@ class ExamTemplate(db.Model):
     start_time = db.Column(db.DateTime)  # 开始时间（可选）
     end_time = db.Column(db.DateTime)  # 结束时间（可选）
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 关系
     exam_instances = db.relationship("ExamInstance", backref="template", lazy=True)
@@ -120,15 +110,9 @@ class ExamInstance(db.Model):
     __tablename__ = "exam_instances"
 
     id = db.Column(db.Integer, primary_key=True)
-    template_id = db.Column(
-        db.Integer, db.ForeignKey("exam_templates.id"), nullable=False
-    )
-    session_id = db.Column(
-        db.Integer, db.ForeignKey("exam_sessions.id"), nullable=True
-    )  # 可选，兼容新旧流程
-    student_id = db.Column(
-        db.Integer, db.ForeignKey("students.id"), nullable=True
-    )  # 可选，兼容新旧流程
+    template_id = db.Column(db.Integer, db.ForeignKey("exam_templates.id"), nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey("exam_sessions.id"), nullable=True)  # 可选，兼容新旧流程
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=True)  # 可选，兼容新旧流程
     name = db.Column(db.String(200), nullable=False)  # 实例名称
     description = db.Column(db.Text)  # 实例描述
     questions = db.Column(db.Text)  # JSON格式存储题目（从模板复制或随机生成）
@@ -143,9 +127,7 @@ class ExamInstance(db.Model):
     started_at = db.Column(db.DateTime, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 关系
     answers = db.relationship("Answer", backref="exam_instance", lazy=True)
@@ -191,12 +173,8 @@ class Exam(db.Model):
     __tablename__ = "exams"
 
     id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(
-        db.Integer, db.ForeignKey("exam_sessions.id"), nullable=False
-    )
-    config_id = db.Column(
-        db.Integer, db.ForeignKey("exam_configs.id"), nullable=True
-    )  # 关联的考试配置
+    session_id = db.Column(db.Integer, db.ForeignKey("exam_sessions.id"), nullable=False)
+    config_id = db.Column(db.Integer, db.ForeignKey("exam_configs.id"), nullable=True)  # 关联的考试配置
     questions = db.Column(db.Text)  # JSON格式存储题目
     time_limit = db.Column(db.Integer, default=75)  # 时间限制（分钟）
     status = db.Column(db.String(20), default="active")  # active, completed, expired
@@ -235,9 +213,7 @@ class Question(db.Model):
     language = db.Column(db.String(10), default="zh")  # 语言：zh(中文), en(英文)
     difficulty = db.Column(db.String(20), nullable=False)  # 难度等级
     cognitive_level = db.Column(db.String(20), nullable=False)  # 认知层级
-    question_type = db.Column(
-        db.String(20), nullable=False
-    )  # 题型：multiple_choice, short_answer, programming
+    question_type = db.Column(db.String(20), nullable=False)  # 题型：multiple_choice, short_answer, programming
     content = db.Column(db.Text, nullable=False)  # 题目内容
     options = db.Column(db.Text)  # 选项（JSON格式）
     correct_answer = db.Column(db.Text)  # 正确答案
@@ -245,9 +221,7 @@ class Question(db.Model):
     points = db.Column(db.Integer, default=1)  # 分值
     is_active = db.Column(db.Boolean, default=True)  # 是否启用
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
         """转换为字典格式"""
@@ -295,20 +269,14 @@ class ExamConfig(db.Model):
     show_results = db.Column(db.Boolean, default=True)  # 是否在考试完成后立即显示成绩
 
     # 新增：支持精确题目选择
-    question_selection_mode = db.Column(
-        db.String(20), default="filter"
-    )  # 'filter' 或 'manual'
+    question_selection_mode = db.Column(db.String(20), default="filter")  # 'filter' 或 'manual'
     passing_score = db.Column(db.Float, default=60.0)  # 及格分数
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 关系
-    config_questions = db.relationship(
-        "ExamConfigQuestion", backref="config", lazy=True, cascade="all, delete-orphan"
-    )
+    config_questions = db.relationship("ExamConfigQuestion", backref="config", lazy=True, cascade="all, delete-orphan")
 
     def to_dict(self):
         """转换为字典格式"""
@@ -347,9 +315,7 @@ class ExamConfigQuestion(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 关系
-    question = db.relationship(
-        "Question", backref=db.backref("config_questions", cascade="all, delete-orphan")
-    )
+    question = db.relationship("Question", backref=db.backref("config_questions", cascade="all, delete-orphan"))
 
     def to_dict(self):
         """转换为字典格式"""
@@ -379,9 +345,7 @@ class ExamQuestion(db.Model):
 
     # 关系
     exam = db.relationship("Exam", backref="exam_questions")
-    question = db.relationship(
-        "Question", backref=db.backref("exam_questions", cascade="all, delete-orphan")
-    )
+    question = db.relationship("Question", backref=db.backref("exam_questions", cascade="all, delete-orphan"))
 
     def __repr__(self):
         return f"<ExamQuestion {self.exam_id}-{self.question_id}>"
@@ -393,12 +357,8 @@ class Answer(db.Model):
     __tablename__ = "answers"
 
     id = db.Column(db.Integer, primary_key=True)
-    exam_id = db.Column(
-        db.Integer, db.ForeignKey("exams.id"), nullable=True
-    )  # 兼容旧版
-    exam_instance_id = db.Column(
-        db.Integer, db.ForeignKey("exam_instances.id"), nullable=True
-    )  # 新版支持
+    exam_id = db.Column(db.Integer, db.ForeignKey("exams.id"), nullable=True)  # 兼容旧版
+    exam_instance_id = db.Column(db.Integer, db.ForeignKey("exam_instances.id"), nullable=True)  # 新版支持
     question_id = db.Column(db.String(50), nullable=False)  # 题目ID（在考试中的ID）
     answer_text = db.Column(db.Text)
     is_correct = db.Column(db.Boolean)
@@ -424,9 +384,7 @@ class StudentExamRecord(db.Model):
     start_time = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
     duration_minutes = db.Column(db.Integer, default=0)
-    status = db.Column(
-        db.String(20), default="in_progress"
-    )  # in_progress, completed, abandoned
+    status = db.Column(db.String(20), default="in_progress")  # in_progress, completed, abandoned
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 关系
@@ -462,9 +420,7 @@ class ExamTemplateQuestion(db.Model):
     __tablename__ = "exam_template_questions"
 
     id = db.Column(db.Integer, primary_key=True)
-    template_id = db.Column(
-        db.Integer, db.ForeignKey("exam_templates.id"), nullable=False
-    )
+    template_id = db.Column(db.Integer, db.ForeignKey("exam_templates.id"), nullable=False)
     question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=False)
     question_order = db.Column(db.Integer, default=0)  # 题目顺序
     points = db.Column(db.Float, default=1.0)  # 该题目在考试中的分值
@@ -498,13 +454,9 @@ class StudentExam(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
-    exam_instance_id = db.Column(
-        db.Integer, db.ForeignKey("exam_instances.id"), nullable=False
-    )
+    exam_instance_id = db.Column(db.Integer, db.ForeignKey("exam_instances.id"), nullable=False)
     attempt_number = db.Column(db.Integer, default=1)  # 尝试次数
-    status = db.Column(
-        db.String(20), default="not_started"
-    )  # not_started, in_progress, completed, abandoned
+    status = db.Column(db.String(20), default="not_started")  # not_started, in_progress, completed, abandoned
     start_time = db.Column(db.DateTime)  # 开始时间
     end_time = db.Column(db.DateTime)  # 结束时间
     duration_minutes = db.Column(db.Integer, default=0)  # 实际用时（分钟）
@@ -514,15 +466,11 @@ class StudentExam(db.Model):
     total_questions = db.Column(db.Integer, default=0)  # 总题数
     is_passed = db.Column(db.Boolean, default=False)  # 是否通过
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 关系
     student = db.relationship("Student", backref="student_exams")
-    answers = db.relationship(
-        "StudentAnswer", backref="student_exam", lazy=True, cascade="all, delete-orphan"
-    )
+    answers = db.relationship("StudentAnswer", backref="student_exam", lazy=True, cascade="all, delete-orphan")
 
     def to_dict(self):
         """转换为字典格式"""
@@ -554,9 +502,7 @@ class StudentAnswer(db.Model):
     __tablename__ = "student_answers"
 
     id = db.Column(db.Integer, primary_key=True)
-    student_exam_id = db.Column(
-        db.Integer, db.ForeignKey("student_exams.id"), nullable=False
-    )
+    student_exam_id = db.Column(db.Integer, db.ForeignKey("student_exams.id"), nullable=False)
     question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=False)
     answer_text = db.Column(db.Text)  # 学生答案
     is_correct = db.Column(db.Boolean)  # 是否正确
@@ -567,9 +513,7 @@ class StudentAnswer(db.Model):
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)  # 提交时间
 
     # 关系
-    question = db.relationship(
-        "Question", backref=db.backref("student_answers", cascade="all, delete-orphan")
-    )
+    question = db.relationship("Question", backref=db.backref("student_answers", cascade="all, delete-orphan"))
 
     def to_dict(self):
         """转换为字典格式"""
@@ -583,9 +527,7 @@ class StudentAnswer(db.Model):
             "feedback": self.feedback,
             "auto_graded": self.auto_graded,
             "graded_at": self.graded_at.isoformat() if self.graded_at else None,
-            "submitted_at": (
-                self.submitted_at.isoformat() if self.submitted_at else None
-            ),
+            "submitted_at": (self.submitted_at.isoformat() if self.submitted_at else None),
         }
 
     def __repr__(self):
@@ -598,23 +540,17 @@ class VerificationConfig(db.Model):
     __tablename__ = "verification_configs"
 
     id = db.Column(db.Integer, primary_key=True)
-    field_name = db.Column(
-        db.String(50), nullable=False
-    )  # 字段名称 (name, id_number, application_number)
+    field_name = db.Column(db.String(50), nullable=False)  # 字段名称 (name, id_number, application_number)
     display_name = db.Column(db.String(100), nullable=False)  # 显示名称
     is_required = db.Column(db.Boolean, default=True)  # 是否必填
     is_enabled = db.Column(db.Boolean, default=True)  # 是否启用
-    field_type = db.Column(
-        db.String(20), default="text"
-    )  # 字段类型 (text, number, email)
+    field_type = db.Column(db.String(20), default="text")  # 字段类型 (text, number, email)
     placeholder = db.Column(db.String(200))  # 占位符文本
     validation_pattern = db.Column(db.String(500))  # 验证正则表达式
     error_message = db.Column(db.String(200))  # 错误提示信息
     field_order = db.Column(db.Integer, default=0)  # 字段显示顺序
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
         """转换为字典格式"""
@@ -645,14 +581,10 @@ class SystemConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     config_key = db.Column(db.String(100), unique=True, nullable=False)
     config_value = db.Column(db.Text)
-    config_type = db.Column(
-        db.String(20), default="text"
-    )  # text, file, boolean, number
+    config_type = db.Column(db.String(20), default="text")  # text, file, boolean, number
     description = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
         """转换为字典格式"""
@@ -676,9 +608,7 @@ class ApiProvider(db.Model):
     __tablename__ = "api_providers"
 
     id = db.Column(db.Integer, primary_key=True)
-    provider_name = db.Column(
-        db.String(50), unique=True, nullable=False
-    )  # openrouter, openai, anthropic
+    provider_name = db.Column(db.String(50), unique=True, nullable=False)  # openrouter, openai, anthropic
     display_name = db.Column(db.String(100), nullable=False)  # 显示名称
     api_url = db.Column(db.String(500), nullable=False)  # API端点URL
     api_key = db.Column(db.Text)  # API密钥（加密存储）
@@ -689,9 +619,7 @@ class ApiProvider(db.Model):
     headers_template = db.Column(db.Text)  # 请求头模板（JSON格式）
     request_template = db.Column(db.Text)  # 请求体模板（JSON格式）
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
         """转换为字典格式"""
@@ -702,21 +630,13 @@ class ApiProvider(db.Model):
             "provider_name": self.provider_name,
             "display_name": self.display_name,
             "api_url": self.api_url,
-            "api_key": (
-                self.api_key[:10] + "..." if self.api_key else None
-            ),  # 隐藏API密钥
+            "api_key": (self.api_key[:10] + "..." if self.api_key else None),  # 隐藏API密钥
             "is_active": self.is_active,
             "is_verified": self.is_verified,
             "default_model": self.default_model,
-            "supported_models": (
-                json.loads(self.supported_models) if self.supported_models else []
-            ),
-            "headers_template": (
-                json.loads(self.headers_template) if self.headers_template else {}
-            ),
-            "request_template": (
-                json.loads(self.request_template) if self.request_template else {}
-            ),
+            "supported_models": (json.loads(self.supported_models) if self.supported_models else []),
+            "headers_template": (json.loads(self.headers_template) if self.headers_template else {}),
+            "request_template": (json.loads(self.request_template) if self.request_template else {}),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -4,10 +4,9 @@
 """
 
 import hashlib
-import json
 import random
 from datetime import datetime
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set
 
 
 class AdvancedQuestionGenerator:
@@ -130,15 +129,11 @@ class AdvancedQuestionGenerator:
                         ],
                         "item": ["手机", "衣服", "鞋子", "包包", "化妆品"],
                         "original_price": lambda: random.uniform(200, 1500),
-                        "discount_type": lambda: random.choice(
-                            ["8折优惠", "满300减50", "买二送一", "第二件半价"]
-                        ),
+                        "discount_type": lambda: random.choice(["8折优惠", "满300减50", "买二送一", "第二件半价"]),
                         "customer": ["顾客", "会员", "学生", "老师", "职员"],
                         "quantity": lambda: random.randint(1, 5),
                     },
-                    "answer_formula": lambda vars: vars["original_price"]
-                    * vars["quantity"]
-                    * 0.8,  # 简化折扣计算
+                    "answer_formula": lambda vars: vars["original_price"] * vars["quantity"] * 0.8,  # 简化折扣计算
                 },
                 {
                     "type": "currency_exchange_shopping",
@@ -148,13 +143,10 @@ class AdvancedQuestionGenerator:
                         "country": ["美国", "日本", "韩国", "英国", "欧洲"],
                         "item": ["手表", "包包", "化妆品", "电子产品", "奢侈品"],
                         "local_price": lambda: random.uniform(100, 2000),
-                        "currency": lambda: random.choice(
-                            ["美元", "日元", "韩元", "英镑", "欧元"]
-                        ),
+                        "currency": lambda: random.choice(["美元", "日元", "韩元", "英镑", "欧元"]),
                         "exchange_rate": lambda: random.uniform(6.5, 7.5),
                     },
-                    "answer_formula": lambda vars: vars["local_price"]
-                    * vars["exchange_rate"],
+                    "answer_formula": lambda vars: vars["local_price"] * vars["exchange_rate"],
                 },
                 {
                     "type": "subscription_cost_analysis",
@@ -177,8 +169,7 @@ class AdvancedQuestionGenerator:
                         "monthly_fee": lambda: random.uniform(15, 80),
                         "annual_fee": lambda: random.uniform(120, 600),  # 简化
                     },
-                    "answer_formula": lambda vars: (vars["monthly_fee"] * 12)
-                    - vars["annual_fee"],
+                    "answer_formula": lambda vars: (vars["monthly_fee"] * 12) - vars["annual_fee"],
                 },
             ],
             "probability_statistics": [
@@ -233,8 +224,7 @@ class AdvancedQuestionGenerator:
                         ],
                         "positive_count": lambda: random.randint(50, 750),  # 简化
                     },
-                    "answer_formula": lambda vars: vars["positive_count"]
-                    / vars["total_people"],
+                    "answer_formula": lambda vars: vars["positive_count"] / vars["total_people"],
                 },
                 {
                     "type": "quality_control",
@@ -243,9 +233,7 @@ class AdvancedQuestionGenerator:
                         "total_products": lambda: random.randint(500, 5000),
                         "defective_count": lambda: random.randint(5, 250),  # 简化
                     },
-                    "answer_formula": lambda vars: (
-                        vars["total_products"] - vars["defective_count"]
-                    )
+                    "answer_formula": lambda vars: (vars["total_products"] - vars["defective_count"])
                     / vars["total_products"],
                 },
                 {
@@ -257,8 +245,7 @@ class AdvancedQuestionGenerator:
                         "total_days": lambda: random.choice([90, 91, 92]),
                         "rainy_days": lambda: random.randint(10, 30),  # 简化
                     },
-                    "answer_formula": lambda vars: vars["rainy_days"]
-                    / vars["total_days"],
+                    "answer_formula": lambda vars: vars["rainy_days"] / vars["total_days"],
                 },
             ],
             "investment_finance": [
@@ -271,10 +258,7 @@ class AdvancedQuestionGenerator:
                         "rate": lambda: random.uniform(3.5, 8.5),
                         "years": lambda: random.randint(1, 5),
                     },
-                    "answer_formula": lambda vars: vars["principal"]
-                    * vars["rate"]
-                    / 100
-                    * vars["years"],
+                    "answer_formula": lambda vars: vars["principal"] * vars["rate"] / 100 * vars["years"],
                 },
                 {
                     "type": "compound_interest",
@@ -289,13 +273,10 @@ class AdvancedQuestionGenerator:
                         ],
                         "principal": lambda: random.randint(50000, 500000),
                         "rate": lambda: random.uniform(4.0, 12.0),
-                        "compound_frequency": lambda: random.choice(
-                            ["按年", "按月", "按季度"]
-                        ),
+                        "compound_frequency": lambda: random.choice(["按年", "按月", "按季度"]),
                         "years": lambda: random.randint(2, 10),
                     },
-                    "answer_formula": lambda vars: vars["principal"]
-                    * (1 + vars["rate"] / 100) ** vars["years"],
+                    "answer_formula": lambda vars: vars["principal"] * (1 + vars["rate"] / 100) ** vars["years"],
                 },
                 {
                     "type": "portfolio_allocation",
@@ -312,9 +293,7 @@ class AdvancedQuestionGenerator:
                         "stock_ratio": lambda: random.randint(30, 70),
                         "bond_ratio": lambda: random.randint(10, 40),  # 简化
                     },
-                    "answer_formula": lambda vars: vars["total_money"]
-                    * vars["stock_ratio"]
-                    / 100,
+                    "answer_formula": lambda vars: vars["total_money"] * vars["stock_ratio"] / 100,
                 },
                 {
                     "type": "loan_calculation",
@@ -333,10 +312,7 @@ class AdvancedQuestionGenerator:
                             ]
                         ),
                     },
-                    "answer_formula": lambda vars: vars["loan_amount"]
-                    * vars["rate"]
-                    / 100
-                    / 12,  # 简化计算
+                    "answer_formula": lambda vars: vars["loan_amount"] * vars["rate"] / 100 / 12,  # 简化计算
                 },
                 {
                     "type": "currency_arbitrage",
@@ -349,20 +325,13 @@ class AdvancedQuestionGenerator:
                             "金融机构",
                             "个人交易者",
                         ],
-                        "currency1": lambda: random.choice(
-                            ["美元", "欧元", "英镑", "日元"]
-                        ),
-                        "currency2": lambda: random.choice(
-                            ["港币", "澳元", "加元", "瑞郎"]
-                        ),
+                        "currency1": lambda: random.choice(["美元", "欧元", "英镑", "日元"]),
+                        "currency2": lambda: random.choice(["港币", "澳元", "加元", "瑞郎"]),
                         "rate1": lambda: random.uniform(0.8, 1.5),
                         "rate2": lambda: random.uniform(5.0, 8.0),
                         "amount": lambda: random.randint(100000, 1000000),
                     },
-                    "answer_formula": lambda vars: vars["amount"]
-                    * vars["rate1"]
-                    * vars["rate2"]
-                    - vars["amount"],
+                    "answer_formula": lambda vars: vars["amount"] * vars["rate1"] * vars["rate2"] - vars["amount"],
                 },
             ],
         }
@@ -413,18 +382,14 @@ class AdvancedQuestionGenerator:
         if custom_prompt.strip():
             detected_language = self._extract_language_from_prompt(custom_prompt)
             if detected_language != language:
-                print(
-                    f"📝 检测到提示词语言要求: {detected_language}, 覆盖默认语言: {language}"
-                )
+                print(f"📝 检测到提示词语言要求: {detected_language}, 覆盖默认语言: {language}")
                 language = detected_language
 
         print(f"主要场景: {primary_scenario}")
         print(f"最终语言: {language}")
 
         # 获取难度配置
-        difficulty_config = self.difficulty_configs.get(
-            difficulty, self.difficulty_configs["中等"]
-        )
+        difficulty_config = self.difficulty_configs.get(difficulty, self.difficulty_configs["中等"])
 
         questions = []
         used_question_signatures = set()  # 本次生成中使用的题目签名
@@ -460,10 +425,7 @@ class AdvancedQuestionGenerator:
                 signature = self._calculate_question_signature(question)
 
                 # 确保完全不重复
-                if (
-                    signature not in used_question_signatures
-                    and signature not in self.used_signatures
-                ):
+                if signature not in used_question_signatures and signature not in self.used_signatures:
                     questions.append(question)
                     used_question_signatures.add(signature)
                     self.used_signatures.add(signature)
@@ -476,9 +438,7 @@ class AdvancedQuestionGenerator:
             # 防止无限循环
             if len(questions) == 0 and i > count * 2:
                 print("⚠️  生成困难，使用fallback方法")
-                question = self._generate_fallback_question(
-                    i, difficulty_config, language, subject
-                )
+                question = self._generate_fallback_question(i, difficulty_config, language, subject)
                 questions.append(question)
 
         print(f"\n🎉 成功生成 {len(questions)} 道完全不同的题目")
@@ -488,20 +448,11 @@ class AdvancedQuestionGenerator:
         """确定主要场景类型"""
         prompt_lower = custom_prompt.lower()
 
-        if any(
-            keyword in prompt_lower
-            for keyword in ["购物", "买", "价格", "商店", "shopping", "buy", "price"]
-        ):
+        if any(keyword in prompt_lower for keyword in ["购物", "买", "价格", "商店", "shopping", "buy", "price"]):
             return "shopping_scenario"
-        elif any(
-            keyword in prompt_lower
-            for keyword in ["概率", "统计", "probability", "statistics"]
-        ):
+        elif any(keyword in prompt_lower for keyword in ["概率", "统计", "probability", "statistics"]):
             return "probability_statistics"
-        elif any(
-            keyword in prompt_lower
-            for keyword in ["投资", "理财", "利息", "investment", "finance", "interest"]
-        ):
+        elif any(keyword in prompt_lower for keyword in ["投资", "理财", "利息", "investment", "finance", "interest"]):
             return "investment_finance"
         else:
             # 默认混合所有场景
@@ -512,16 +463,10 @@ class AdvancedQuestionGenerator:
         prompt_lower = custom_prompt.lower()
 
         # 检测英文要求
-        if any(
-            keyword in prompt_lower
-            for keyword in ["english", "英文", "in english", "使用英文", "用英文"]
-        ):
+        if any(keyword in prompt_lower for keyword in ["english", "英文", "in english", "使用英文", "用英文"]):
             return "en"
         # 检测中文要求
-        elif any(
-            keyword in prompt_lower
-            for keyword in ["chinese", "中文", "in chinese", "使用中文", "用中文"]
-        ):
+        elif any(keyword in prompt_lower for keyword in ["chinese", "中文", "in chinese", "使用中文", "用中文"]):
             return "zh"
         else:
             return "zh"  # 默认中文
@@ -543,44 +488,27 @@ class AdvancedQuestionGenerator:
         if strategy == "scenario_rotation":
             # 场景轮换：每道题使用不同场景
             scenario_types = list(self.scenario_templates.keys())
-            if (
-                primary_scenario in scenario_types
-                and primary_scenario != "mixed_scenarios"
-            ):
+            if primary_scenario in scenario_types and primary_scenario != "mixed_scenarios":
                 # 主要使用指定场景，但也混合其他场景
                 if index % 3 == 0:  # 每3道题有1道用其他场景
-                    other_scenarios = [
-                        s for s in scenario_types if s != primary_scenario
-                    ]
-                    scenario_type = (
-                        random.choice(other_scenarios)
-                        if other_scenarios
-                        else primary_scenario
-                    )
+                    other_scenarios = [s for s in scenario_types if s != primary_scenario]
+                    scenario_type = random.choice(other_scenarios) if other_scenarios else primary_scenario
                 else:
                     scenario_type = primary_scenario
             else:
                 scenario_type = scenario_types[index % len(scenario_types)]
         else:
             # 其他策略仍使用主场景
-            scenario_type = (
-                primary_scenario
-                if primary_scenario != "mixed_scenarios"
-                else "shopping_scenario"
-            )
+            scenario_type = primary_scenario if primary_scenario != "mixed_scenarios" else "shopping_scenario"
 
         # 获取场景模板
-        templates = self.scenario_templates.get(
-            scenario_type, self.scenario_templates["shopping_scenario"]
-        )
+        templates = self.scenario_templates.get(scenario_type, self.scenario_templates["shopping_scenario"])
 
         # 选择子模板（确保不重复）
         template = templates[index % len(templates)]
 
         # 生成变量值
-        variables = self._generate_template_variables(
-            template, index, strategy, language
-        )
+        variables = self._generate_template_variables(template, index, strategy, language)
 
         # 根据变量填充模板 - 支持英文模板
         content = self._fill_template(template, variables, language)
@@ -612,16 +540,12 @@ class AdvancedQuestionGenerator:
 
         return question
 
-    def _generate_template_variables(
-        self, template: Dict, index: int, strategy: str, language: str
-    ) -> Dict[str, Any]:
+    def _generate_template_variables(self, template: Dict, index: int, strategy: str, language: str) -> Dict[str, Any]:
         """生成模板变量值 - 确保每次都不同"""
         variables = {}
 
         # 设置随机种子，确保每道题都不同
-        random.seed(
-            hash(f"{template['type']}_{index}_{strategy}_{datetime.now().microsecond}")
-        )
+        random.seed(hash(f"{template['type']}_{index}_{strategy}_{datetime.now().microsecond}"))
 
         for var_name, var_config in template["variables"].items():
             if callable(var_config):
@@ -635,21 +559,13 @@ class AdvancedQuestionGenerator:
                         variables[var_name] = var_config()
                     else:
                         # 有参数的函数，传入已有变量
-                        variables[var_name] = var_config(
-                            **{
-                                k: v
-                                for k, v in variables.items()
-                                if k in sig.parameters
-                            }
-                        )
+                        variables[var_name] = var_config(**{k: v for k, v in variables.items() if k in sig.parameters})
                 except Exception as e:
                     print(f"变量生成错误 {var_name}: {e}")
                     variables[var_name] = 1  # 默认值
             elif isinstance(var_config, list):
                 # 如果是列表，随机选择（加入index确保不同）
-                variables[var_name] = var_config[
-                    (index + hash(strategy)) % len(var_config)
-                ]
+                variables[var_name] = var_config[(index + hash(strategy)) % len(var_config)]
             else:
                 variables[var_name] = var_config
 
@@ -658,11 +574,7 @@ class AdvancedQuestionGenerator:
             variables = self._translate_variables_to_english(variables)
 
         # 后处理：处理依赖关系
-        if (
-            "total" in variables
-            and "quantity" in variables
-            and "unit_price" in variables
-        ):
+        if "total" in variables and "quantity" in variables and "unit_price" in variables:
             variables["total"] = variables["quantity"] * variables["unit_price"]
 
         return variables
@@ -676,9 +588,7 @@ class AdvancedQuestionGenerator:
                 if isinstance(value, float):
                     if abs(value) > 100:
                         # 大数值保留整数或1位小数
-                        optimized_vars[key] = (
-                            round(value, 1) if value % 1 > 0.1 else int(value)
-                        )
+                        optimized_vars[key] = round(value, 1) if value % 1 > 0.1 else int(value)
                     elif abs(value) > 1:
                         # 中等数值保留2位小数
                         optimized_vars[key] = round(value, 2)
@@ -867,18 +777,12 @@ class AdvancedQuestionGenerator:
 
         return translated_vars
 
-    def _generate_options(
-        self, correct_answer: float, question_type: str, language: str
-    ) -> List[str]:
+    def _generate_options(self, correct_answer: float, question_type: str, language: str) -> List[str]:
         """生成选项 - 优化数字格式"""
         if isinstance(correct_answer, (int, float)):
             # 🔧 优化答案数字格式
             if abs(correct_answer) > 100:
-                formatted_answer = (
-                    round(correct_answer, 1)
-                    if correct_answer % 1 > 0.1
-                    else int(correct_answer)
-                )
+                formatted_answer = round(correct_answer, 1) if correct_answer % 1 > 0.1 else int(correct_answer)
             elif abs(correct_answer) > 1:
                 formatted_answer = round(correct_answer, 2)
             else:
@@ -950,9 +854,7 @@ class AdvancedQuestionGenerator:
 
         return options
 
-    def _generate_explanation(
-        self, template: Dict, variables: Dict, answer: float, language: str
-    ) -> str:
+    def _generate_explanation(self, template: Dict, variables: Dict, answer: float, language: str) -> str:
         """生成解析"""
         question_type = template["type"]
 
@@ -1027,9 +929,7 @@ def generate_advanced_questions(
 ) -> List[Dict[str, Any]]:
     """便捷的题目生成函数"""
     generator = AdvancedQuestionGenerator()
-    return generator.generate_unique_questions(
-        count, difficulty, language, subject, custom_prompt
-    )
+    return generator.generate_unique_questions(count, difficulty, language, subject, custom_prompt)
 
 
 if __name__ == "__main__":

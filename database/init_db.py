@@ -100,11 +100,7 @@ def add_default_exam_config():
     """添加默认考试配置 - 必须在Flask应用上下文中调用"""
     try:
         # 检查是否已有默认配置
-        existing_config = (
-            db.session.query(ExamConfig)
-            .filter_by(is_default=True, is_active=True)
-            .first()
-        )
+        existing_config = db.session.query(ExamConfig).filter_by(is_default=True, is_active=True).first()
         if existing_config:
             print("默认考试配置已存在")
             return

@@ -111,9 +111,7 @@ class QuestionGenerator:
         questions = []
 
         # 根据权重分配题目数量
-        subject_distribution = self._calculate_distribution(
-            self.subjects, total_questions
-        )
+        subject_distribution = self._calculate_distribution(self.subjects, total_questions)
 
         question_id = 1
         for subject_key, subject_info in self.subjects.items():
@@ -222,15 +220,9 @@ class QuestionGenerator:
             question = {
                 "id": f"q{i+1}",
                 "subject": question_template["subject"],
-                "subject_key": (
-                    "statistics"
-                    if "统计" in question_template["subject"]
-                    else "calculus"
-                ),
+                "subject_key": ("statistics" if "统计" in question_template["subject"] else "calculus"),
                 "difficulty": question_template["difficulty"],
-                "difficulty_key": question_template["difficulty"]
-                .lower()
-                .replace(" ", "_"),
+                "difficulty_key": question_template["difficulty"].lower().replace(" ", "_"),
                 "cognitive_level": "理解",  # 固定设置为理解
                 "cognitive_key": "understanding",
                 "type": question_template["type"],
@@ -258,9 +250,7 @@ class QuestionGenerator:
         """生成单个题目"""
         try:
             # 构建提示词
-            prompt = self._build_generation_prompt(
-                subject_info, difficulty, cognitive_level, question_type
-            )
+            prompt = self._build_generation_prompt(subject_info, difficulty, cognitive_level, question_type)
 
             # 调用AI API
             response = self._call_openrouter_api(prompt)
@@ -372,9 +362,7 @@ class QuestionGenerator:
             }
 
             print("发送API请求...")
-            response = requests.post(
-                self.api_url, headers=headers, json=data, timeout=30
-            )
+            response = requests.post(self.api_url, headers=headers, json=data, timeout=30)
 
             print(f"API响应状态: {response.status_code}")
             print(f"API响应内容: {response.text[:200]}...")
@@ -429,9 +417,7 @@ class QuestionGenerator:
         question = random.choice(question_types)
         return json.dumps(question, ensure_ascii=False)
 
-    def _parse_question_response(
-        self, response: str, question_type: Dict
-    ) -> Dict[str, Any]:
+    def _parse_question_response(self, response: str, question_type: Dict) -> Dict[str, Any]:
         """解析AI响应"""
         try:
             # 清理响应内容
@@ -529,20 +515,14 @@ class QuestionGenerator:
         base_points = 1
 
         # 难度加分
-        difficulty_bonus = {"high_school": 0, "gre_level": 1, "graduate": 2}.get(
-            difficulty["key"], 0
-        )
+        difficulty_bonus = {"high_school": 0, "gre_level": 1, "graduate": 2}.get(difficulty["key"], 0)
 
         # 认知层级加分
-        cognitive_bonus = {"understanding": 0, "application": 1, "synthesis": 2}.get(
-            cognitive_level["key"], 0
-        )
+        cognitive_bonus = {"understanding": 0, "application": 1, "synthesis": 2}.get(cognitive_level["key"], 0)
 
         return base_points + difficulty_bonus + cognitive_bonus
 
-    def generate_exam_with_prompt(
-        self, prompt: str, count: int = 5
-    ) -> List[Dict[str, Any]]:
+    def generate_exam_with_prompt(self, prompt: str, count: int = 5) -> List[Dict[str, Any]]:
         """使用自定义提示词生成题目"""
         try:
             if not self.api_key:
@@ -562,9 +542,7 @@ class QuestionGenerator:
                         questions = questions[:count]
                     elif len(questions) < count:
                         # 如果生成的题目不够，补充模拟题目
-                        additional = self._generate_mock_questions_with_prompt(
-                            prompt, count - len(questions)
-                        )
+                        additional = self._generate_mock_questions_with_prompt(prompt, count - len(questions))
                         questions.extend(additional)
                     return questions
                 else:
@@ -578,9 +556,7 @@ class QuestionGenerator:
             print(f"AI生成失败: {str(e)}")
             return self._generate_mock_questions_with_prompt(prompt, count)
 
-    def _generate_mock_questions_with_prompt(
-        self, prompt: str, count: int
-    ) -> List[Dict[str, Any]]:
+    def _generate_mock_questions_with_prompt(self, prompt: str, count: int) -> List[Dict[str, Any]]:
         """使用高级题目生成器 - 彻底解决重复问题"""
 
         # 从提示词中提取信息
@@ -652,13 +628,9 @@ class QuestionGenerator:
                 questions.append(question)
                 # 记录已使用的模式，确保下一题完全不同
                 used_scenario_types.add(question.get("scenario_type", f"type_{i}"))
-                used_content_patterns.add(
-                    question.get("content_pattern", f"pattern_{i}")
-                )
+                used_content_patterns.add(question.get("content_pattern", f"pattern_{i}"))
 
-        print(
-            f"✅ 多样化生成完成: {len(questions)}道题目, 使用的场景类型: {used_scenario_types}"
-        )
+        print(f"✅ 多样化生成完成: {len(questions)}道题目, 使用的场景类型: {used_scenario_types}")
         return questions
 
     def _get_difficulty_config(self, difficulty: str, language: str) -> dict:
@@ -675,9 +647,7 @@ class QuestionGenerator:
                 "points": 1,
                 "time_limit": 2,
                 "description": (
-                    "直接应用单一公式或概念"
-                    if language == "zh"
-                    else "Direct application of single formula or concept"
+                    "直接应用单一公式或概念" if language == "zh" else "Direct application of single formula or concept"
                 ),
             },
             "中等": {
@@ -932,16 +902,11 @@ class QuestionGenerator:
                 scenario_type = question.get("scenario_type")
                 content_pattern = question.get("content_pattern")
 
-                if (
-                    scenario_type not in used_types
-                    and content_pattern not in used_patterns
-                ):
+                if scenario_type not in used_types and content_pattern not in used_patterns:
                     return question
 
         # 如果尝试多次仍无法生成唯一题目，创建一个保底的唯一题目
-        return self._create_fallback_unique_question(
-            index, difficulty_config, language, subject
-        )
+        return self._create_fallback_unique_question(index, difficulty_config, language, subject)
 
     def _extract_subject(self, prompt: str) -> str:
         """从提示词中提取学科"""
@@ -971,9 +936,7 @@ class QuestionGenerator:
 
         if re.search(r"简单|Easy|easy|基础|Basic|初级", prompt, re.IGNORECASE):
             return "简单"
-        elif re.search(
-            r"困难|Hard|hard|高级|Advanced|复杂|Complex", prompt, re.IGNORECASE
-        ):
+        elif re.search(r"困难|Hard|hard|高级|Advanced|复杂|Complex", prompt, re.IGNORECASE):
             return "困难"
         elif re.search(r"中等|Medium|medium|中级|Intermediate", prompt, re.IGNORECASE):
             return "中等"
@@ -1000,11 +963,7 @@ class QuestionGenerator:
     def _extract_question_types(self, prompt: str) -> List[str]:
         """从提示词中提取题型"""
         types = []
-        if (
-            "选择题" in prompt
-            or "multiple_choice" in prompt
-            or "Multiple Choice" in prompt
-        ):
+        if "选择题" in prompt or "multiple_choice" in prompt or "Multiple Choice" in prompt:
             types.append("multiple_choice")
         if "简答题" in prompt or "short_answer" in prompt or "Short Answer" in prompt:
             types.append("short_answer")
@@ -1044,9 +1003,7 @@ class QuestionGenerator:
         import re
 
         # 首先检查具体的场景类型
-        if re.search(
-            r"购物|shopping|买|buy|价格|price|商店|store", prompt, re.IGNORECASE
-        ):
+        if re.search(r"购物|shopping|买|buy|价格|price|商店|store", prompt, re.IGNORECASE):
             return "shopping_scenario"
         elif re.search(
             r"投资|investment|利息|interest|收益|profit|理财|finance",
@@ -1054,9 +1011,7 @@ class QuestionGenerator:
             re.IGNORECASE,
         ):
             return "investment_scenario"
-        elif re.search(
-            r"学校|school|学生|student|班级|class|教室|classroom", prompt, re.IGNORECASE
-        ):
+        elif re.search(r"学校|school|学生|student|班级|class|教室|classroom", prompt, re.IGNORECASE):
             return "school_scenario"
         elif re.search(
             r"交通|transport|车|bus|taxi|速度|speed|距离|distance",
@@ -1086,9 +1041,7 @@ class QuestionGenerator:
             re.IGNORECASE,
         ):
             return "computational_thinking"
-        elif re.search(
-            r"概率|probability|统计|statistics|数据|data", prompt, re.IGNORECASE
-        ):
+        elif re.search(r"概率|probability|统计|statistics|数据|data", prompt, re.IGNORECASE):
             return "probability_statistics"
         elif re.search(r"场景|scenario|实际|应用|application", prompt, re.IGNORECASE):
             return "scenario_based"
@@ -1122,10 +1075,14 @@ class QuestionGenerator:
                     explanation = f"Simple calculation: Original milk = {volume * ratio_a // (ratio_a + ratio_b)} ml, water = {volume * ratio_b // (ratio_a + ratio_b)} ml."
                 elif difficulty == "困难":
                     content = f"{volume} ml mixture has milk:water = {ratio_a}:{ratio_b}. After adding x ml water, ratio becomes {ratio_a}:{ratio_b+2}. Find x and the percentage increase."
-                    explanation = f"Complex multi-step calculation involving percentage changes and ratio transformations."
+                    explanation = (
+                        f"Complex multi-step calculation involving percentage changes and ratio transformations."
+                    )
                 else:
                     content = f"{volume} ml mixture contains milk and water in ratio {ratio_a}:{ratio_b}. How much water to add for ratio {ratio_a}:{ratio_b+1}?"
-                    explanation = f"Medium complexity: Calculate current amounts, determine target amounts, find difference."
+                    explanation = (
+                        f"Medium complexity: Calculate current amounts, determine target amounts, find difference."
+                    )
             else:
                 if difficulty == "简单":
                     content = f"{volume}毫升混合物中牛奶和水的比例是{ratio_a}:{ratio_b}。加多少水可以使比例变成1:1？"
@@ -1141,16 +1098,8 @@ class QuestionGenerator:
             current_milk = volume * ratio_a // (ratio_a + ratio_b)
             current_water = volume * ratio_b // (ratio_a + ratio_b)
             target_ratio = ratio_b + 1 if difficulty != "简单" else ratio_a
-            needed_water = (
-                (current_milk * target_ratio) // ratio_a
-                if difficulty != "简单"
-                else current_milk
-            )
-            answer = (
-                needed_water - current_water
-                if needed_water > current_water
-                else current_water - needed_water
-            )
+            needed_water = (current_milk * target_ratio) // ratio_a if difficulty != "简单" else current_milk
+            answer = needed_water - current_water if needed_water > current_water else current_water - needed_water
 
             options = (
                 [
@@ -1356,16 +1305,8 @@ class QuestionGenerator:
                     answer_num = result
                     options = [
                         f"{result}块" if language == "zh" else f"{result} pieces",
-                        (
-                            f"{result+0.5}块"
-                            if language == "zh"
-                            else f"{result+0.5} pieces"
-                        ),
-                        (
-                            f"{result-0.5}块"
-                            if language == "zh"
-                            else f"{result-0.5} pieces"
-                        ),
+                        (f"{result+0.5}块" if language == "zh" else f"{result+0.5} pieces"),
+                        (f"{result-0.5}块" if language == "zh" else f"{result-0.5} pieces"),
                         f"{result+1}块" if language == "zh" else f"{result+1} pieces",
                     ]
                 elif "students" in selected_vars and "items" in selected_vars:
@@ -1382,9 +1323,7 @@ class QuestionGenerator:
                     # 交通场景
                     import math
 
-                    result = math.ceil(
-                        selected_vars["waiting"] / selected_vars["capacity"]
-                    )
+                    result = math.ceil(selected_vars["waiting"] / selected_vars["capacity"])
                     answer_num = result
                     options = [
                         f"{result}辆" if language == "zh" else f"{result} buses",
@@ -1404,9 +1343,7 @@ class QuestionGenerator:
                 # 生成解释
                 selected_vars["result"] = result if "result" in locals() else 0
                 selected_vars["answer"] = answer_num
-                explanation = scenario_template["explanation_template"].format(
-                    **selected_vars
-                )
+                explanation = scenario_template["explanation_template"].format(**selected_vars)
 
             else:
                 # 旧格式，保持兼容性
@@ -1429,11 +1366,7 @@ class QuestionGenerator:
                     "options": options,
                     "correct_answer": options[0],
                     "explanation": explanation,
-                    "points": (
-                        3
-                        if difficulty == "困难"
-                        else (2 if difficulty == "中等" else 1)
-                    ),
+                    "points": (3 if difficulty == "困难" else (2 if difficulty == "中等" else 1)),
                 }
             )
 
@@ -1455,9 +1388,7 @@ class QuestionGenerator:
             questions.append(
                 {
                     "subject": subject,
-                    "sub_tag": (
-                        "数学建模" if language == "zh" else "Mathematical Modeling"
-                    ),
+                    "sub_tag": ("数学建模" if language == "zh" else "Mathematical Modeling"),
                     "language": language,
                     "difficulty": difficulty,
                     "question_type": "short_answer",
@@ -1465,11 +1396,7 @@ class QuestionGenerator:
                     "options": ["Option A", "Option B", "Option C", "Option D"],
                     "correct_answer": "Option A",
                     "explanation": "Mathematical modeling problem",
-                    "points": (
-                        5
-                        if difficulty == "困难"
-                        else (3 if difficulty == "中等" else 2)
-                    ),
+                    "points": (5 if difficulty == "困难" else (3 if difficulty == "中等" else 2)),
                 }
             )
         return questions
@@ -1502,18 +1429,14 @@ class QuestionGenerator:
                 answer = "O(n²)"
             else:
                 content = (
-                    "Binary search steps for 1000 elements?"
-                    if language == "en"
-                    else "对1000元素二分查找需要多少步？"
+                    "Binary search steps for 1000 elements?" if language == "en" else "对1000元素二分查找需要多少步？"
                 )
                 answer = "10 steps" if language == "en" else "10步"
 
             questions.append(
                 {
                     "subject": subject,
-                    "sub_tag": (
-                        "计算思维" if language == "zh" else "Computational Thinking"
-                    ),
+                    "sub_tag": ("计算思维" if language == "zh" else "Computational Thinking"),
                     "language": language,
                     "difficulty": difficulty,
                     "question_type": "multiple_choice",
@@ -1521,11 +1444,7 @@ class QuestionGenerator:
                     "options": [answer, "Wrong1", "Wrong2", "Wrong3"],
                     "correct_answer": answer,
                     "explanation": "Computational thinking analysis",
-                    "points": (
-                        4
-                        if difficulty == "困难"
-                        else (2 if difficulty == "中等" else 1)
-                    ),
+                    "points": (4 if difficulty == "困难" else (2 if difficulty == "中等" else 1)),
                 }
             )
         return questions
@@ -1545,11 +1464,7 @@ class QuestionGenerator:
         for i in range(count):
             if subject in ["数学", "Mathematics"]:
                 if difficulty == "简单":
-                    content = (
-                        "Calculate: 15 + 27 = ?"
-                        if language == "en"
-                        else "计算：15 + 27 = ?"
-                    )
+                    content = "Calculate: 15 + 27 = ?" if language == "en" else "计算：15 + 27 = ?"
                     answer = "42"
                 elif difficulty == "困难":
                     content = (
@@ -1559,11 +1474,7 @@ class QuestionGenerator:
                     )
                     answer = "22/3"
                 else:
-                    content = (
-                        "Find derivative: d/dx(x³ - 2x + 1)"
-                        if language == "en"
-                        else "求导数：d/dx(x³ - 2x + 1)"
-                    )
+                    content = "Find derivative: d/dx(x³ - 2x + 1)" if language == "en" else "求导数：d/dx(x³ - 2x + 1)"
                     answer = "3x² - 2"
             else:
                 content = (
@@ -1584,11 +1495,7 @@ class QuestionGenerator:
                     "options": [answer, "Option B", "Option C", "Option D"],
                     "correct_answer": answer,
                     "explanation": f"This is a {difficulty} difficulty question about {subject}",
-                    "points": (
-                        3
-                        if difficulty == "困难"
-                        else (2 if difficulty == "中等" else 1)
-                    ),
+                    "points": (3 if difficulty == "困难" else (2 if difficulty == "中等" else 1)),
                 }
             )
         return questions
@@ -1729,9 +1636,7 @@ class QuestionGenerator:
             if difficulty == "简单":
                 quantity = random.randint(2, 5)
                 price = random.randint(5, 15)
-                payment = quantity * price + random.randint(
-                    10, 50
-                )  # 确保付款金额大于商品总价
+                payment = quantity * price + random.randint(10, 50)  # 确保付款金额大于商品总价
                 base_values = {
                     "quantity": quantity,
                     "price": price,
@@ -1792,7 +1697,9 @@ class QuestionGenerator:
             if scenario["type"] in ["单价计算", "unit_price"]:
                 correct_answer = template_vars["total"] // template_vars["quantity"]
                 if language == "zh":
-                    explanation = f"单价计算：{template_vars['total']}元 ÷ {template_vars['quantity']}个 = {correct_answer}元/个"
+                    explanation = (
+                        f"单价计算：{template_vars['total']}元 ÷ {template_vars['quantity']}个 = {correct_answer}元/个"
+                    )
                     options = [
                         f"{correct_answer}元",
                         f"{correct_answer+2}元",
@@ -1800,7 +1707,9 @@ class QuestionGenerator:
                         f"{correct_answer+5}元",
                     ]
                 else:
-                    explanation = f"Unit price: ${template_vars['total']} ÷ {template_vars['quantity']} = ${correct_answer}"
+                    explanation = (
+                        f"Unit price: ${template_vars['total']} ÷ {template_vars['quantity']} = ${correct_answer}"
+                    )
                     options = [
                         f"${correct_answer}",
                         f"${correct_answer+2}",
@@ -1809,9 +1718,7 @@ class QuestionGenerator:
                     ]
 
             elif scenario["type"] in ["折扣优惠", "discount"]:
-                discount_price = template_vars["original"] * (
-                    template_vars["discount"] / 10
-                )
+                discount_price = template_vars["original"] * (template_vars["discount"] / 10)
                 total_cost = discount_price * template_vars["quantity"]
                 if language == "zh":
                     explanation = f"折扣价：{template_vars['original']}元 × {template_vars['discount']}折 × {template_vars['quantity']}个 = {total_cost:.0f}元"
@@ -1868,11 +1775,7 @@ class QuestionGenerator:
             questions.append(
                 {
                     "subject": subject,
-                    "sub_tag": (
-                        f"购物场景-{scenario['type']}"
-                        if language == "zh"
-                        else f"Shopping-{scenario['type']}"
-                    ),
+                    "sub_tag": (f"购物场景-{scenario['type']}" if language == "zh" else f"Shopping-{scenario['type']}"),
                     "language": language,
                     "difficulty": difficulty,
                     "question_type": "multiple_choice",
@@ -2093,9 +1996,7 @@ class QuestionGenerator:
                     "period": (
                         random.choice(["5年", "8年", "10年", "15年"])
                         if language == "zh"
-                        else random.choice(
-                            ["5 years", "8 years", "10 years", "15 years"]
-                        )
+                        else random.choice(["5 years", "8 years", "10 years", "15 years"])
                     ),
                     "shares": random.randint(500, 5000),
                     "price": random.randint(50, 300),
@@ -2131,9 +2032,7 @@ class QuestionGenerator:
                 "fund_name": random.choice(scenario.get("fund_names", ["基金"])),
                 "city": random.choice(scenario.get("cities", ["城市"])),
                 "location": random.choice(scenario.get("locations", ["区域"])),
-                "insurance_type": random.choice(
-                    scenario.get("insurance_types", ["保险产品"])
-                ),
+                "insurance_type": random.choice(scenario.get("insurance_types", ["保险产品"])),
                 "mode": random.choice(scenario.get("modes", ["存款方式"])),
                 "change_type": random.choice(scenario.get("change_types", ["变化"])),
                 "action": random.choice(scenario.get("actions", ["操作"])),
@@ -2153,9 +2052,7 @@ class QuestionGenerator:
                     if language == "zh"
                     else int(template_vars["period"].split(" ")[0])
                 )
-                interest = (
-                    template_vars["principal"] * (template_vars["rate"] / 100) * years
-                )
+                interest = template_vars["principal"] * (template_vars["rate"] / 100) * years
                 total = template_vars["principal"] + interest
 
                 if language == "zh":
@@ -2221,9 +2118,7 @@ class QuestionGenerator:
                 {
                     "subject": subject,
                     "sub_tag": (
-                        f"投资理财-{scenario['type']}"
-                        if language == "zh"
-                        else f"Investment-{scenario['type']}"
+                        f"投资理财-{scenario['type']}" if language == "zh" else f"Investment-{scenario['type']}"
                     ),
                     "language": language,
                     "difficulty": difficulty,
@@ -2448,9 +2343,7 @@ class QuestionGenerator:
                 "event": random.choice(scenario.get("events", ["比赛"])),
                 "ratio": "1:1:1",
                 **base_values,
-                "history": base_values["total_books"]
-                - base_values["fiction"]
-                - base_values["science"],
+                "history": base_values["total_books"] - base_values["fiction"] - base_values["science"],
             }
 
             # 生成题目内容
@@ -2458,11 +2351,7 @@ class QuestionGenerator:
 
             # 根据场景类型计算答案
             if scenario["type"] in ["教室资源分配", "classroom_resource"]:
-                total_needed = (
-                    template_vars["classes"]
-                    * template_vars["students"]
-                    * template_vars["per_person"]
-                )
+                total_needed = template_vars["classes"] * template_vars["students"] * template_vars["per_person"]
                 if language == "zh":
                     explanation = f"总需求：{template_vars['classes']}个班 × {template_vars['students']}人/班 × {template_vars['per_person']}个/人 = {total_needed}个"
                     options = [
@@ -2481,11 +2370,7 @@ class QuestionGenerator:
                     ]
 
             elif scenario["type"] in ["考试成绩统计", "exam_statistics"]:
-                passed = (
-                    template_vars["total_students"]
-                    - template_vars["excellent"]
-                    - template_vars["good"]
-                )
+                passed = template_vars["total_students"] - template_vars["excellent"] - template_vars["good"]
                 pass_rate = (passed / template_vars["total_students"]) * 100
                 if language == "zh":
                     explanation = f"及格人数：{template_vars['total_students']} - {template_vars['excellent']} - {template_vars['good']} = {passed}人。及格率：{passed}÷{template_vars['total_students']}×100% = {pass_rate:.1f}%"
@@ -2505,14 +2390,8 @@ class QuestionGenerator:
                     ]
 
             elif scenario["type"] in ["食堂餐饮计算", "cafeteria_calculation"]:
-                rice_cost = (
-                    template_vars["students"] * template_vars["rice"] / 1000
-                ) * template_vars["rice_price"]
-                dish_cost = (
-                    template_vars["students"]
-                    * template_vars["dishes"]
-                    * template_vars["dish_price"]
-                )
+                rice_cost = (template_vars["students"] * template_vars["rice"] / 1000) * template_vars["rice_price"]
+                dish_cost = template_vars["students"] * template_vars["dishes"] * template_vars["dish_price"]
                 total_cost = rice_cost + dish_cost
                 if language == "zh":
                     explanation = f"大米成本：{template_vars['students']}人×{template_vars['rice']}g÷1000×{template_vars['rice_price']}元={rice_cost:.2f}元。菜成本：{template_vars['students']}人×{template_vars['dishes']}份×{template_vars['dish_price']}元={dish_cost:.2f}元。总成本：{rice_cost:.2f}+{dish_cost:.2f}={total_cost:.2f}元"
@@ -2543,9 +2422,7 @@ class QuestionGenerator:
                     ]
                 else:
                     result = random.randint(100, 500)
-                    explanation = (
-                        f"Based on {scenario['knowledge']}, the result is {result}"
-                    )
+                    explanation = f"Based on {scenario['knowledge']}, the result is {result}"
                     options = [
                         f"{result}",
                         f"{result+50}",
@@ -2556,11 +2433,7 @@ class QuestionGenerator:
             questions.append(
                 {
                     "subject": subject,
-                    "sub_tag": (
-                        f"学校教育-{scenario['type']}"
-                        if language == "zh"
-                        else f"School-{scenario['type']}"
-                    ),
+                    "sub_tag": (f"学校教育-{scenario['type']}" if language == "zh" else f"School-{scenario['type']}"),
                     "language": language,
                     "difficulty": difficulty,
                     "question_type": "multiple_choice",
@@ -2862,9 +2735,7 @@ class QuestionGenerator:
                     ]
                 else:
                     result = random.randint(100, 1000)
-                    explanation = (
-                        f"Based on {scenario['knowledge']}, the result is ${result}"
-                    )
+                    explanation = f"Based on {scenario['knowledge']}, the result is ${result}"
                     options = [
                         f"${result}",
                         f"${result+100}",
@@ -2876,9 +2747,7 @@ class QuestionGenerator:
                 {
                     "subject": subject,
                     "sub_tag": (
-                        f"交通运输-{scenario['type']}"
-                        if language == "zh"
-                        else f"Transport-{scenario['type']}"
+                        f"交通运输-{scenario['type']}" if language == "zh" else f"Transport-{scenario['type']}"
                     ),
                     "language": language,
                     "difficulty": difficulty,
@@ -2900,11 +2769,7 @@ class QuestionGenerator:
         questions = []
         import random
 
-        foods = (
-            ["披萨", "蛋糕", "派", "面包"]
-            if language == "zh"
-            else ["pizza", "cake", "pie", "bread"]
-        )
+        foods = ["披萨", "蛋糕", "派", "面包"] if language == "zh" else ["pizza", "cake", "pie", "bread"]
 
         for i in range(count):
             food = random.choice(foods)
@@ -2917,42 +2782,20 @@ class QuestionGenerator:
                 content = f"A {food} is cut into {total_pieces} pieces. If {people} friends share equally, how many pieces does each person get?"
                 explanation = f"{total_pieces} pieces ÷ {people} people = {pieces_per_person:.2f} pieces per person"
             else:
-                content = (
-                    f"一个{food}切成{total_pieces}块，{people}个朋友平分，每人分几块？"
-                )
-                explanation = (
-                    f"{total_pieces}块 ÷ {people}人 = {pieces_per_person:.2f}块每人"
-                )
+                content = f"一个{food}切成{total_pieces}块，{people}个朋友平分，每人分几块？"
+                explanation = f"{total_pieces}块 ÷ {people}人 = {pieces_per_person:.2f}块每人"
 
             options = [
-                (
-                    f"{pieces_per_person:.2f}块"
-                    if language == "zh"
-                    else f"{pieces_per_person:.2f} pieces"
-                ),
-                (
-                    f"{pieces_per_person+0.5:.2f}块"
-                    if language == "zh"
-                    else f"{pieces_per_person+0.5:.2f} pieces"
-                ),
-                (
-                    f"{pieces_per_person-0.3:.2f}块"
-                    if language == "zh"
-                    else f"{pieces_per_person-0.3:.2f} pieces"
-                ),
-                (
-                    f"{pieces_per_person+1:.2f}块"
-                    if language == "zh"
-                    else f"{pieces_per_person+1:.2f} pieces"
-                ),
+                (f"{pieces_per_person:.2f}块" if language == "zh" else f"{pieces_per_person:.2f} pieces"),
+                (f"{pieces_per_person+0.5:.2f}块" if language == "zh" else f"{pieces_per_person+0.5:.2f} pieces"),
+                (f"{pieces_per_person-0.3:.2f}块" if language == "zh" else f"{pieces_per_person-0.3:.2f} pieces"),
+                (f"{pieces_per_person+1:.2f}块" if language == "zh" else f"{pieces_per_person+1:.2f} pieces"),
             ]
 
             questions.append(
                 {
                     "subject": subject,
-                    "sub_tag": (
-                        "餐厅场景-定制" if language == "zh" else "Restaurant-Custom"
-                    ),
+                    "sub_tag": ("餐厅场景-定制" if language == "zh" else "Restaurant-Custom"),
                     "language": language,
                     "difficulty": difficulty,
                     "question_type": "multiple_choice",
@@ -3178,9 +3021,7 @@ class QuestionGenerator:
                 "product": random.choice(scenario.get("products", ["产品"])),
                 "quality": random.choice(scenario.get("qualities", ["质量"])),
                 "test_type": random.choice(scenario.get("test_types", ["检验类型"])),
-                "condition": (
-                    "1个标准差" if language == "zh" else "1 standard deviation"
-                ),
+                "condition": ("1个标准差" if language == "zh" else "1 standard deviation"),
                 **base_values,
             }
 
@@ -3191,7 +3032,9 @@ class QuestionGenerator:
             if scenario["type"] in ["古典概率", "classical_probability"]:
                 probability = template_vars["favorable"] / template_vars["total"]
                 if language == "zh":
-                    explanation = f"古典概率计算：{template_vars['favorable']} ÷ {template_vars['total']} = {probability:.3f}"
+                    explanation = (
+                        f"古典概率计算：{template_vars['favorable']} ÷ {template_vars['total']} = {probability:.3f}"
+                    )
                     options = [
                         f"{probability:.3f}",
                         f"{probability*1.2:.3f}",
@@ -3209,20 +3052,18 @@ class QuestionGenerator:
 
             elif scenario["type"] in ["正态分布", "normal_distribution"]:
                 if language == "zh":
-                    explanation = (
-                        f"根据经验法则，正态分布中约68%的数据落在均值±1个标准差范围内"
-                    )
+                    explanation = f"根据经验法则，正态分布中约68%的数据落在均值±1个标准差范围内"
                     options = ["68%", "95%", "99.7%", "50%"]
                 else:
                     explanation = f"According to the empirical rule, approximately 68% of data in normal distribution falls within 1 standard deviation"
                     options = ["68%", "95%", "99.7%", "50%"]
 
             elif scenario["type"] in ["条件概率", "conditional_probability"]:
-                joint_prob = (template_vars["rate1"] / 100) * (
-                    template_vars["rate2"] / 100
-                )
+                joint_prob = (template_vars["rate1"] / 100) * (template_vars["rate2"] / 100)
                 if language == "zh":
-                    explanation = f"联合概率：{template_vars['rate1']}% × {template_vars['rate2']}% = {joint_prob*100:.1f}%"
+                    explanation = (
+                        f"联合概率：{template_vars['rate1']}% × {template_vars['rate2']}% = {joint_prob*100:.1f}%"
+                    )
                     options = [
                         f"{joint_prob*100:.1f}%",
                         f"{joint_prob*100*1.3:.1f}%",
@@ -3245,18 +3086,14 @@ class QuestionGenerator:
                     options = [f"{result}", f"{result+5}", f"{result-3}", f"{result+8}"]
                 else:
                     result = random.randint(10, 50)
-                    explanation = (
-                        f"Based on {scenario['knowledge']}, the result is {result}"
-                    )
+                    explanation = f"Based on {scenario['knowledge']}, the result is {result}"
                     options = [f"{result}", f"{result+5}", f"{result-3}", f"{result+8}"]
 
             questions.append(
                 {
                     "subject": subject,
                     "sub_tag": (
-                        f"概率统计-{scenario['type']}"
-                        if language == "zh"
-                        else f"Statistics-{scenario['type']}"
+                        f"概率统计-{scenario['type']}" if language == "zh" else f"Statistics-{scenario['type']}"
                     ),
                     "language": language,
                     "difficulty": difficulty,
@@ -3285,17 +3122,11 @@ class QuestionGenerator:
 
         # 使用index确保每道题完全不同
         if difficulty_config["steps"] == 1:  # 简单：直接计算
-            return self._generate_simple_unique_shopping(
-                index, difficulty_config, language, subject
-            )
+            return self._generate_simple_unique_shopping(index, difficulty_config, language, subject)
         elif difficulty_config["steps"] >= 4:  # 困难：多步分析
-            return self._generate_complex_unique_shopping(
-                index, difficulty_config, language, subject
-            )
+            return self._generate_complex_unique_shopping(index, difficulty_config, language, subject)
         else:  # 中等：两步计算
-            return self._generate_medium_unique_shopping(
-                index, difficulty_config, language, subject
-            )
+            return self._generate_medium_unique_shopping(index, difficulty_config, language, subject)
 
     def _generate_simple_unique_shopping(
         self, index: int, difficulty_config: dict, language: str, subject: str
@@ -3323,9 +3154,7 @@ class QuestionGenerator:
             items = (
                 ["苹果", "橘子", "葡萄", "草莓", "樱桃"][index % 5]
                 if language == "zh"
-                else ["apples", "oranges", "grapes", "strawberries", "cherries"][
-                    index % 5
-                ]
+                else ["apples", "oranges", "grapes", "strawberries", "cherries"][index % 5]
             )
             names = (
                 ["小明", "小红", "小李", "小王", "小张"][index % 5]
@@ -3335,9 +3164,7 @@ class QuestionGenerator:
 
             if language == "zh":
                 content = f"{names}买了{quantity}个{items}，总共花费{total}元，每个{items}的单价是多少？"
-                explanation = (
-                    f"单价计算：{total}元 ÷ {quantity}个 = {unit_price:.2f}元/个"
-                )
+                explanation = f"单价计算：{total}元 ÷ {quantity}个 = {unit_price:.2f}元/个"
                 options = [
                     f"{unit_price:.2f}元",
                     f"{unit_price+1:.2f}元",
@@ -3366,12 +3193,8 @@ class QuestionGenerator:
             )
 
             if language == "zh":
-                content = (
-                    f"有{money}元，每个{items}价格{unit_price:.2f}元，最多能买多少个？"
-                )
-                explanation = (
-                    f"数量计算：{money}元 ÷ {unit_price:.2f}元 = {max_quantity}个"
-                )
+                content = f"有{money}元，每个{items}价格{unit_price:.2f}元，最多能买多少个？"
+                explanation = f"数量计算：{money}元 ÷ {unit_price:.2f}元 = {max_quantity}个"
                 options = [
                     f"{max_quantity}个",
                     f"{max_quantity+1}个",
@@ -3390,11 +3213,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"购物-简单-{scenario_type}"
-                if language == "zh"
-                else f"Shopping-Simple-{scenario_type}"
-            ),
+            "sub_tag": (f"购物-简单-{scenario_type}" if language == "zh" else f"Shopping-Simple-{scenario_type}"),
             "language": language,
             "difficulty": "简单" if language == "zh" else "Easy",
             "question_type": "multiple_choice",
@@ -3421,31 +3240,20 @@ class QuestionGenerator:
         retail_price = random.randint(20 + index * 3, 50 + index * 5)
         bulk_threshold = random.randint(30 + index * 5, 80 + index * 3)
         bulk_discount = random.randint(18 + index * 2, 35 + index * 3)
-        needed_qty = random.randint(
-            bulk_threshold - 15 + index, bulk_threshold + 40 + index * 2
-        )
+        needed_qty = random.randint(bulk_threshold - 15 + index, bulk_threshold + 40 + index * 2)
 
         bulk_price = retail_price * (100 - bulk_discount) / 100
 
         # 多种采购策略分析
         strategy1 = needed_qty * retail_price  # 全部零售
-        strategy2 = (
-            bulk_threshold * bulk_price
-            + max(0, needed_qty - bulk_threshold) * retail_price
-        )  # 混合采购
-        strategy3 = (
-            needed_qty * bulk_price if needed_qty >= bulk_threshold else float("inf")
-        )  # 全部批发
+        strategy2 = bulk_threshold * bulk_price + max(0, needed_qty - bulk_threshold) * retail_price  # 混合采购
+        strategy3 = needed_qty * bulk_price if needed_qty >= bulk_threshold else float("inf")  # 全部批发
 
-        valid_strategies = [
-            s for s in [strategy1, strategy2, strategy3] if s != float("inf")
-        ]
+        valid_strategies = [s for s in [strategy1, strategy2, strategy3] if s != float("inf")]
         optimal_cost = min(valid_strategies)
 
         products = (
-            ["高端电子产品", "工业原材料", "医疗设备", "精密仪器", "专业工具"][
-                index % 5
-            ]
+            ["高端电子产品", "工业原材料", "医疗设备", "精密仪器", "专业工具"][index % 5]
             if language == "zh"
             else [
                 "premium electronics",
@@ -3494,11 +3302,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"购物-复杂-多步分析"
-                if language == "zh"
-                else f"Shopping-Complex-MultiStep"
-            ),
+            "sub_tag": (f"购物-复杂-多步分析" if language == "zh" else f"Shopping-Complex-MultiStep"),
             "language": language,
             "difficulty": "困难" if language == "zh" else "Hard",
             "question_type": "multiple_choice",
@@ -3573,11 +3377,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"购物-中等-两步计算"
-                if language == "zh"
-                else f"Shopping-Medium-TwoStep"
-            ),
+            "sub_tag": (f"购物-中等-两步计算" if language == "zh" else f"Shopping-Medium-TwoStep"),
             "language": language,
             "difficulty": "中等" if language == "zh" else "Medium",
             "question_type": "multiple_choice",
@@ -3603,21 +3403,13 @@ class QuestionGenerator:
         import random
 
         if difficulty_config["steps"] == 1:  # 简单
-            return self._generate_simple_stats_unique(
-                index, difficulty_config, language, subject
-            )
+            return self._generate_simple_stats_unique(index, difficulty_config, language, subject)
         elif difficulty_config["steps"] >= 4:  # 困难
-            return self._generate_complex_stats_unique(
-                index, difficulty_config, language, subject
-            )
+            return self._generate_complex_stats_unique(index, difficulty_config, language, subject)
         else:  # 中等
-            return self._generate_medium_stats_unique(
-                index, difficulty_config, language, subject
-            )
+            return self._generate_medium_stats_unique(index, difficulty_config, language, subject)
 
-    def _generate_simple_stats_unique(
-        self, index: int, difficulty_config: dict, language: str, subject: str
-    ) -> dict:
+    def _generate_simple_stats_unique(self, index: int, difficulty_config: dict, language: str, subject: str) -> dict:
         """简单统计题目 - 完全不同的场景类型"""
         import random
 
@@ -3646,9 +3438,7 @@ class QuestionGenerator:
                 options = ["0.5", "0.25", "0.75", "1.0"]
             else:
                 content = f"Flipping a fair coin {flips} times, each flip has 0.5 probability of heads. What's the probability of getting heads on the {random.randint(1, flips)}th flip?"
-                explanation = (
-                    f"Each coin flip is independent, probability of heads is always 0.5"
-                )
+                explanation = f"Each coin flip is independent, probability of heads is always 0.5"
                 options = ["0.5", "0.25", "0.75", "1.0"]
             correct_answer = "0.5"
 
@@ -3667,16 +3457,10 @@ class QuestionGenerator:
 
         elif scenario_type == "card_draw":
             # 扑克牌抽取场景
-            suits = (
-                ["红桃", "黑桃", "方块", "梅花"]
-                if language == "zh"
-                else ["hearts", "spades", "diamonds", "clubs"]
-            )
+            suits = ["红桃", "黑桃", "方块", "梅花"] if language == "zh" else ["hearts", "spades", "diamonds", "clubs"]
             target_suit = suits[index % 4]
             if language == "zh":
-                content = (
-                    f"从标准52张扑克牌中随机抽取一张，抽到{target_suit}的概率是多少？"
-                )
+                content = f"从标准52张扑克牌中随机抽取一张，抽到{target_suit}的概率是多少？"
                 explanation = f"标准扑克牌有4种花色，每种13张，抽到{target_suit}的概率 = 13/52 = 0.25"
                 options = ["0.25", "0.20", "0.30", "0.33"]
             else:
@@ -3729,7 +3513,9 @@ class QuestionGenerator:
             topic = topics[index % len(topics)]
 
             if language == "zh":
-                content = f"调查{total_people}人，其中{positive_responses}人{topic}，随机选择一人，他{topic}的概率是多少？"
+                content = (
+                    f"调查{total_people}人，其中{positive_responses}人{topic}，随机选择一人，他{topic}的概率是多少？"
+                )
                 explanation = f"概率 = {topic}的人数 ÷ 总人数 = {positive_responses}/{total_people} = {probability:.3f}"
                 options = [
                     f"{probability:.3f}",
@@ -3766,7 +3552,9 @@ class QuestionGenerator:
                 ]
             else:
                 content = f"In a class of {total_students} students, {high_scorers} scored above {grade_threshold}. Probability a randomly selected student scored above {grade_threshold}?"
-                explanation = f"Probability = High scorers ÷ Total students = {high_scorers}/{total_students} = {probability:.3f}"
+                explanation = (
+                    f"Probability = High scorers ÷ Total students = {high_scorers}/{total_students} = {probability:.3f}"
+                )
                 options = [
                     f"{probability:.3f}",
                     f"{probability*1.15:.3f}",
@@ -3793,7 +3581,9 @@ class QuestionGenerator:
 
             if language == "zh":
                 content = f"袋子里有{total_objects}个{objects}，其中{favorable}个是{colors}的，随机取一个，取到{colors}{objects}的概率是多少？"
-                explanation = f"古典概率计算：P = 有利结果数 ÷ 总结果数 = {favorable} ÷ {total_objects} = {probability:.3f}"
+                explanation = (
+                    f"古典概率计算：P = 有利结果数 ÷ 总结果数 = {favorable} ÷ {total_objects} = {probability:.3f}"
+                )
                 options = [
                     f"{probability:.3f}",
                     f"{probability*1.2:.3f}",
@@ -3802,7 +3592,9 @@ class QuestionGenerator:
                 ]
             else:
                 content = f"A bag has {total_objects} {objects}, {favorable} are {colors}. Probability of selecting a {colors} {objects[:-1]}?"
-                explanation = f"Classical probability: P = Favorable ÷ Total = {favorable} ÷ {total_objects} = {probability:.3f}"
+                explanation = (
+                    f"Classical probability: P = Favorable ÷ Total = {favorable} ÷ {total_objects} = {probability:.3f}"
+                )
                 options = [
                     f"{probability:.3f}",
                     f"{probability*1.2:.3f}",
@@ -3813,11 +3605,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"统计-简单-{scenario_type}"
-                if language == "zh"
-                else f"Stats-Simple-{scenario_type}"
-            ),
+            "sub_tag": (f"统计-简单-{scenario_type}" if language == "zh" else f"Stats-Simple-{scenario_type}"),
             "language": language,
             "difficulty": "简单" if language == "zh" else "Easy",
             "question_type": "multiple_choice",
@@ -3830,9 +3618,7 @@ class QuestionGenerator:
             "content_pattern": f"pattern_stats_simple_{scenario_type}_{index}",
         }
 
-    def _generate_complex_stats_unique(
-        self, index: int, difficulty_config: dict, language: str, subject: str
-    ) -> dict:
+    def _generate_complex_stats_unique(self, index: int, difficulty_config: dict, language: str, subject: str) -> dict:
         """复杂统计题目 - 贝叶斯定理"""
         import random
 
@@ -3881,9 +3667,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"统计-复杂-贝叶斯定理" if language == "zh" else f"Stats-Complex-Bayes"
-            ),
+            "sub_tag": (f"统计-复杂-贝叶斯定理" if language == "zh" else f"Stats-Complex-Bayes"),
             "language": language,
             "difficulty": "困难" if language == "zh" else "Hard",
             "question_type": "multiple_choice",
@@ -3896,9 +3680,7 @@ class QuestionGenerator:
             "content_pattern": f"pattern_stats_complex_{index}",
         }
 
-    def _generate_medium_stats_unique(
-        self, index: int, difficulty_config: dict, language: str, subject: str
-    ) -> dict:
+    def _generate_medium_stats_unique(self, index: int, difficulty_config: dict, language: str, subject: str) -> dict:
         """中等统计题目 - 条件概率"""
         import random
 
@@ -3925,9 +3707,7 @@ class QuestionGenerator:
             ][index % 5]
         )
         conditions_b = (
-            ["使用移动支付", "买新能源车", "继续深造", "参加马拉松", "买电子书"][
-                index % 5
-            ]
+            ["使用移动支付", "买新能源车", "继续深造", "参加马拉松", "买电子书"][index % 5]
             if language == "zh"
             else [
                 "mobile payment",
@@ -3959,11 +3739,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"统计-中等-条件概率"
-                if language == "zh"
-                else f"Stats-Medium-Conditional"
-            ),
+            "sub_tag": (f"统计-中等-条件概率" if language == "zh" else f"Stats-Medium-Conditional"),
             "language": language,
             "difficulty": "中等" if language == "zh" else "Medium",
             "question_type": "multiple_choice",
@@ -4000,9 +3776,7 @@ class QuestionGenerator:
             ]
         else:
             content = f"Basic calculation #{index+1}: {base_number} × {multiplier} = ?"
-            explanation = (
-                f"Direct multiplication: {base_number} × {multiplier} = {result}"
-            )
+            explanation = f"Direct multiplication: {base_number} × {multiplier} = {result}"
             options = [
                 f"{result}",
                 f"{result+index+1}",
@@ -4012,13 +3786,9 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"基础计算-{index+1}" if language == "zh" else f"Basic-Calc-{index+1}"
-            ),
+            "sub_tag": (f"基础计算-{index+1}" if language == "zh" else f"Basic-Calc-{index+1}"),
             "language": language,
-            "difficulty": difficulty_config.get(
-                "description", "简单" if language == "zh" else "Easy"
-            ),
+            "difficulty": difficulty_config.get("description", "简单" if language == "zh" else "Easy"),
             "question_type": "multiple_choice",
             "content": content,
             "options": options,
@@ -4043,41 +3813,23 @@ class QuestionGenerator:
 
         # 根据推理深度选择对应的专业生成器
         if difficulty_type == "strategic":  # GRE风格
-            return self._create_gre_style_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_gre_style_question(index, difficulty_config, language, subject)
         elif difficulty_type == "business_analytical":  # GMAT风格
-            return self._create_gmat_style_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_gmat_style_question(index, difficulty_config, language, subject)
         elif difficulty_type == "theoretical":  # 研究生水平
-            return self._create_graduate_level_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_graduate_level_question(index, difficulty_config, language, subject)
         elif difficulty_type == "innovative":  # 竞赛水平
-            return self._create_competition_math_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_competition_math_question(index, difficulty_config, language, subject)
         elif difficulty_type == "applied":  # 工程应用
-            return self._create_engineering_application_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_engineering_application_question(index, difficulty_config, language, subject)
         elif difficulty_type == "statistical":  # 数据科学
-            return self._create_data_science_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_data_science_question(index, difficulty_config, language, subject)
         elif difficulty_type == "quantitative":  # 金融建模
-            return self._create_financial_modeling_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_financial_modeling_question(index, difficulty_config, language, subject)
         else:
-            return self._create_fallback_unique_question(
-                index, difficulty_config, language, subject
-            )
+            return self._create_fallback_unique_question(index, difficulty_config, language, subject)
 
-    def _create_gre_style_question(
-        self, index: int, difficulty_config: dict, language: str, subject: str
-    ) -> dict:
+    def _create_gre_style_question(self, index: int, difficulty_config: dict, language: str, subject: str) -> dict:
         """创建GRE风格数学题目"""
         import random
 
@@ -4185,7 +3937,9 @@ class QuestionGenerator:
                     explanation = f"Quantity A = √({x}² + {y}²) = √{x**2 + y**2} ≈ {value_a:.2f}, Quantity B = {x} + {y} = {value_b}. By geometric inequality, A > B."
                 elif value_b > value_a:
                     correct_answer = "B) Quantity B is greater"
-                    explanation = f"Quantity A = √({x}² + {y}²) ≈ {value_a:.2f}, Quantity B = {x} + {y} = {value_b}. B > A."
+                    explanation = (
+                        f"Quantity A = √({x}² + {y}²) ≈ {value_a:.2f}, Quantity B = {x} + {y} = {value_b}. B > A."
+                    )
                 else:
                     correct_answer = "C) The quantities are equal"
                     explanation = f"Quantity A = Quantity B = {value_a:.2f}"
@@ -4231,9 +3985,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"GRE-{question_type}" if language == "en" else f"GRE-{question_type}"
-            ),
+            "sub_tag": (f"GRE-{question_type}" if language == "en" else f"GRE-{question_type}"),
             "language": language,
             "difficulty": difficulty_config["description"],
             "question_type": "multiple_choice",
@@ -4247,9 +3999,7 @@ class QuestionGenerator:
             "content_pattern": f"pattern_gre_{question_type}_{index}",
         }
 
-    def _create_graduate_level_question(
-        self, index: int, difficulty_config: dict, language: str, subject: str
-    ) -> dict:
+    def _create_graduate_level_question(self, index: int, difficulty_config: dict, language: str, subject: str) -> dict:
         """创建研究生水平数学题目"""
         import random
 
@@ -4352,11 +4102,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"研究生-{question_type}"
-                if language == "zh"
-                else f"Graduate-{question_type}"
-            ),
+            "sub_tag": (f"研究生-{question_type}" if language == "zh" else f"Graduate-{question_type}"),
             "language": language,
             "difficulty": difficulty_config["description"],
             "question_type": "multiple_choice",
@@ -4388,9 +4134,7 @@ class QuestionGenerator:
             "functional_equation",  # 函数方程
         ]
 
-        question_type = competition_question_types[
-            index % len(competition_question_types)
-        ]
+        question_type = competition_question_types[index % len(competition_question_types)]
 
         if question_type == "combinatorics_advanced":
             # 高级组合数学
@@ -4403,9 +4147,7 @@ class QuestionGenerator:
                 # 计算：C(n,2) * S(n-2, k-1) 其中S是第二类Stirling数的近似
                 first_box_ways = n * (n - 1) // 2  # C(n,2)
                 remaining_arrangements = (n - 2) ** (k - 1)  # 简化的Stirling数近似
-                total_ways = (
-                    first_box_ways * remaining_arrangements // (k - 1)
-                )  # 修正因子
+                total_ways = first_box_ways * remaining_arrangements // (k - 1)  # 修正因子
 
                 explanation = f"解法：\n1) 选择2个球放入第1个盒子：C({n},2)={first_box_ways}\n2) 剩余{n-2}个球分配到{k-1}个盒子，每个非空：使用容斥原理\n3) 总方案数约为{total_ways}"
 
@@ -4484,11 +4226,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"竞赛-{question_type}"
-                if language == "zh"
-                else f"Competition-{question_type}"
-            ),
+            "sub_tag": (f"竞赛-{question_type}" if language == "zh" else f"Competition-{question_type}"),
             "language": language,
             "difficulty": difficulty_config["description"],
             "question_type": "multiple_choice",
@@ -4502,9 +4240,7 @@ class QuestionGenerator:
             "content_pattern": f"pattern_competition_{question_type}_{index}",
         }
 
-    def _create_gmat_style_question(
-        self, index: int, difficulty_config: dict, language: str, subject: str
-    ) -> dict:
+    def _create_gmat_style_question(self, index: int, difficulty_config: dict, language: str, subject: str) -> dict:
         """创建GMAT风格商业数学题目"""
         import random
 
@@ -4533,9 +4269,7 @@ class QuestionGenerator:
 
                 breakeven_quantity = fixed_cost // (selling_price - variable_cost)
                 profit_target = 1000000
-                target_quantity = (fixed_cost + profit_target) // (
-                    selling_price - variable_cost
-                )
+                target_quantity = (fixed_cost + profit_target) // (selling_price - variable_cost)
 
                 explanation = f"商业分析：\n1) 盈亏平衡点：固定成本÷(售价-变动成本)={fixed_cost}÷({selling_price}-{variable_cost})={breakeven_quantity}件\n2) 目标利润时：(固定成本+目标利润)÷贡献边际=({fixed_cost}+{profit_target})÷{selling_price-variable_cost}={target_quantity}件"
 
@@ -4551,9 +4285,7 @@ class QuestionGenerator:
 
                 breakeven_quantity = fixed_cost // (selling_price - variable_cost)
                 profit_target = 1000000
-                target_quantity = (fixed_cost + profit_target) // (
-                    selling_price - variable_cost
-                )
+                target_quantity = (fixed_cost + profit_target) // (selling_price - variable_cost)
 
                 explanation = f"Business analysis:\n1) Breakeven point: Fixed cost÷(Price-Variable cost)=${fixed_cost}÷(${selling_price}-${variable_cost})={breakeven_quantity} units\n2) Profit target: (Fixed cost+Target profit)÷Contribution margin=(${fixed_cost}+${profit_target})÷{selling_price-variable_cost}={target_quantity} units"
 
@@ -4576,9 +4308,7 @@ class QuestionGenerator:
                 content = f"投资项目分析：初始投资{initial_investment}元，预计年现金流{annual_cash_flow}元，持续{years}年，折现率{discount_rate}%。\n\n计算净现值(NPV)并判断投资可行性。NPV = -初始投资 + ∑(年现金流/(1+折现率)^t)"
 
                 # 简化NPV计算
-                pv_factor = sum(
-                    1 / (1 + discount_rate / 100) ** t for t in range(1, years + 1)
-                )
+                pv_factor = sum(1 / (1 + discount_rate / 100) ** t for t in range(1, years + 1))
                 npv = -initial_investment + annual_cash_flow * pv_factor
 
                 explanation = f"NPV计算：\n1) 现值系数总和 = {pv_factor:.3f}\n2) 现金流现值 = {annual_cash_flow} × {pv_factor:.3f} = {annual_cash_flow * pv_factor:.0f}元\n3) NPV = -{initial_investment} + {annual_cash_flow * pv_factor:.0f} = {npv:.0f}元\n4) {'项目可行' if npv > 0 else '项目不可行'}"
@@ -4593,9 +4323,7 @@ class QuestionGenerator:
             else:
                 content = f"Investment analysis: Initial investment ${initial_investment}, expected annual cash flow ${annual_cash_flow} for {years} years, discount rate {discount_rate}%.\n\nCalculate NPV and assess feasibility. NPV = -Initial investment + ∑(Cash flow/(1+discount rate)^t)"
 
-                pv_factor = sum(
-                    1 / (1 + discount_rate / 100) ** t for t in range(1, years + 1)
-                )
+                pv_factor = sum(1 / (1 + discount_rate / 100) ** t for t in range(1, years + 1))
                 npv = -initial_investment + annual_cash_flow * pv_factor
 
                 explanation = f"NPV calculation:\n1) Total PV factor = {pv_factor:.3f}\n2) PV of cash flows = ${annual_cash_flow} × {pv_factor:.3f} = ${annual_cash_flow * pv_factor:.0f}\n3) NPV = -${initial_investment} + ${annual_cash_flow * pv_factor:.0f} = ${npv:.0f}\n4) Project is {'feasible' if npv > 0 else 'not feasible'}"
@@ -4610,9 +4338,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"GMAT-{question_type}" if language == "en" else f"GMAT-{question_type}"
-            ),
+            "sub_tag": (f"GMAT-{question_type}" if language == "en" else f"GMAT-{question_type}"),
             "language": language,
             "difficulty": difficulty_config["description"],
             "question_type": "multiple_choice",
@@ -4743,11 +4469,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"工程-{question_type}"
-                if language == "zh"
-                else f"Engineering-{question_type}"
-            ),
+            "sub_tag": (f"工程-{question_type}" if language == "zh" else f"Engineering-{question_type}"),
             "language": language,
             "difficulty": difficulty_config["description"],
             "question_type": "multiple_choice",
@@ -4761,9 +4483,7 @@ class QuestionGenerator:
             "content_pattern": f"pattern_engineering_{question_type}_{index}",
         }
 
-    def _create_data_science_question(
-        self, index: int, difficulty_config: dict, language: str, subject: str
-    ) -> dict:
+    def _create_data_science_question(self, index: int, difficulty_config: dict, language: str, subject: str) -> dict:
         """创建数据科学题目"""
         import random
 
@@ -4865,11 +4585,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"数据科学-{question_type}"
-                if language == "zh"
-                else f"DataScience-{question_type}"
-            ),
+            "sub_tag": (f"数据科学-{question_type}" if language == "zh" else f"DataScience-{question_type}"),
             "language": language,
             "difficulty": difficulty_config["description"],
             "question_type": "multiple_choice",
@@ -4916,8 +4632,7 @@ class QuestionGenerator:
                 import math
 
                 d1 = (
-                    math.log(stock_price / strike_price)
-                    + (risk_free_rate + volatility**2 / 2) * time_to_expiry
+                    math.log(stock_price / strike_price) + (risk_free_rate + volatility**2 / 2) * time_to_expiry
                 ) / (volatility * math.sqrt(time_to_expiry))
                 d2 = d1 - volatility * math.sqrt(time_to_expiry)
 
@@ -4944,8 +4659,7 @@ class QuestionGenerator:
                 import math
 
                 d1 = (
-                    math.log(stock_price / strike_price)
-                    + (risk_free_rate + volatility**2 / 2) * time_to_expiry
+                    math.log(stock_price / strike_price) + (risk_free_rate + volatility**2 / 2) * time_to_expiry
                 ) / (volatility * math.sqrt(time_to_expiry))
                 d2 = d1 - volatility * math.sqrt(time_to_expiry)
 
@@ -4977,26 +4691,15 @@ class QuestionGenerator:
             if language == "zh":
                 content = f"投资组合优化：\n资产A期望收益率{expected_return_a*100}%，波动率{volatility_a*100}%\n资产B期望收益率{expected_return_b*100}%，波动率{volatility_b*100}%\n相关系数ρ={correlation}\n\n构建最小方差投资组合，权重wₐ的计算公式：\nwₐ = (σ_B² - ρσₐσ_B) / (σₐ² + σ_B² - 2ρσₐσ_B)"
 
-                weight_a = (
-                    volatility_b**2 - correlation * volatility_a * volatility_b
-                ) / (
-                    volatility_a**2
-                    + volatility_b**2
-                    - 2 * correlation * volatility_a * volatility_b
+                weight_a = (volatility_b**2 - correlation * volatility_a * volatility_b) / (
+                    volatility_a**2 + volatility_b**2 - 2 * correlation * volatility_a * volatility_b
                 )
                 weight_b = 1 - weight_a
-                portfolio_return = (
-                    weight_a * expected_return_a + weight_b * expected_return_b
-                )
+                portfolio_return = weight_a * expected_return_a + weight_b * expected_return_b
                 portfolio_volatility = math.sqrt(
                     weight_a**2 * volatility_a**2
                     + weight_b**2 * volatility_b**2
-                    + 2
-                    * weight_a
-                    * weight_b
-                    * correlation
-                    * volatility_a
-                    * volatility_b
+                    + 2 * weight_a * weight_b * correlation * volatility_a * volatility_b
                 )
 
                 explanation = f"投资组合计算：\n1) 最小方差权重：wₐ = {weight_a:.3f}, w_B = {weight_b:.3f}\n2) 组合期望收益：{weight_a:.3f}×{expected_return_a:.3f} + {weight_b:.3f}×{expected_return_b:.3f} = {portfolio_return:.3f}\n3) 组合风险：√(...) = {portfolio_volatility:.3f}"
@@ -5011,26 +4714,15 @@ class QuestionGenerator:
             else:
                 content = f"Portfolio optimization:\nAsset A expected return {expected_return_a*100}%, volatility {volatility_a*100}%\nAsset B expected return {expected_return_b*100}%, volatility {volatility_b*100}%\nCorrelation ρ={correlation}\n\nConstruct minimum variance portfolio, weight wₐ formula:\nwₐ = (σ_B² - ρσₐσ_B) / (σₐ² + σ_B² - 2ρσₐσ_B)"
 
-                weight_a = (
-                    volatility_b**2 - correlation * volatility_a * volatility_b
-                ) / (
-                    volatility_a**2
-                    + volatility_b**2
-                    - 2 * correlation * volatility_a * volatility_b
+                weight_a = (volatility_b**2 - correlation * volatility_a * volatility_b) / (
+                    volatility_a**2 + volatility_b**2 - 2 * correlation * volatility_a * volatility_b
                 )
                 weight_b = 1 - weight_a
-                portfolio_return = (
-                    weight_a * expected_return_a + weight_b * expected_return_b
-                )
+                portfolio_return = weight_a * expected_return_a + weight_b * expected_return_b
                 portfolio_volatility = math.sqrt(
                     weight_a**2 * volatility_a**2
                     + weight_b**2 * volatility_b**2
-                    + 2
-                    * weight_a
-                    * weight_b
-                    * correlation
-                    * volatility_a
-                    * volatility_b
+                    + 2 * weight_a * weight_b * correlation * volatility_a * volatility_b
                 )
 
                 explanation = f"Portfolio calculation:\n1) Minimum variance weights: wₐ = {weight_a:.3f}, w_B = {weight_b:.3f}\n2) Portfolio expected return: {weight_a:.3f}×{expected_return_a:.3f} + {weight_b:.3f}×{expected_return_b:.3f} = {portfolio_return:.3f}\n3) Portfolio risk: √(...) = {portfolio_volatility:.3f}"
@@ -5045,11 +4737,7 @@ class QuestionGenerator:
 
         return {
             "subject": subject,
-            "sub_tag": (
-                f"金融建模-{question_type}"
-                if language == "zh"
-                else f"FinancialModeling-{question_type}"
-            ),
+            "sub_tag": (f"金融建模-{question_type}" if language == "zh" else f"FinancialModeling-{question_type}"),
             "language": language,
             "difficulty": difficulty_config["description"],
             "question_type": "multiple_choice",

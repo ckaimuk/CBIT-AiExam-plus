@@ -62,9 +62,7 @@ class QuestionValidator:
             errors.append("题目包含未处理的数学公式标记")
 
         # 检查是否包含特殊字符
-        if re.search(
-            r'[^\u4e00-\u9fa5a-zA-Z0-9\s\.,;:!?()\[\]{}"\'`~@#$%^&*+=|\\/<>]', content
-        ):
+        if re.search(r'[^\u4e00-\u9fa5a-zA-Z0-9\s\.,;:!?()\[\]{}"\'`~@#$%^&*+=|\\/<>]', content):
             errors.append("题目包含不支持的字符")
 
         return errors

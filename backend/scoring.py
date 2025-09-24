@@ -46,13 +46,9 @@ class ScoringSystem:
                 return
 
             # 检查AI评分是否启用
-            ai_scoring_config = SystemConfig.query.filter_by(
-                config_key="aiScoringEnabled"
-            ).first()
+            ai_scoring_config = SystemConfig.query.filter_by(config_key="aiScoringEnabled").first()
             if ai_scoring_config:
-                self.ai_scoring_enabled = (
-                    ai_scoring_config.config_value.lower() == "true"
-                )
+                self.ai_scoring_enabled = ai_scoring_config.config_value.lower() == "true"
             else:
                 # 如果没有配置，默认启用（向后兼容）
                 self.ai_scoring_enabled = True
@@ -63,17 +59,13 @@ class ScoringSystem:
                 return
 
             # 获取当前激活且验证通过的API提供商
-            active_provider = ApiProvider.query.filter_by(
-                is_active=True, is_verified=True
-            ).first()
+            active_provider = ApiProvider.query.filter_by(is_active=True, is_verified=True).first()
 
             if active_provider:
                 self.api_key = active_provider.api_key
                 self.api_url = active_provider.api_url
                 self.model = active_provider.default_model
-                print(
-                    f"🤖 AI评分配置加载成功: {active_provider.display_name} - {self.model}"
-                )
+                print(f"🤖 AI评分配置加载成功: {active_provider.display_name} - {self.model}")
 
                 # 验证API是否真正可用
                 if not self._verify_api_connection():
@@ -111,9 +103,7 @@ class ScoringSystem:
                 "temperature": 0.1,
             }
 
-            response = requests.post(
-                self.api_url, headers=headers, json=data, timeout=5  # 5秒超时
-            )
+            response = requests.post(self.api_url, headers=headers, json=data, timeout=5)  # 5秒超时
 
             if response.status_code == 200:
                 print("✅ API连接验证成功")
@@ -131,18 +121,12 @@ class ScoringSystem:
     ) -> Dict[str, Any]:
         """计算考试实例总分和详细分数"""
         print(f"开始计算考试实例 {instance_id} 的分数，共 {len(questions)} 道题目")
-        return self._calculate_scores_internal(
-            questions, answers, instance_id, is_instance=True
-        )
+        return self._calculate_scores_internal(questions, answers, instance_id, is_instance=True)
 
-    def calculate_scores(
-        self, exam_id: int, questions: List[Dict], answers: Dict[str, str]
-    ) -> Dict[str, Any]:
+    def calculate_scores(self, exam_id: int, questions: List[Dict], answers: Dict[str, str]) -> Dict[str, Any]:
         """计算考试总分和详细分数"""
         print(f"开始计算考试 {exam_id} 的分数，共 {len(questions)} 道题目")
-        return self._calculate_scores_internal(
-            questions, answers, exam_id, is_instance=False
-        )
+        return self._calculate_scores_internal(questions, answers, exam_id, is_instance=False)
 
     def _calculate_scores_internal(
         self,
@@ -160,25 +144,17 @@ class ScoringSystem:
         question_scores = []
 
         entity_type = "考试实例" if is_instance else "考试"
-        print(
-            f"开始计算{entity_type} {exam_or_instance_id} 的分数，共 {len(questions)} 道题目"
-        )
+        print(f"开始计算{entity_type} {exam_or_instance_id} 的分数，共 {len(questions)} 道题目")
 
         for i, question in enumerate(questions):
             # 获取题目ID，尝试多种可能的字段名
-            question_id = str(
-                question.get("id", question.get("question_id", str(i + 1)))
-            )
-            student_answer = answers.get(
-                question_id, answers.get(str(question.get("id", "")), "")
-            )
+            question_id = str(question.get("id", question.get("question_id", str(i + 1))))
+            student_answer = answers.get(question_id, answers.get(str(question.get("id", "")), ""))
 
             print(f"题目 {i+1} (ID: {question_id}): 学生答案长度 {len(student_answer)}")
 
             # 计算单题分数
-            question_score, max_question_score = self._score_single_question(
-                question, student_answer
-            )
+            question_score, max_question_score = self._score_single_question(question, student_answer)
 
             print(f"题目 {i+1} 得分: {question_score}/{max_question_score}")
 
@@ -191,19 +167,9 @@ class ScoringSystem:
                     "question_id": question_id,
                     "score": question_score,
                     "max_score": max_question_score,
-                    "percentage": (
-                        (question_score / max_question_score * 100)
-                        if max_question_score > 0
-                        else 0
-                    ),
-                    "student_answer": (
-                        student_answer[:100] + "..."
-                        if len(student_answer) > 100
-                        else student_answer
-                    ),
-                    "question_type": question.get(
-                        "type_key", question.get("question_type", "unknown")
-                    ),
+                    "percentage": ((question_score / max_question_score * 100) if max_question_score > 0 else 0),
+                    "student_answer": (student_answer[:100] + "..." if len(student_answer) > 100 else student_answer),
+                    "question_type": question.get("type_key", question.get("question_type", "unknown")),
                 }
             )
 
@@ -215,18 +181,14 @@ class ScoringSystem:
             subject_scores[subject]["max_score"] += max_question_score
 
             # 按难度统计
-            difficulty = question.get(
-                "difficulty", question.get("difficulty_key", "unknown")
-            )
+            difficulty = question.get("difficulty", question.get("difficulty_key", "unknown"))
             if difficulty not in difficulty_scores:
                 difficulty_scores[difficulty] = {"score": 0, "max_score": 0}
             difficulty_scores[difficulty]["score"] += question_score
             difficulty_scores[difficulty]["max_score"] += max_question_score
 
             # 按认知层级统计
-            cognitive = question.get(
-                "cognitive_level", question.get("cognitive_key", "unknown")
-            )
+            cognitive = question.get("cognitive_level", question.get("cognitive_key", "unknown"))
             if cognitive not in cognitive_scores:
                 cognitive_scores[cognitive] = {"score": 0, "max_score": 0}
             cognitive_scores[cognitive]["score"] += question_score
@@ -242,9 +204,7 @@ class ScoringSystem:
         subject_percentages = {}
         for subject, scores in subject_scores.items():
             if scores["max_score"] > 0:
-                subject_percentages[subject] = (
-                    scores["score"] / scores["max_score"] * 100
-                )
+                subject_percentages[subject] = scores["score"] / scores["max_score"] * 100
             else:
                 subject_percentages[subject] = 0
 
@@ -270,9 +230,7 @@ class ScoringSystem:
             },
         }
 
-    def _score_single_question(
-        self, question: Dict, student_answer: str
-    ) -> Tuple[float, float]:
+    def _score_single_question(self, question: Dict, student_answer: str) -> Tuple[float, float]:
         """计算单个题目的分数"""
         question_type = question.get("type_key", question.get("question_type", ""))
         max_score = float(question.get("points", 1))
@@ -291,9 +249,7 @@ class ScoringSystem:
             # 默认按简答题处理
             return self._score_short_answer(question, student_answer, max_score)
 
-    def _score_multiple_choice(
-        self, question: Dict, student_answer: str, max_score: float
-    ) -> Tuple[float, float]:
+    def _score_multiple_choice(self, question: Dict, student_answer: str, max_score: float) -> Tuple[float, float]:
         """评分选择题"""
         correct_answer = question.get("correct_answer", "")
 
@@ -329,9 +285,7 @@ class ScoringSystem:
 
         return 0.0, max_score
 
-    def _score_short_answer(
-        self, question: Dict, student_answer: str, max_score: float
-    ) -> Tuple[float, float]:
+    def _score_short_answer(self, question: Dict, student_answer: str, max_score: float) -> Tuple[float, float]:
         """评分简答题"""
         correct_answer = question.get("correct_answer", "")
 
@@ -342,15 +296,11 @@ class ScoringSystem:
         # 检查是否启用AI评分
         if self.ai_scoring_enabled and self.api_key:
             # 使用AI进行语义相似度评分
-            ai_similarity = self._calculate_semantic_similarity(
-                student_answer, correct_answer
-            )
+            ai_similarity = self._calculate_semantic_similarity(student_answer, correct_answer)
             print(f"🤖 AI语义相似度评分: {ai_similarity:.2f}")
 
             # 使用关键词匹配作为辅助评分
-            keyword_score = self._simple_keyword_similarity(
-                student_answer, correct_answer
-            )
+            keyword_score = self._simple_keyword_similarity(student_answer, correct_answer)
             print(f"📝 关键词匹配评分: {keyword_score:.2f}")
 
             # AI评分占80%，关键词匹配占20%
@@ -363,16 +313,12 @@ class ScoringSystem:
             print("📝 使用基本评分结构（非AI模式）")
 
             # 基本评分结构：关键词匹配 + 长度评分 + 基本逻辑
-            keyword_score = self._simple_keyword_similarity(
-                student_answer, correct_answer
-            )
+            keyword_score = self._simple_keyword_similarity(student_answer, correct_answer)
             length_score = self._evaluate_answer_length(student_answer, correct_answer)
             basic_logic_score = self._evaluate_basic_logic(student_answer)
 
             # 基本评分权重：关键词70%，长度20%，逻辑10%
-            final_similarity = (
-                keyword_score * 0.7 + length_score * 0.2 + basic_logic_score * 0.1
-            )
+            final_similarity = keyword_score * 0.7 + length_score * 0.2 + basic_logic_score * 0.1
             print(
                 f"✅ 基本评分结构: 关键词{keyword_score:.2f}*0.7 + 长度{length_score:.2f}*0.2 + 逻辑{basic_logic_score:.2f}*0.1 = {final_similarity:.2f}"
             )
@@ -398,9 +344,7 @@ class ScoringSystem:
         else:
             return 0.0, max_score
 
-    def _score_programming(
-        self, question: Dict, student_answer: str, max_score: float
-    ) -> Tuple[float, float]:
+    def _score_programming(self, question: Dict, student_answer: str, max_score: float) -> Tuple[float, float]:
         """评分编程题 - 改进的步骤分评估"""
         try:
             if not student_answer.strip():
@@ -437,10 +381,7 @@ class ScoringSystem:
 
                 # 综合评分：AI占80%，结构10%，语法5%，执行5%
                 final_score = (
-                    ai_score * 0.8
-                    + structure_score * 0.1
-                    + syntax_score * 0.05
-                    + execution_score * 0.05
+                    ai_score * 0.8 + structure_score * 0.1 + syntax_score * 0.05 + execution_score * 0.05
                 ) * max_score
                 print(
                     f"✅ AI模式最终评分: AI{ai_score:.2f}*0.8 + 结构{structure_score:.2f}*0.1 + 语法{syntax_score:.2f}*0.05 + 执行{execution_score:.2f}*0.05 = {final_score:.2f}/{max_score}"
@@ -450,9 +391,7 @@ class ScoringSystem:
                 print("📝 使用基本评分结构（非AI模式）")
 
                 # 基本评分结构：结构40%，语法35%，执行25%
-                final_score = (
-                    structure_score * 0.4 + syntax_score * 0.35 + execution_score * 0.25
-                ) * max_score
+                final_score = (structure_score * 0.4 + syntax_score * 0.35 + execution_score * 0.25) * max_score
                 print(
                     f"✅ 基本评分结构最终评分: 结构{structure_score:.2f}*0.4 + 语法{syntax_score:.2f}*0.35 + 执行{execution_score:.2f}*0.25 = {final_score:.2f}/{max_score}"
                 )
@@ -460,9 +399,7 @@ class ScoringSystem:
                 # 确保基本评分给予合理分数
                 if final_score < max_score * 0.1 and student_answer.strip():
                     final_score = max_score * 0.1  # 有代码内容就至少给10%
-                    print(
-                        f"🛡️ 基本评分保护：给予最低10%分数 = {final_score:.2f}/{max_score}"
-                    )
+                    print(f"🛡️ 基本评分保护：给予最低10%分数 = {final_score:.2f}/{max_score}")
 
             return min(final_score, max_score), max_score
 
@@ -518,17 +455,13 @@ class ScoringSystem:
 
         return len(intersection) / len(union)
 
-    def _evaluate_answer_length(
-        self, student_answer: str, correct_answer: str
-    ) -> float:
+    def _evaluate_answer_length(self, student_answer: str, correct_answer: str) -> float:
         """评估答案长度的合理性"""
         if not student_answer.strip():
             return 0.0
 
         student_len = len(student_answer.strip())
-        correct_len = (
-            len(correct_answer.strip()) if correct_answer else 50
-        )  # 默认期望长度
+        correct_len = len(correct_answer.strip()) if correct_answer else 50  # 默认期望长度
 
         # 长度比例评分
         if correct_len == 0:
@@ -590,9 +523,7 @@ class ScoringSystem:
 
         return min(score, 1.0)
 
-    def _update_answer_scores(
-        self, exam_or_instance_id: int, question_scores: list, is_instance: bool = False
-    ):
+    def _update_answer_scores(self, exam_or_instance_id: int, question_scores: list, is_instance: bool = False):
         """更新数据库中的Answer记录分数"""
         try:
             # 导入这里而不是在文件顶部，避免循环导入
@@ -620,9 +551,7 @@ class ScoringSystem:
                     ).first()
                 else:
                     # 旧系统：通过exam_id查找
-                    answer = Answer.query.filter_by(
-                        exam_id=exam_or_instance_id, question_id=question_id
-                    ).first()
+                    answer = Answer.query.filter_by(exam_id=exam_or_instance_id, question_id=question_id).first()
 
                 if answer:
                     # 更新分数和正确性
@@ -674,9 +603,7 @@ class ScoringSystem:
 
         # 检查代码缩进（基本格式检查）
         lines = code.split("\n")
-        has_indentation = any(
-            line.startswith("    ") or line.startswith("\t") for line in lines
-        )
+        has_indentation = any(line.startswith("    ") or line.startswith("\t") for line in lines)
         if has_indentation:
             score += 0.1
 
@@ -899,9 +826,7 @@ class ScoringSystem:
                 "max_tokens": 100,
             }
 
-            response = requests.post(
-                self.api_url, headers=headers, json=data, timeout=30
-            )
+            response = requests.post(self.api_url, headers=headers, json=data, timeout=30)
 
             if response.status_code == 200:
                 result = response.json()
@@ -937,9 +862,7 @@ class ScoringSystem:
         else:
             return "F"
 
-    def _generate_summary(
-        self, percentage: float, subject_scores: Dict[str, float]
-    ) -> str:
+    def _generate_summary(self, percentage: float, subject_scores: Dict[str, float]) -> str:
         """生成成绩总结"""
         if percentage >= 80:
             performance = "优秀"

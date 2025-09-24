@@ -63,12 +63,8 @@ app = Flask(
 # 配置
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
 # 使用绝对路径确保连接正确的数据库
-db_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "instance", "exam.db"
-)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "DATABASE_URL", f"sqlite:///{db_path}"
-)
+db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "instance", "exam.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", f"sqlite:///{db_path}")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # 自动重新加载模板
 app.jinja_env.auto_reload = True  # 自动重新加载Jinja环境
@@ -268,9 +264,7 @@ def verify_student():
         name = data.get("name", "").strip()
         # 兼容新旧字段名称
         id_number = data.get("id_number", data.get("idNumber", "")).strip()
-        application_number = data.get(
-            "application_number", data.get("applicationNumber", "")
-        ).strip()
+        application_number = data.get("application_number", data.get("applicationNumber", "")).strip()
         device_ip = data.get("deviceIP", "")
         device_id = data.get("deviceId", "")
 
@@ -288,11 +282,7 @@ def verify_student():
             )
 
         # 验证身份证号格式
-        if (
-            len(id_number) != 18
-            or not id_number[:-1].isdigit()
-            or id_number[-1] not in "0123456789Xx"
-        ):
+        if len(id_number) != 18 or not id_number[:-1].isdigit() or id_number[-1] not in "0123456789Xx":
             return (
                 jsonify(
                     {
@@ -321,9 +311,7 @@ def verify_student():
         is_admin_test = is_admin()
 
         # 检查是否已经参加过考试（管理员可以绕过）
-        existing_student = Student.query.filter_by(
-            id_number=id_number, application_number=application_number
-        ).first()
+        existing_student = Student.query.filter_by(id_number=id_number, application_number=application_number).first()
 
         if existing_student and existing_student.has_taken_exam and not is_admin_test:
             return (
@@ -363,9 +351,7 @@ def verify_student():
                     )
 
                 # 检查申请号是否已被使用
-                existing_app = Student.query.filter_by(
-                    application_number=application_number
-                ).first()
+                existing_app = Student.query.filter_by(application_number=application_number).first()
                 if existing_app:
                     return (
                         jsonify(
@@ -422,9 +408,7 @@ def verify_student():
         db.session.add(exam_session)
         db.session.commit()
 
-        return jsonify(
-            {"success": True, "message": "身份验证成功", "session_id": exam_session.id}
-        )
+        return jsonify({"success": True, "message": "身份验证成功", "session_id": exam_session.id})
 
     except Exception as e:
         db.session.rollback()
@@ -452,9 +436,7 @@ def generate_exam():
             exam_config = ExamConfig.query.get(config_id)
         else:
             # 使用默认配置
-            exam_config = ExamConfig.query.filter_by(
-                is_default=True, is_active=True
-            ).first()
+            exam_config = ExamConfig.query.filter_by(is_default=True, is_active=True).first()
 
         if not exam_config:
             # 如果没有配置，使用默认值
@@ -466,19 +448,9 @@ def generate_exam():
         else:
             total_questions = exam_config.total_questions
             time_limit = exam_config.time_limit
-            subject_filter = (
-                exam_config.subject_filter.split(",")
-                if exam_config.subject_filter
-                else None
-            )
-            difficulty_filter = (
-                exam_config.difficulty_filter.split(",")
-                if exam_config.difficulty_filter
-                else None
-            )
-            type_filter = (
-                exam_config.type_filter.split(",") if exam_config.type_filter else None
-            )
+            subject_filter = exam_config.subject_filter.split(",") if exam_config.subject_filter else None
+            difficulty_filter = exam_config.difficulty_filter.split(",") if exam_config.difficulty_filter else None
+            type_filter = exam_config.type_filter.split(",") if exam_config.type_filter else None
 
         # 从题库中抽取题目
         query = Question.query.filter_by(is_active=True)
@@ -523,9 +495,7 @@ def generate_exam():
         # 创建考试题目关联
         exam_questions = []
         for i, question in enumerate(selected_questions):
-            exam_question = ExamQuestion(
-                exam_id=exam.id, question_id=question.id, question_order=i + 1
-            )
+            exam_question = ExamQuestion(exam_id=exam.id, question_id=question.id, question_order=i + 1)
             db.session.add(exam_question)
             exam_questions.append(question.to_dict())
 
@@ -555,9 +525,7 @@ def submit_answer():
         answer_text = data.get("answer", "")
 
         # 查找或创建答案记录
-        answer = Answer.query.filter_by(
-            exam_id=exam_id, question_id=question_id
-        ).first()
+        answer = Answer.query.filter_by(exam_id=exam_id, question_id=question_id).first()
 
         if answer:
             answer.answer_text = answer_text
@@ -613,9 +581,7 @@ def submit_exam_instance(instance_id, answers):
 
         # 保存所有答案
         for question_id, answer_text in answers.items():
-            answer = Answer.query.filter_by(
-                exam_instance_id=instance_id, question_id=question_id
-            ).first()
+            answer = Answer.query.filter_by(exam_instance_id=instance_id, question_id=question_id).first()
 
             if answer:
                 answer.answer_text = answer_text
@@ -675,9 +641,7 @@ def submit_exam_legacy(exam_id, answers):
 
         # 保存所有答案
         for question_id, answer_text in answers.items():
-            answer = Answer.query.filter_by(
-                exam_id=exam_id, question_id=question_id
-            ).first()
+            answer = Answer.query.filter_by(exam_id=exam_id, question_id=question_id).first()
 
             if answer:
                 answer.answer_text = answer_text
@@ -692,11 +656,7 @@ def submit_exam_legacy(exam_id, answers):
                 db.session.add(answer)
 
         # 获取考试题目（从关联表）
-        exam_questions = (
-            ExamQuestion.query.filter_by(exam_id=exam_id)
-            .order_by(ExamQuestion.question_order)
-            .all()
-        )
+        exam_questions = ExamQuestion.query.filter_by(exam_id=exam_id).order_by(ExamQuestion.question_order).all()
         questions = []
         for eq in exam_questions:
             question = eq.question
@@ -718,24 +678,14 @@ def submit_exam_legacy(exam_id, answers):
 
         # 创建学生答题记录
         total_score = scores.get("total_score", 0) if scores else 0
-        max_score = (
-            scores.get("max_score", len(questions) * 5)
-            if scores
-            else len(questions) * 5
-        )
-        correct_count = (
-            sum(1 for q_score in (scores.get("question_scores", []) if scores else []))
-            if scores
-            else 0
-        )
+        max_score = scores.get("max_score", len(questions) * 5) if scores else len(questions) * 5
+        correct_count = sum(1 for q_score in (scores.get("question_scores", []) if scores else [])) if scores else 0
         total_questions = len(questions)
 
         # 计算考试用时
         start_time = exam.started_at
         end_time = datetime.utcnow()
-        duration_minutes = (
-            int((end_time - start_time).total_seconds() / 60) if start_time else 0
-        )
+        duration_minutes = int((end_time - start_time).total_seconds() / 60) if start_time else 0
 
         student_record = StudentExamRecord(
             student_id=student.id,
@@ -815,9 +765,7 @@ def get_exam_instance_questions(instance_id):
                     "id": instance.id,
                     "name": instance.name,
                     "description": instance.description,
-                    "time_limit": (
-                        instance.template.time_limit if instance.template else 75
-                    ),
+                    "time_limit": (instance.template.time_limit if instance.template else 75),
                     "time_remaining": time_remaining_seconds,
                 },
             }
@@ -837,11 +785,7 @@ def get_exam_questions(exam_id):
             return jsonify({"success": False, "message": "考试不存在"}), 404
 
         # 从关联表获取题目
-        exam_questions = (
-            ExamQuestion.query.filter_by(exam_id=exam_id)
-            .order_by(ExamQuestion.question_order)
-            .all()
-        )
+        exam_questions = ExamQuestion.query.filter_by(exam_id=exam_id).order_by(ExamQuestion.question_order).all()
         questions = []
 
         for eq in exam_questions:
@@ -908,9 +852,7 @@ def get_exam_status(exam_id):
                 "score": score_data.get("score", 0),
                 "total_score": score_data.get("total_score", total_questions),
                 "percentage": score_data.get("percentage", 0),
-                "completed_at": (
-                    exam.completed_at.isoformat() if exam.completed_at else None
-                ),
+                "completed_at": (exam.completed_at.isoformat() if exam.completed_at else None),
             }
         )
 
@@ -957,15 +899,9 @@ def get_exam_instance_status(instance_id):
                 "percentage": instance.percentage,
                 "name": instance.name,
                 "description": instance.description,
-                "started_at": (
-                    instance.started_at.isoformat() if instance.started_at else None
-                ),
-                "completed_at": (
-                    instance.completed_at.isoformat() if instance.completed_at else None
-                ),
-                "template_time_limit": (
-                    instance.template.time_limit if instance.template else 60
-                ),
+                "started_at": (instance.started_at.isoformat() if instance.started_at else None),
+                "completed_at": (instance.completed_at.isoformat() if instance.completed_at else None),
+                "template_time_limit": (instance.template.time_limit if instance.template else 60),
             }
         )
 
@@ -990,9 +926,7 @@ def get_exam_results(exam_id):
                 "exam": {
                     "id": exam.id,
                     "status": exam.status,
-                    "completed_at": (
-                        exam.completed_at.isoformat() if exam.completed_at else None
-                    ),
+                    "completed_at": (exam.completed_at.isoformat() if exam.completed_at else None),
                 },
                 "scores": scores,
             }
@@ -1096,26 +1030,14 @@ def admin_start_exam():
 
         # 从题库中抽取题目
         # 获取默认考试配置
-        exam_config = ExamConfig.query.filter_by(
-            is_default=True, is_active=True
-        ).first()
+        exam_config = ExamConfig.query.filter_by(is_default=True, is_active=True).first()
 
         if exam_config:
             total_questions = exam_config.total_questions
             time_limit = exam_config.time_limit
-            subject_filter = (
-                exam_config.subject_filter.split(",")
-                if exam_config.subject_filter
-                else None
-            )
-            difficulty_filter = (
-                exam_config.difficulty_filter.split(",")
-                if exam_config.difficulty_filter
-                else None
-            )
-            type_filter = (
-                exam_config.type_filter.split(",") if exam_config.type_filter else None
-            )
+            subject_filter = exam_config.subject_filter.split(",") if exam_config.subject_filter else None
+            difficulty_filter = exam_config.difficulty_filter.split(",") if exam_config.difficulty_filter else None
+            type_filter = exam_config.type_filter.split(",") if exam_config.type_filter else None
         else:
             # 使用默认值
             total_questions = 5
@@ -1167,9 +1089,7 @@ def admin_start_exam():
         # 创建考试题目关联
         exam_questions = []
         for i, question in enumerate(selected_questions):
-            exam_question = ExamQuestion(
-                exam_id=exam.id, question_id=question.id, question_order=i + 1
-            )
+            exam_question = ExamQuestion(exam_id=exam.id, question_id=question.id, question_order=i + 1)
             db.session.add(exam_question)
             exam_questions.append(question.to_dict())
 
@@ -1249,14 +1169,10 @@ def get_ai_models():
                     "recommended": False,
                 },
             ],
-            "custom": [
-                {"id": "custom-model", "name": "自定义模型", "recommended": False}
-            ],
+            "custom": [{"id": "custom-model", "name": "自定义模型", "recommended": False}],
         }
 
-        return jsonify(
-            {"success": True, "models": models.get(provider, models["openrouter"])}
-        )
+        return jsonify({"success": True, "models": models.get(provider, models["openrouter"])})
 
     except Exception as e:
         return (
@@ -1279,18 +1195,14 @@ def test_ai_model():
         custom_config = data.get("custom_config", {})
 
         print(f"测试AI模型 - Provider: {provider}, Model: {model}")
-        print(
-            f"环境变量 OPENROUTER_API_KEY: {os.getenv('OPENROUTER_API_KEY', 'NOT_SET')[:20]}..."
-        )
+        print(f"环境变量 OPENROUTER_API_KEY: {os.getenv('OPENROUTER_API_KEY', 'NOT_SET')[:20]}...")
 
         # 使用AI生成器测试连接
         from ai_engine.generator import QuestionGenerator
 
         generator = QuestionGenerator()
 
-        print(
-            f"生成器API Key: {generator.api_key[:20] if generator.api_key else 'None'}..."
-        )
+        print(f"生成器API Key: {generator.api_key[:20] if generator.api_key else 'None'}...")
 
         # 生成一个简单的测试题目
         test_question = generator._generate_single_question(
@@ -1311,9 +1223,7 @@ def test_ai_model():
                 }
             )
         else:
-            return jsonify(
-                {"success": False, "message": "AI模型连接失败 - 无法生成测试题目"}
-            )
+            return jsonify({"success": False, "message": "AI模型连接失败 - 无法生成测试题目"})
 
     except Exception as e:
         print(f"测试AI模型异常: {str(e)}")
@@ -1416,9 +1326,7 @@ def get_questions():
             query = query.filter(Question.content.contains(search))
 
         # 分页
-        questions = query.order_by(Question.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        questions = query.order_by(Question.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
         return jsonify(
             {
@@ -1469,9 +1377,7 @@ def create_question():
             cognitive_level=data["cognitive_level"],
             question_type=data["question_type"],
             content=data["content"],
-            options=(
-                json.dumps(data.get("options", [])) if data.get("options") else None
-            ),
+            options=(json.dumps(data.get("options", [])) if data.get("options") else None),
             correct_answer=data.get("correct_answer", ""),
             explanation=data.get("explanation", ""),
             points=data.get("points", 1),
@@ -1481,9 +1387,7 @@ def create_question():
         db.session.add(question)
         db.session.commit()
 
-        return jsonify(
-            {"success": True, "message": "题目创建成功", "question": question.to_dict()}
-        )
+        return jsonify({"success": True, "message": "题目创建成功", "question": question.to_dict()})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -1537,9 +1441,7 @@ def update_question(question_id):
         question.updated_at = datetime.utcnow()
         db.session.commit()
 
-        return jsonify(
-            {"success": True, "message": "题目更新成功", "question": question.to_dict()}
-        )
+        return jsonify({"success": True, "message": "题目更新成功", "question": question.to_dict()})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -1557,22 +1459,10 @@ def delete_question(question_id):
         print(f"题目内容: {question.content[:100]}...")
 
         # 检查关联的记录数量
-        template_questions_count = (
-            len(question.template_questions)
-            if hasattr(question, "template_questions")
-            else 0
-        )
-        config_questions_count = (
-            len(question.config_questions)
-            if hasattr(question, "config_questions")
-            else 0
-        )
-        exam_questions_count = (
-            len(question.exam_questions) if hasattr(question, "exam_questions") else 0
-        )
-        student_answers_count = (
-            len(question.student_answers) if hasattr(question, "student_answers") else 0
-        )
+        template_questions_count = len(question.template_questions) if hasattr(question, "template_questions") else 0
+        config_questions_count = len(question.config_questions) if hasattr(question, "config_questions") else 0
+        exam_questions_count = len(question.exam_questions) if hasattr(question, "exam_questions") else 0
+        student_answers_count = len(question.student_answers) if hasattr(question, "student_answers") else 0
 
         print(
             f"关联记录: 模板题目({template_questions_count}), 配置题目({config_questions_count}), 考试题目({exam_questions_count}), 学生答案({student_answers_count})"
@@ -1708,11 +1598,7 @@ def batch_create_questions():
                 cognitive_level=q_data.get("cognitive_level", "理解"),
                 question_type=q_data.get("question_type", "short_answer"),
                 content=q_data.get("content", ""),
-                options=(
-                    json.dumps(q_data.get("options", []))
-                    if q_data.get("options")
-                    else None
-                ),
+                options=(json.dumps(q_data.get("options", [])) if q_data.get("options") else None),
                 correct_answer=q_data.get("correct_answer", ""),
                 explanation=q_data.get("explanation", ""),
                 points=q_data.get("points", 1),
@@ -1848,9 +1734,7 @@ def ai_generate_questions():
 
             # 检查生成数量是否足够
             if len(generated_questions) < count:
-                print(
-                    f"⚠️  生成数量不足：期望 {count} 道，实际 {len(generated_questions)} 道"
-                )
+                print(f"⚠️  生成数量不足：期望 {count} 道，实际 {len(generated_questions)} 道")
 
                 # 尝试补充生成
                 remaining_count = count - len(generated_questions)
@@ -1900,11 +1784,7 @@ def ai_generate_questions():
                 cognitive_level=question_cognitive_level,
                 question_type=q_data.get("question_type", question_type),
                 content=q_data.get("content", ""),
-                options=(
-                    json.dumps(q_data.get("options", []))
-                    if q_data.get("options")
-                    else None
-                ),
+                options=(json.dumps(q_data.get("options", [])) if q_data.get("options") else None),
                 correct_answer=q_data.get("correct_answer", ""),
                 explanation=q_data.get("explanation", ""),
                 points=q_data.get("points", points_per_question),
@@ -1998,17 +1878,11 @@ def _generate_mock_questions(
                     explanation = "The mean is most affected by outliers because it takes into account all values."
                 else:
                     # 默认题目，但添加自定义要求
-                    custom_desc = (
-                        f" (Custom requirement: {custom_prompt[:50]}...)"
-                        if custom_prompt
-                        else ""
-                    )
+                    custom_desc = f" (Custom requirement: {custom_prompt[:50]}...)" if custom_prompt else ""
                     content = f"Question {i+1} about {subject} - {difficulty} level{custom_desc}"
                     options = ["Option A", "Option B", "Option C", "Option D"]
                     correct_answer = "Option A"
-                    explanation = (
-                        f"This is a {difficulty} difficulty question about {subject}."
-                    )
+                    explanation = f"This is a {difficulty} difficulty question about {subject}."
 
                 mock_questions.append(
                     {
@@ -2016,9 +1890,7 @@ def _generate_mock_questions(
                         "sub_tag": sub_tag,
                         "language": language,
                         "difficulty": difficulty,
-                        "cognitive_level": (
-                            cognitive_level if cognitive_level else "Understanding"
-                        ),
+                        "cognitive_level": (cognitive_level if cognitive_level else "Understanding"),
                         "question_type": "multiple_choice",
                         "content": content,
                         "options": options,
@@ -2034,9 +1906,7 @@ def _generate_mock_questions(
                         "sub_tag": sub_tag,
                         "language": language,
                         "difficulty": difficulty,
-                        "cognitive_level": (
-                            cognitive_level if cognitive_level else "Application"
-                        ),
+                        "cognitive_level": (cognitive_level if cognitive_level else "Application"),
                         "question_type": "short_answer",
                         "content": f'Please briefly answer: This is question {i+1} about {subject} with {difficulty} difficulty level{f" focusing on {sub_tag}" if sub_tag else ""}.',
                         "correct_answer": f"This is the reference answer for question {i+1}.",
@@ -2051,9 +1921,7 @@ def _generate_mock_questions(
                         "sub_tag": sub_tag,
                         "language": language,
                         "difficulty": difficulty,
-                        "cognitive_level": (
-                            cognitive_level if cognitive_level else "Application"
-                        ),
+                        "cognitive_level": (cognitive_level if cognitive_level else "Application"),
                         "question_type": "programming",
                         "content": f'Please write code to solve: This is question {i+1} about {subject} with {difficulty} difficulty level{f" focusing on {sub_tag}" if sub_tag else ""}.',
                         "correct_answer": f"def solution{i+1}():\n    # Code implementation\n    pass",
@@ -2082,11 +1950,7 @@ def _generate_mock_questions(
                     explanation = f"根据幂函数求导法则，f(x) = x^{i+2} 的导数为 f'(x) = {i+2}x^{i+1}"
                 else:
                     # 默认题目，但添加自定义要求说明
-                    custom_desc = (
-                        f"（用户要求：{custom_prompt[:30]}...）"
-                        if custom_prompt
-                        else ""
-                    )
+                    custom_desc = f"（用户要求：{custom_prompt[:30]}...）" if custom_prompt else ""
                     content = f'这是第{i+1}道{subject}学科的{difficulty}难度选择题{f"，重点考察{sub_tag}相关内容" if sub_tag else ""}{custom_desc}'
                     options = ["选项A", "选项B", "选项C", "选项D"]
                     correct_answer = "选项A"
@@ -2114,9 +1978,7 @@ def _generate_mock_questions(
                         "sub_tag": sub_tag,
                         "language": language,
                         "difficulty": difficulty,
-                        "cognitive_level": (
-                            cognitive_level if cognitive_level else "应用"
-                        ),
+                        "cognitive_level": (cognitive_level if cognitive_level else "应用"),
                         "question_type": "short_answer",
                         "content": f'请简要回答：这是第{i+1}道{subject}学科的{difficulty}难度简答题{f"，重点考察{sub_tag}相关内容" if sub_tag else ""}',
                         "correct_answer": f"这是第{i+1}道题的参考答案",
@@ -2131,9 +1993,7 @@ def _generate_mock_questions(
                         "sub_tag": sub_tag,
                         "language": language,
                         "difficulty": difficulty,
-                        "cognitive_level": (
-                            cognitive_level if cognitive_level else "应用"
-                        ),
+                        "cognitive_level": (cognitive_level if cognitive_level else "应用"),
                         "question_type": "programming",
                         "content": f'请编写代码解决：这是第{i+1}道{subject}学科的{difficulty}难度编程题{f"，重点考察{sub_tag}相关内容" if sub_tag else ""}',
                         "correct_answer": f"def solution{i+1}():\n    # 代码实现\n    pass",
@@ -2229,9 +2089,7 @@ def create_exam_config():
 
         db.session.commit()
 
-        return jsonify(
-            {"success": True, "message": "考试配置创建成功", "config": config.to_dict()}
-        )
+        return jsonify({"success": True, "message": "考试配置创建成功", "config": config.to_dict()})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -2250,9 +2108,7 @@ def update_exam_config(config_id):
             question_selection_mode = data["question_selection_mode"]
             if question_selection_mode == "manual" and not data.get("question_ids"):
                 return (
-                    jsonify(
-                        {"success": False, "message": "手动选择模式下必须选择题目"}
-                    ),
+                    jsonify({"success": False, "message": "手动选择模式下必须选择题目"}),
                     400,
                 )
 
@@ -2305,9 +2161,7 @@ def update_exam_config(config_id):
         config.updated_at = datetime.utcnow()
         db.session.commit()
 
-        return jsonify(
-            {"success": True, "message": "考试配置更新成功", "config": config.to_dict()}
-        )
+        return jsonify({"success": True, "message": "考试配置更新成功", "config": config.to_dict()})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -2338,9 +2192,7 @@ def delete_exam_config(config_id):
             other_configs = ExamConfig.query.filter(ExamConfig.id != config_id).count()
             if other_configs > 0:
                 # 自动将第一个其他配置设为默认
-                new_default = ExamConfig.query.filter(
-                    ExamConfig.id != config_id
-                ).first()
+                new_default = ExamConfig.query.filter(ExamConfig.id != config_id).first()
                 if new_default:
                     new_default.is_default = True
 
@@ -2393,16 +2245,12 @@ def get_config_questions(config_id):
             query = Question.query.filter_by(is_active=True)
 
             if config.subject_filter:
-                subjects = [
-                    s.strip() for s in config.subject_filter.split(",") if s.strip()
-                ]
+                subjects = [s.strip() for s in config.subject_filter.split(",") if s.strip()]
                 if subjects:
                     query = query.filter(Question.subject.in_(subjects))
 
             if config.difficulty_filter:
-                difficulties = [
-                    d.strip() for d in config.difficulty_filter.split(",") if d.strip()
-                ]
+                difficulties = [d.strip() for d in config.difficulty_filter.split(",") if d.strip()]
                 if difficulties:
                     query = query.filter(Question.difficulty.in_(difficulties))
 
@@ -2413,13 +2261,10 @@ def get_config_questions(config_id):
 
             questions_list = query.limit(config.total_questions).all()
             questions = [
-                {"question": q.to_dict(), "points": 1.0, "question_order": i + 1}
-                for i, q in enumerate(questions_list)
+                {"question": q.to_dict(), "points": 1.0, "question_order": i + 1} for i, q in enumerate(questions_list)
             ]
 
-        return jsonify(
-            {"success": True, "questions": questions, "config": config.to_dict()}
-        )
+        return jsonify({"success": True, "questions": questions, "config": config.to_dict()})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -2509,9 +2354,7 @@ def get_student_record_detail(record_id):
                 }
             )
 
-        return jsonify(
-            {"success": True, "record": record.to_dict(), "questions": questions_detail}
-        )
+        return jsonify({"success": True, "record": record.to_dict(), "questions": questions_detail})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -2526,9 +2369,7 @@ def get_student_records_statistics():
 
         # 按状态统计
         status_stats = (
-            db.session.query(
-                StudentExamRecord.status, db.func.count(StudentExamRecord.id)
-            )
+            db.session.query(StudentExamRecord.status, db.func.count(StudentExamRecord.id))
             .group_by(StudentExamRecord.status)
             .all()
         )
@@ -2812,20 +2653,10 @@ def create_exam_instance(template_id):
         # 创建考试实例
         instance = ExamInstance(
             template_id=template_id,
-            name=data.get(
-                "name", f'{template.name} - {datetime.now().strftime("%Y-%m-%d %H:%M")}'
-            ),
+            name=data.get("name", f'{template.name} - {datetime.now().strftime("%Y-%m-%d %H:%M")}'),
             description=data.get("description", template.description),
-            start_time=(
-                datetime.fromisoformat(data["start_time"])
-                if data.get("start_time")
-                else None
-            ),
-            end_time=(
-                datetime.fromisoformat(data["end_time"])
-                if data.get("end_time")
-                else None
-            ),
+            start_time=(datetime.fromisoformat(data["start_time"]) if data.get("start_time") else None),
+            end_time=(datetime.fromisoformat(data["end_time"]) if data.get("end_time") else None),
             max_attempts=data.get("max_attempts", 1),
             is_active=data.get("is_active", True),
         )
@@ -2897,9 +2728,7 @@ def get_exam_instance(instance_id):
         instance = ExamInstance.query.get_or_404(instance_id)
 
         # 获取参与人数
-        participant_count = StudentExam.query.filter_by(
-            exam_instance_id=instance_id
-        ).count()
+        participant_count = StudentExam.query.filter_by(exam_instance_id=instance_id).count()
 
         instance_dict = instance.to_dict()
         instance_dict["participant_count"] = participant_count
@@ -2923,15 +2752,9 @@ def update_exam_instance(instance_id):
         if "description" in data:
             instance.description = data["description"]
         if "start_time" in data:
-            instance.start_time = (
-                datetime.fromisoformat(data["start_time"])
-                if data["start_time"]
-                else None
-            )
+            instance.start_time = datetime.fromisoformat(data["start_time"]) if data["start_time"] else None
         if "end_time" in data:
-            instance.end_time = (
-                datetime.fromisoformat(data["end_time"]) if data["end_time"] else None
-            )
+            instance.end_time = datetime.fromisoformat(data["end_time"]) if data["end_time"] else None
         if "max_attempts" in data:
             instance.max_attempts = data["max_attempts"]
         if "is_active" in data:
@@ -2962,9 +2785,7 @@ def delete_exam_instance(instance_id):
         instance = ExamInstance.query.get_or_404(instance_id)
 
         # 检查是否有学生参与
-        participant_count = StudentExam.query.filter_by(
-            exam_instance_id=instance_id
-        ).count()
+        participant_count = StudentExam.query.filter_by(exam_instance_id=instance_id).count()
         if participant_count > 0:
             return (
                 jsonify(
@@ -3243,8 +3064,7 @@ def get_available_exam_templates():
                     "questions_count": config.total_questions,
                     "type": "config",  # 标识这是基于配置的考试
                     "config_id": config.id,
-                    "subjects": config.subject_filter
-                    or "数学、英语、计算机、逻辑、统计学等",
+                    "subjects": config.subject_filter or "数学、英语、计算机、逻辑、统计学等",
                     "is_default": config.is_default,  # 标识是否为默认配置
                 }
             )
@@ -3274,9 +3094,7 @@ def get_available_exam_templates():
                 try:
                     questions_list = json.loads(template.questions)
                     questions_count = (
-                        len(questions_list)
-                        if isinstance(questions_list, list)
-                        else template.total_questions
+                        len(questions_list) if isinstance(questions_list, list) else template.total_questions
                     )
                 except:
                     questions_count = template.total_questions
@@ -3289,12 +3107,8 @@ def get_available_exam_templates():
                     "time_limit": template.time_limit,
                     "total_questions": template.total_questions,
                     "passing_score": template.passing_score,
-                    "start_time": (
-                        template.start_time.isoformat() if template.start_time else None
-                    ),
-                    "end_time": (
-                        template.end_time.isoformat() if template.end_time else None
-                    ),
+                    "start_time": (template.start_time.isoformat() if template.start_time else None),
+                    "end_time": (template.end_time.isoformat() if template.end_time else None),
                     "questions_count": questions_count,
                     "type": "template",  # 标识这是考试模板
                     "template_id": template.id,
@@ -3368,9 +3182,7 @@ def create_exam_from_template():
                 return jsonify({"success": False, "message": "考试配置已停用"}), 400
 
             # 检查学生是否已经参加过基于这个配置的考试
-            existing_exam = Exam.query.filter_by(
-                session_id=session_id, status="completed"
-            ).first()
+            existing_exam = Exam.query.filter_by(session_id=session_id, status="completed").first()
 
             if existing_exam:
                 return jsonify({"success": False, "message": "您已经完成过考试"}), 400
@@ -3508,9 +3320,7 @@ def create_exam_instance_from_config():
                 return jsonify({"success": False, "message": "会话不存在"}), 404
         else:
             # 创建管理员测试学生记录（如果不存在）
-            admin_student = Student.query.filter_by(
-                id_number="110101199001011234"
-            ).first()
+            admin_student = Student.query.filter_by(id_number="110101199001011234").first()
 
             if not admin_student:
                 admin_student = Student(
@@ -3553,9 +3363,7 @@ def create_exam_instance_from_config():
             # 查找对应的Question记录
             question = Question.query.get(question_data.get("question_id"))
             if question:
-                exam_question = ExamQuestion(
-                    exam_id=exam.id, question_id=question.id, question_order=i + 1
-                )
+                exam_question = ExamQuestion(exam_id=exam.id, question_id=question.id, question_order=i + 1)
                 db.session.add(exam_question)
 
         db.session.commit()
@@ -3626,27 +3434,15 @@ def generate_questions_from_config(config):
     except Exception as e:
         print(f"生成题目失败: {str(e)}")
         # 返回模拟题目
-        return _generate_mock_questions(
-            config.total_questions, "数学", "", "中等", "", ["multiple_choice"], "zh"
-        )
+        return _generate_mock_questions(config.total_questions, "数学", "", "中等", "", ["multiple_choice"], "zh")
 
 
 def generate_questions_by_filter(config):
     """根据筛选条件生成题目"""
     # 解析筛选条件
-    subjects = (
-        [s.strip() for s in config.subject_filter.split(",")]
-        if config.subject_filter
-        else []
-    )
-    difficulties = (
-        [d.strip() for d in config.difficulty_filter.split(",")]
-        if config.difficulty_filter
-        else []
-    )
-    types = (
-        [t.strip() for t in config.type_filter.split(",")] if config.type_filter else []
-    )
+    subjects = [s.strip() for s in config.subject_filter.split(",")] if config.subject_filter else []
+    difficulties = [d.strip() for d in config.difficulty_filter.split(",")] if config.difficulty_filter else []
+    types = [t.strip() for t in config.type_filter.split(",")] if config.type_filter else []
 
     print(f"筛选条件 - 学科: {subjects}, 难度: {difficulties}, 题型: {types}")
 
@@ -3670,9 +3466,7 @@ def generate_questions_by_filter(config):
         available_questions.extend(additional_questions)
 
     # 随机选择指定数量的题目
-    selected_questions = random.sample(
-        available_questions, min(config.total_questions, len(available_questions))
-    )
+    selected_questions = random.sample(available_questions, min(config.total_questions, len(available_questions)))
     print(f"筛选模式：选择了 {len(selected_questions)} 道题目")
 
     return selected_questions
@@ -3814,9 +3608,7 @@ def auto_grade_exam():
                 continue
 
             # 根据题型进行批改
-            is_correct, score, feedback = grade_question(
-                question, student_answer.answer_text, tq.points
-            )
+            is_correct, score, feedback = grade_question(question, student_answer.answer_text, tq.points)
 
             # 更新答案记录
             student_answer.is_correct = is_correct
@@ -3835,9 +3627,7 @@ def auto_grade_exam():
         student_exam.max_score = max_score
         student_exam.correct_count = correct_count
         student_exam.total_questions = len(template_questions)
-        student_exam.is_passed = (
-            total_score / max_score * 100
-        ) >= template.passing_score
+        student_exam.is_passed = (total_score / max_score * 100) >= template.passing_score
         student_exam.status = "completed"
         student_exam.end_time = datetime.utcnow()
 
@@ -3858,9 +3648,7 @@ def auto_grade_exam():
                     "correct_count": correct_count,
                     "total_questions": len(template_questions),
                     "is_passed": student_exam.is_passed,
-                    "percentage": (
-                        round(total_score / max_score * 100, 2) if max_score > 0 else 0
-                    ),
+                    "percentage": (round(total_score / max_score * 100, 2) if max_score > 0 else 0),
                 },
             }
         )
@@ -3874,14 +3662,9 @@ def grade_question(question, student_answer, max_points):
     try:
         if question.question_type == "multiple_choice":
             # 选择题：直接比较答案
-            is_correct = (
-                student_answer.strip().lower()
-                == question.correct_answer.strip().lower()
-            )
+            is_correct = student_answer.strip().lower() == question.correct_answer.strip().lower()
             score = max_points if is_correct else 0
-            feedback = (
-                "回答正确！" if is_correct else f"正确答案是：{question.correct_answer}"
-            )
+            feedback = "回答正确！" if is_correct else f"正确答案是：{question.correct_answer}"
 
         elif question.question_type == "short_answer":
             # 简答题：使用AI进行语义比较
@@ -3891,9 +3674,7 @@ def grade_question(question, student_answer, max_points):
             student_keywords = student_answer.lower().split()
 
             # 计算关键词匹配度
-            match_count = sum(
-                1 for keyword in correct_keywords if keyword in student_keywords
-            )
+            match_count = sum(1 for keyword in correct_keywords if keyword in student_keywords)
             match_ratio = match_count / len(correct_keywords) if correct_keywords else 0
 
             is_correct = match_ratio >= 0.6  # 60%以上匹配认为正确
@@ -3928,9 +3709,7 @@ def ensure_default_config():
     """确保存在默认考试配置"""
     with app.app_context():
         # 检查是否已有默认配置
-        existing_config = ExamConfig.query.filter_by(
-            is_default=True, is_active=True
-        ).first()
+        existing_config = ExamConfig.query.filter_by(is_default=True, is_active=True).first()
         if not existing_config:
             # 创建默认考试配置
             default_config = ExamConfig(
@@ -3980,9 +3759,7 @@ def get_exam_templates_with_participants():
             old_participants = []
             for exam in config_exams:
                 # 获取该考试对应的会话
-                session = (
-                    ExamSession.query.get(exam.session_id) if exam.session_id else None
-                )
+                session = ExamSession.query.get(exam.session_id) if exam.session_id else None
                 if not session:
                     continue
                 student = session.student
@@ -3997,9 +3774,7 @@ def get_exam_templates_with_participants():
                             import json
 
                             scores_data = json.loads(exam.scores)
-                            percentage = round(
-                                scores_data.get("percentage_score", 0), 1
-                            )
+                            percentage = round(scores_data.get("percentage_score", 0), 1)
                             score = scores_data.get("total_score", 0)
                             total_score = scores_data.get("max_score", 0)
                         except (json.JSONDecodeError, AttributeError):
@@ -4008,11 +3783,7 @@ def get_exam_templates_with_participants():
                             total_questions = len(answers)
                             correct_count = len([a for a in answers if a.is_correct])
                             percentage = round(
-                                (
-                                    (correct_count / total_questions * 100)
-                                    if total_questions > 0
-                                    else 0
-                                ),
+                                ((correct_count / total_questions * 100) if total_questions > 0 else 0),
                                 1,
                             )
                             score = correct_count
@@ -4023,11 +3794,7 @@ def get_exam_templates_with_participants():
                         total_questions = len(answers)
                         correct_count = len([a for a in answers if a.is_correct])
                         percentage = round(
-                            (
-                                (correct_count / total_questions * 100)
-                                if total_questions > 0
-                                else 0
-                            ),
+                            ((correct_count / total_questions * 100) if total_questions > 0 else 0),
                             1,
                         )
                         score = correct_count
@@ -4040,19 +3807,11 @@ def get_exam_templates_with_participants():
                             "student_name": student.name,
                             "student_id_number": student.id_number,
                             "student_application_number": student.application_number,
-                            "status": (
-                                "completed" if exam.status == "completed" else "active"
-                            ),
+                            "status": ("completed" if exam.status == "completed" else "active"),
                             "score": score,
                             "percentage": percentage,
-                            "started_at": (
-                                exam.started_at.isoformat() if exam.started_at else None
-                            ),
-                            "completed_at": (
-                                exam.completed_at.isoformat()
-                                if exam.completed_at
-                                else None
-                            ),
+                            "started_at": (exam.started_at.isoformat() if exam.started_at else None),
+                            "completed_at": (exam.completed_at.isoformat() if exam.completed_at else None),
                             "time_spent_minutes": 0,  # Exam模型没有duration_minutes字段
                         }
                     )
@@ -4062,28 +3821,19 @@ def get_exam_templates_with_participants():
                 "id": f"config_{config.id}",
                 "name": config.name,
                 "description": config.description
-                or (
-                    f'基于{"默认" if config.is_default else ""}配置 "{config.name}" 的考试'
-                ),
+                or (f'基于{"默认" if config.is_default else ""}配置 "{config.name}" 的考试'),
                 "time_limit": config.time_limit,
                 "total_questions": config.total_questions,
                 "passing_score": config.passing_score,
                 "is_active": config.is_active,
-                "created_at": (
-                    config.created_at.isoformat() if config.created_at else None
-                ),
+                "created_at": (config.created_at.isoformat() if config.created_at else None),
                 "statistics": {
                     "total_participants": len(old_participants),
-                    "completed_count": len(
-                        [p for p in old_participants if p["status"] == "completed"]
-                    ),
-                    "active_count": len(
-                        [p for p in old_participants if p["status"] == "active"]
-                    ),
+                    "completed_count": len([p for p in old_participants if p["status"] == "completed"]),
+                    "active_count": len([p for p in old_participants if p["status"] == "active"]),
                     "avg_score": round(
                         (
-                            sum(p["percentage"] for p in old_participants)
-                            / len(old_participants)
+                            sum(p["percentage"] for p in old_participants) / len(old_participants)
                             if old_participants
                             else 0
                         ),
@@ -4100,11 +3850,7 @@ def get_exam_templates_with_participants():
             result.append(config_exam_info)
 
         # 3. 查询所有激活的考试模板（新系统）
-        templates = (
-            ExamTemplate.query.filter_by(is_active=True)
-            .order_by(ExamTemplate.created_at.desc())
-            .all()
-        )
+        templates = ExamTemplate.query.filter_by(is_active=True).order_by(ExamTemplate.created_at.desc()).all()
 
         for template in templates:
             # 获取该模板的所有考试实例
@@ -4116,27 +3862,16 @@ def get_exam_templates_with_participants():
             active_count = len([i for i in instances if i.status == "active"])
 
             # 计算平均分
-            completed_instances = [
-                i
-                for i in instances
-                if i.status == "completed" and i.percentage is not None
-            ]
+            completed_instances = [i for i in instances if i.status == "completed" and i.percentage is not None]
             avg_score = (
-                sum(i.percentage for i in completed_instances)
-                / len(completed_instances)
-                if completed_instances
-                else 0
+                sum(i.percentage for i in completed_instances) / len(completed_instances) if completed_instances else 0
             )
 
             # 获取参与学生详情
             participants = []
             for instance in instances:
                 # 获取学生信息
-                session = (
-                    ExamSession.query.get(instance.session_id)
-                    if instance.session_id
-                    else None
-                )
+                session = ExamSession.query.get(instance.session_id) if instance.session_id else None
                 student = session.student if session else None
 
                 # 如果没有通过session找到学生，直接通过student_id查找
@@ -4148,36 +3883,24 @@ def get_exam_templates_with_participants():
                     "student_id": student.id if student else None,
                     "student_name": student.name if student else "Unknown",
                     "student_id_number": student.id_number if student else "",
-                    "student_application_number": (
-                        student.application_number if student else ""
-                    ),
+                    "student_application_number": (student.application_number if student else ""),
                     "status": instance.status,
                     "score": instance.score or 0,
                     "percentage": instance.percentage or 0,
-                    "started_at": (
-                        instance.started_at.isoformat() if instance.started_at else None
-                    ),
-                    "completed_at": (
-                        instance.completed_at.isoformat()
-                        if instance.completed_at
-                        else None
-                    ),
+                    "started_at": (instance.started_at.isoformat() if instance.started_at else None),
+                    "completed_at": (instance.completed_at.isoformat() if instance.completed_at else None),
                     "time_spent_minutes": 0,
                 }
 
                 # 计算用时
                 if instance.started_at and instance.completed_at:
                     time_spent = instance.completed_at - instance.started_at
-                    participant_info["time_spent_minutes"] = round(
-                        time_spent.total_seconds() / 60, 1
-                    )
+                    participant_info["time_spent_minutes"] = round(time_spent.total_seconds() / 60, 1)
 
                 participants.append(participant_info)
 
             # 按完成时间排序
-            participants.sort(
-                key=lambda x: x["completed_at"] or "1970-01-01T00:00:00", reverse=True
-            )
+            participants.sort(key=lambda x: x["completed_at"] or "1970-01-01T00:00:00", reverse=True)
 
             template_info = {
                 "id": template.id,
@@ -4187,9 +3910,7 @@ def get_exam_templates_with_participants():
                 "total_questions": template.total_questions,
                 "passing_score": template.passing_score,
                 "is_active": template.is_active,
-                "created_at": (
-                    template.created_at.isoformat() if template.created_at else None
-                ),
+                "created_at": (template.created_at.isoformat() if template.created_at else None),
                 "statistics": {
                     "total_participants": total_participants,
                     "completed_count": completed_count,
@@ -4238,17 +3959,11 @@ def get_students_management():
         for student in students_paginated.items:
             # 获取该学生的考试统计
             exam_count = ExamInstance.query.filter_by(student_id=student.id).count()
-            completed_exams = ExamInstance.query.filter_by(
-                student_id=student.id, status="completed"
-            ).all()
+            completed_exams = ExamInstance.query.filter_by(student_id=student.id, status="completed").all()
 
             avg_score = 0
             if completed_exams:
-                scores = [
-                    exam.percentage
-                    for exam in completed_exams
-                    if exam.percentage is not None
-                ]
+                scores = [exam.percentage for exam in completed_exams if exam.percentage is not None]
                 avg_score = sum(scores) / len(scores) if scores else 0
 
             student_info = {
@@ -4257,9 +3972,7 @@ def get_students_management():
                 "id_number": student.id_number,
                 "application_number": student.application_number,
                 "device_ip": student.device_ip or "未记录",
-                "created_at": (
-                    student.created_at.isoformat() if student.created_at else None
-                ),
+                "created_at": (student.created_at.isoformat() if student.created_at else None),
                 "exam_count": exam_count,
                 "completed_count": len(completed_exams),
                 "avg_score": round(avg_score, 1),
@@ -4357,8 +4070,7 @@ def update_student(student_id):
                 Student.id != student_id,
                 or_(
                     Student.id_number == data.get("id_number", student.id_number),
-                    Student.application_number
-                    == data.get("application_number", student.application_number),
+                    Student.application_number == data.get("application_number", student.application_number),
                 ),
             ).first()
 
@@ -4397,55 +4109,37 @@ def delete_student(student_id):
         for session in sessions:
             exams = Exam.query.filter_by(session_id=session.id).all()
             for exam in exams:
-                Answer.query.filter_by(exam_id=exam.id).delete(
-                    synchronize_session=False
-                )
+                Answer.query.filter_by(exam_id=exam.id).delete(synchronize_session=False)
 
         # 删除通过exam_instance_id关联的答案
         instances = ExamInstance.query.filter_by(student_id=student_id).all()
         for instance in instances:
-            Answer.query.filter_by(exam_instance_id=instance.id).delete(
-                synchronize_session=False
-            )
+            Answer.query.filter_by(exam_instance_id=instance.id).delete(synchronize_session=False)
 
         # 2. 删除学生答案记录
         student_exams = StudentExam.query.filter_by(student_id=student_id).all()
         for student_exam in student_exams:
-            StudentAnswer.query.filter_by(student_exam_id=student_exam.id).delete(
-                synchronize_session=False
-            )
+            StudentAnswer.query.filter_by(student_exam_id=student_exam.id).delete(synchronize_session=False)
 
         # 3. 删除考试题目关联记录
         for session in sessions:
             exams = Exam.query.filter_by(session_id=session.id).all()
             for exam in exams:
-                ExamQuestion.query.filter_by(exam_id=exam.id).delete(
-                    synchronize_session=False
-                )
+                ExamQuestion.query.filter_by(exam_id=exam.id).delete(synchronize_session=False)
 
         # 4. 删除学生考试记录
-        StudentExamRecord.query.filter_by(student_id=student_id).delete(
-            synchronize_session=False
-        )
-        StudentExam.query.filter_by(student_id=student_id).delete(
-            synchronize_session=False
-        )
+        StudentExamRecord.query.filter_by(student_id=student_id).delete(synchronize_session=False)
+        StudentExam.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
         # 5. 删除考试记录
         for session in sessions:
-            Exam.query.filter_by(session_id=session.id).delete(
-                synchronize_session=False
-            )
+            Exam.query.filter_by(session_id=session.id).delete(synchronize_session=False)
 
         # 6. 删除考试实例
-        ExamInstance.query.filter_by(student_id=student_id).delete(
-            synchronize_session=False
-        )
+        ExamInstance.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
         # 7. 删除考试会话
-        ExamSession.query.filter_by(student_id=student_id).delete(
-            synchronize_session=False
-        )
+        ExamSession.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
         # 8. 最后删除学生记录
         db.session.delete(student)
@@ -4490,9 +4184,7 @@ def get_exams_history():
             if instance.questions:
                 try:
                     questions_data = json.loads(instance.questions)
-                    question_count = (
-                        len(questions_data) if isinstance(questions_data, list) else 0
-                    )
+                    question_count = len(questions_data) if isinstance(questions_data, list) else 0
                 except:
                     question_count = 0
 
@@ -4523,21 +4215,13 @@ def get_exams_history():
                     "template_name": instance.template_name,
                     "student_name": student_name,
                     "time_limit": instance.time_limit,
-                    "started_at": (
-                        instance.started_at.isoformat() if instance.started_at else None
-                    ),
-                    "completed_at": (
-                        instance.completed_at.isoformat()
-                        if instance.completed_at
-                        else None
-                    ),
+                    "started_at": (instance.started_at.isoformat() if instance.started_at else None),
+                    "completed_at": (instance.completed_at.isoformat() if instance.completed_at else None),
                     "student_count": 1,  # 每个实例对应一个学生
                     "question_count": question_count,
                     "score": instance.score or 0,
                     "total_score": instance.total_score or 0,
-                    "avg_score": (
-                        round(instance.percentage, 1) if instance.percentage else 0
-                    ),
+                    "avg_score": (round(instance.percentage, 1) if instance.percentage else 0),
                 }
             )
 
@@ -4559,18 +4243,14 @@ def get_exams_history():
 
         for exam in exams:
             # 获取参与学生数量
-            student_count = (
-                ExamSession.query.join(Exam).filter(Exam.id == exam.id).count()
-            )
+            student_count = ExamSession.query.join(Exam).filter(Exam.id == exam.id).count()
 
             # 获取题目数量
             question_count = ExamQuestion.query.filter_by(exam_id=exam.id).count()
             if question_count == 0 and exam.questions:
                 try:
                     questions_data = json.loads(exam.questions)
-                    question_count = (
-                        len(questions_data) if isinstance(questions_data, list) else 0
-                    )
+                    question_count = len(questions_data) if isinstance(questions_data, list) else 0
                 except:
                     question_count = 0
 
@@ -4603,12 +4283,8 @@ def get_exams_history():
                     "template_name": exam.config_name or "未知配置",
                     "student_name": student_name,
                     "time_limit": exam.time_limit,
-                    "started_at": (
-                        exam.started_at.isoformat() if exam.started_at else None
-                    ),
-                    "completed_at": (
-                        exam.completed_at.isoformat() if exam.completed_at else None
-                    ),
+                    "started_at": (exam.started_at.isoformat() if exam.started_at else None),
+                    "completed_at": (exam.completed_at.isoformat() if exam.completed_at else None),
                     "student_count": student_count,
                     "question_count": question_count,
                     "score": total_score,
@@ -4619,9 +4295,7 @@ def get_exams_history():
 
         # 3. 合并所有考试记录，按时间排序
         all_exams = instance_list + legacy_list
-        all_exams.sort(
-            key=lambda x: x["started_at"] or "1970-01-01T00:00:00", reverse=True
-        )
+        all_exams.sort(key=lambda x: x["started_at"] or "1970-01-01T00:00:00", reverse=True)
 
         return jsonify(
             {
@@ -4706,20 +4380,14 @@ def get_config_usage(config_id):
         exam_list = []
         for exam in exams:
             # 获取参与学生数量
-            student_count = (
-                ExamSession.query.join(Exam).filter(Exam.id == exam.id).count()
-            )
+            student_count = ExamSession.query.join(Exam).filter(Exam.id == exam.id).count()
 
             exam_list.append(
                 {
                     "id": exam.id,
                     "status": exam.status,
-                    "started_at": (
-                        exam.started_at.isoformat() if exam.started_at else None
-                    ),
-                    "completed_at": (
-                        exam.completed_at.isoformat() if exam.completed_at else None
-                    ),
+                    "started_at": (exam.started_at.isoformat() if exam.started_at else None),
+                    "completed_at": (exam.completed_at.isoformat() if exam.completed_at else None),
                     "student_count": student_count,
                 }
             )
@@ -4814,11 +4482,7 @@ def get_student_answers(exam_id, student_id):
         exam = Exam.query.get_or_404(exam_id)
 
         # 获取考试题目
-        exam_questions = (
-            ExamQuestion.query.filter_by(exam_id=exam_id)
-            .order_by(ExamQuestion.question_order)
-            .all()
-        )
+        exam_questions = ExamQuestion.query.filter_by(exam_id=exam_id).order_by(ExamQuestion.question_order).all()
         questions = []
         for eq in exam_questions:
             question = eq.question
@@ -4836,9 +4500,7 @@ def get_student_answers(exam_id, student_id):
 
         # 获取学生答案
         answers = Answer.query.filter_by(exam_id=exam_id).all()
-        answer_dict = {
-            str(answer.question_id): answer.answer_text for answer in answers
-        }
+        answer_dict = {str(answer.question_id): answer.answer_text for answer in answers}
 
         # 获取成绩数据
         scores_data = {}
@@ -4907,11 +4569,7 @@ def get_exam_type_scores(template_id):
 
             for answer in answers:
                 # 获取题目信息
-                question = (
-                    Question.query.get(answer.question_id)
-                    if answer.question_id
-                    else None
-                )
+                question = Question.query.get(answer.question_id) if answer.question_id else None
                 if not question:
                     continue
 
@@ -4929,9 +4587,7 @@ def get_exam_type_scores(template_id):
                     }
 
                 # 累加统计数据
-                type_stats[question_type]["total_score"] += (
-                    answer.score if answer.score else 0
-                )
+                type_stats[question_type]["total_score"] += answer.score if answer.score else 0
                 type_stats[question_type]["max_score"] += question.points
                 type_stats[question_type]["question_count"] += 1
                 type_stats[question_type]["students"].add(instance.id)
@@ -4951,11 +4607,7 @@ def get_exam_type_scores(template_id):
 
                 for answer in answers:
                     # 获取题目信息
-                    question = (
-                        Question.query.get(answer.question_id)
-                        if answer.question_id
-                        else None
-                    )
+                    question = Question.query.get(answer.question_id) if answer.question_id else None
                     if not question:
                         continue
 
@@ -4973,25 +4625,17 @@ def get_exam_type_scores(template_id):
                         }
 
                     # 累加统计数据
-                    type_stats[question_type]["total_score"] += (
-                        answer.score if answer.score else 0
-                    )
+                    type_stats[question_type]["total_score"] += answer.score if answer.score else 0
                     type_stats[question_type]["max_score"] += question.points
                     type_stats[question_type]["question_count"] += 1
                     type_stats[question_type]["students"].add(exam.id)
 
                     # 判断是否正确：score达到满分则认为正确
-                    if (
-                        answer.score
-                        and question.points
-                        and answer.score >= question.points
-                    ):
+                    if answer.score and question.points and answer.score >= question.points:
                         type_stats[question_type]["correct_count"] += 1
 
         if not type_stats:
-            return jsonify(
-                {"success": True, "type_scores": {}, "message": "暂无考试数据"}
-            )
+            return jsonify({"success": True, "type_scores": {}, "message": "暂无考试数据"})
 
         # 计算每种题型的统计结果
         result_stats = {}
@@ -5002,22 +4646,14 @@ def get_exam_type_scores(template_id):
                 "total_score": stats["total_score"],
                 "max_score": stats["max_score"],
                 "percentage": round(
-                    (
-                        (stats["total_score"] / stats["max_score"] * 100)
-                        if stats["max_score"] > 0
-                        else 0
-                    ),
+                    ((stats["total_score"] / stats["max_score"] * 100) if stats["max_score"] > 0 else 0),
                     1,
                 ),
                 "question_count": stats["question_count"],
                 "student_count": student_count,
                 "correct_count": stats["correct_count"],
                 "accuracy": round(
-                    (
-                        (stats["correct_count"] / stats["question_count"] * 100)
-                        if stats["question_count"] > 0
-                        else 0
-                    ),
+                    ((stats["correct_count"] / stats["question_count"] * 100) if stats["question_count"] > 0 else 0),
                     1,
                 ),
             }
@@ -5050,11 +4686,7 @@ def get_student_type_scores(student_id):
 
             for answer in answers:
                 # 获取题目信息
-                question = (
-                    Question.query.get(answer.question_id)
-                    if answer.question_id
-                    else None
-                )
+                question = Question.query.get(answer.question_id) if answer.question_id else None
                 if not question:
                     continue
 
@@ -5073,43 +4705,31 @@ def get_student_type_scores(student_id):
                     }
 
                 # 累加统计数据
-                type_stats[question_type]["total_score"] += (
-                    answer.score if answer.score else 0
-                )
+                type_stats[question_type]["total_score"] += answer.score if answer.score else 0
                 type_stats[question_type]["max_score"] += question.points
                 type_stats[question_type]["question_count"] += 1
                 type_stats[question_type]["exams"].add(instance.id)
 
                 # 判断是否正确：score达到满分则认为正确
-                is_correct = bool(
-                    answer.score and question.points and answer.score >= question.points
-                )
+                is_correct = bool(answer.score and question.points and answer.score >= question.points)
 
                 # 添加详细得分信息
                 type_stats[question_type]["detailed_scores"].append(
                     {
                         "question_id": question.id,
                         "question_text": (
-                            question.content[:100] + "..."
-                            if len(question.content) > 100
-                            else question.content
+                            question.content[:100] + "..." if len(question.content) > 100 else question.content
                         ),
                         "score": answer.score if answer.score else 0,
                         "max_score": question.points,
                         "percentage": round(
-                            (
-                                (answer.score / question.points * 100)
-                                if answer.score and question.points > 0
-                                else 0
-                            ),
+                            ((answer.score / question.points * 100) if answer.score and question.points > 0 else 0),
                             1,
                         ),
                         "is_correct": is_correct,
                         "exam_instance_id": instance.id,
                         "exam_date": (
-                            instance.completed_at.strftime("%Y-%m-%d %H:%M")
-                            if instance.completed_at
-                            else "N/A"
+                            instance.completed_at.strftime("%Y-%m-%d %H:%M") if instance.completed_at else "N/A"
                         ),
                     }
                 )
@@ -5128,11 +4748,7 @@ def get_student_type_scores(student_id):
 
                     for answer in answers:
                         # 获取题目信息
-                        question = (
-                            Question.query.get(answer.question_id)
-                            if answer.question_id
-                            else None
-                        )
+                        question = Question.query.get(answer.question_id) if answer.question_id else None
                         if not question:
                             continue
 
@@ -5151,28 +4767,20 @@ def get_student_type_scores(student_id):
                             }
 
                         # 累加统计数据
-                        type_stats[question_type]["total_score"] += (
-                            answer.score if answer.score else 0
-                        )
+                        type_stats[question_type]["total_score"] += answer.score if answer.score else 0
                         type_stats[question_type]["max_score"] += question.points
                         type_stats[question_type]["question_count"] += 1
                         type_stats[question_type]["exams"].add(exam.id)
 
                         # 判断是否正确：score达到满分则认为正确
-                        is_correct = bool(
-                            answer.score
-                            and question.points
-                            and answer.score >= question.points
-                        )
+                        is_correct = bool(answer.score and question.points and answer.score >= question.points)
 
                         # 添加详细得分信息
                         type_stats[question_type]["detailed_scores"].append(
                             {
                                 "question_id": question.id,
                                 "question_text": (
-                                    question.content[:100] + "..."
-                                    if len(question.content) > 100
-                                    else question.content
+                                    question.content[:100] + "..." if len(question.content) > 100 else question.content
                                 ),
                                 "score": answer.score if answer.score else 0,
                                 "max_score": question.points,
@@ -5186,11 +4794,7 @@ def get_student_type_scores(student_id):
                                 ),
                                 "is_correct": is_correct,
                                 "exam_instance_id": exam.id,
-                                "exam_date": (
-                                    exam.started_at.strftime("%Y-%m-%d %H:%M")
-                                    if exam.started_at
-                                    else "N/A"
-                                ),
+                                "exam_date": (exam.started_at.strftime("%Y-%m-%d %H:%M") if exam.started_at else "N/A"),
                             }
                         )
 
@@ -5216,35 +4820,23 @@ def get_student_type_scores(student_id):
                 "total_score": stats["total_score"],
                 "max_score": stats["max_score"],
                 "percentage": round(
-                    (
-                        (stats["total_score"] / stats["max_score"] * 100)
-                        if stats["max_score"] > 0
-                        else 0
-                    ),
+                    ((stats["total_score"] / stats["max_score"] * 100) if stats["max_score"] > 0 else 0),
                     1,
                 ),
                 "question_count": stats["question_count"],
                 "exam_count": exam_count,
                 "correct_count": stats["correct_count"],
                 "accuracy": round(
-                    (
-                        (stats["correct_count"] / stats["question_count"] * 100)
-                        if stats["question_count"] > 0
-                        else 0
-                    ),
+                    ((stats["correct_count"] / stats["question_count"] * 100) if stats["question_count"] > 0 else 0),
                     1,
                 ),
                 "avg_score_per_question": (
-                    round(stats["total_score"] / stats["question_count"], 2)
-                    if stats["question_count"] > 0
-                    else 0
+                    round(stats["total_score"] / stats["question_count"], 2) if stats["question_count"] > 0 else 0
                 ),
                 "detailed_scores": stats["detailed_scores"],  # 添加详细得分信息
             }
 
-        return jsonify(
-            {"success": True, "student_name": student.name, "type_scores": result_stats}
-        )
+        return jsonify({"success": True, "student_name": student.name, "type_scores": result_stats})
 
     except Exception as e:
         print(f"获取学生题型评分统计失败: {str(e)}")
@@ -5274,12 +4866,8 @@ def get_exam_detailed_scores(template_id):
                 continue
 
             # 为每次考试创建唯一的学生记录
-            china_time = (
-                to_china_time(instance.completed_at) if instance.completed_at else None
-            )
-            exam_date = (
-                china_time.strftime("%Y-%m-%d %H:%M") if china_time else "未知时间"
-            )
+            china_time = to_china_time(instance.completed_at) if instance.completed_at else None
+            exam_date = china_time.strftime("%Y-%m-%d %H:%M") if china_time else "未知时间"
             unique_student_key = f"{student.name}_{exam_date}_{instance.id}"
 
             all_students_data[unique_student_key] = {
@@ -5299,24 +4887,15 @@ def get_exam_detailed_scores(template_id):
             student_exam_max_score = 0
 
             for answer in answers:
-                question = (
-                    Question.query.get(answer.question_id)
-                    if answer.question_id
-                    else None
-                )
+                question = Question.query.get(answer.question_id) if answer.question_id else None
                 if not question:
                     continue
 
                 question_type = question.question_type
 
                 # 初始化题型统计
-                if (
-                    question_type
-                    not in all_students_data[unique_student_key]["type_scores"]
-                ):
-                    all_students_data[unique_student_key]["type_scores"][
-                        question_type
-                    ] = {
+                if question_type not in all_students_data[unique_student_key]["type_scores"]:
+                    all_students_data[unique_student_key]["type_scores"][question_type] = {
                         "type_name": get_question_type_name(question_type),
                         "total_score": 0,
                         "max_score": 0,
@@ -5326,34 +4905,22 @@ def get_exam_detailed_scores(template_id):
 
                 # 累加统计数据
                 score = answer.score if answer.score else 0
-                all_students_data[unique_student_key]["type_scores"][question_type][
-                    "total_score"
-                ] += score
-                all_students_data[unique_student_key]["type_scores"][question_type][
-                    "max_score"
-                ] += question.points
-                all_students_data[unique_student_key]["type_scores"][question_type][
-                    "question_count"
-                ] += 1
+                all_students_data[unique_student_key]["type_scores"][question_type]["total_score"] += score
+                all_students_data[unique_student_key]["type_scores"][question_type]["max_score"] += question.points
+                all_students_data[unique_student_key]["type_scores"][question_type]["question_count"] += 1
 
                 # 判断是否正确：score达到满分则认为正确
                 if score and question.points and score >= question.points:
-                    all_students_data[unique_student_key]["type_scores"][question_type][
-                        "correct_count"
-                    ] += 1
+                    all_students_data[unique_student_key]["type_scores"][question_type]["correct_count"] += 1
 
                 student_exam_score += score
                 student_exam_max_score += question.points
 
             all_students_data[unique_student_key]["total_score"] = student_exam_score
-            all_students_data[unique_student_key][
-                "total_max_score"
-            ] = student_exam_max_score
+            all_students_data[unique_student_key]["total_max_score"] = student_exam_max_score
 
         # 旧系统：从Exam获取数据，为每次考试创建单独的记录
-        exams = Exam.query.filter_by(
-            config_id=int(config_id) if config_id.isdigit() else config_id
-        ).all()
+        exams = Exam.query.filter_by(config_id=int(config_id) if config_id.isdigit() else config_id).all()
 
         for exam in exams:
             # 通过session获取学生信息
@@ -5367,9 +4934,7 @@ def get_exam_detailed_scores(template_id):
 
             # 为每次考试创建唯一的学生记录
             china_time = to_china_time(exam.started_at) if exam.started_at else None
-            exam_date = (
-                china_time.strftime("%Y-%m-%d %H:%M") if china_time else "未知时间"
-            )
+            exam_date = china_time.strftime("%Y-%m-%d %H:%M") if china_time else "未知时间"
             unique_student_key = f"{student.name}_{exam_date}_{exam.id}"
 
             all_students_data[unique_student_key] = {
@@ -5388,24 +4953,15 @@ def get_exam_detailed_scores(template_id):
             student_exam_max_score = 0
 
             for answer in answers:
-                question = (
-                    Question.query.get(answer.question_id)
-                    if answer.question_id
-                    else None
-                )
+                question = Question.query.get(answer.question_id) if answer.question_id else None
                 if not question:
                     continue
 
                 question_type = question.question_type
 
                 # 初始化题型统计
-                if (
-                    question_type
-                    not in all_students_data[unique_student_key]["type_scores"]
-                ):
-                    all_students_data[unique_student_key]["type_scores"][
-                        question_type
-                    ] = {
+                if question_type not in all_students_data[unique_student_key]["type_scores"]:
+                    all_students_data[unique_student_key]["type_scores"][question_type] = {
                         "type_name": get_question_type_name(question_type),
                         "total_score": 0,
                         "max_score": 0,
@@ -5415,37 +4971,26 @@ def get_exam_detailed_scores(template_id):
 
                 # 累加统计数据
                 score = answer.score if answer.score else 0
-                all_students_data[unique_student_key]["type_scores"][question_type][
-                    "total_score"
-                ] += score
-                all_students_data[unique_student_key]["type_scores"][question_type][
-                    "max_score"
-                ] += question.points
-                all_students_data[unique_student_key]["type_scores"][question_type][
-                    "question_count"
-                ] += 1
+                all_students_data[unique_student_key]["type_scores"][question_type]["total_score"] += score
+                all_students_data[unique_student_key]["type_scores"][question_type]["max_score"] += question.points
+                all_students_data[unique_student_key]["type_scores"][question_type]["question_count"] += 1
 
                 # 判断是否正确：score达到满分则认为正确
                 if score and question.points and score >= question.points:
-                    all_students_data[unique_student_key]["type_scores"][question_type][
-                        "correct_count"
-                    ] += 1
+                    all_students_data[unique_student_key]["type_scores"][question_type]["correct_count"] += 1
 
                 student_exam_score += score
                 student_exam_max_score += question.points
 
             all_students_data[unique_student_key]["total_score"] = student_exam_score
-            all_students_data[unique_student_key][
-                "total_max_score"
-            ] = student_exam_max_score
+            all_students_data[unique_student_key]["total_max_score"] = student_exam_max_score
 
         # 计算百分比
         for student_name, student_data in all_students_data.items():
             # 计算总体百分比
             if student_data["total_max_score"] > 0:
                 student_data["total_percentage"] = round(
-                    (student_data["total_score"] / student_data["total_max_score"])
-                    * 100,
+                    (student_data["total_score"] / student_data["total_max_score"]) * 100,
                     1,
                 )
             else:
@@ -5454,16 +4999,13 @@ def get_exam_detailed_scores(template_id):
             # 计算各题型百分比和正确率
             for question_type, type_data in student_data["type_scores"].items():
                 if type_data["max_score"] > 0:
-                    type_data["percentage"] = round(
-                        (type_data["total_score"] / type_data["max_score"]) * 100, 1
-                    )
+                    type_data["percentage"] = round((type_data["total_score"] / type_data["max_score"]) * 100, 1)
                 else:
                     type_data["percentage"] = 0
 
                 if type_data["question_count"] > 0:
                     type_data["accuracy"] = round(
-                        (type_data["correct_count"] / type_data["question_count"])
-                        * 100,
+                        (type_data["correct_count"] / type_data["question_count"]) * 100,
                         1,
                     )
                 else:
@@ -5655,11 +5197,7 @@ def clear_all_exams():
 def get_verification_config():
     """获取验证字段配置"""
     try:
-        configs = (
-            VerificationConfig.query.filter_by(is_enabled=True)
-            .order_by(VerificationConfig.field_order)
-            .all()
-        )
+        configs = VerificationConfig.query.filter_by(is_enabled=True).order_by(VerificationConfig.field_order).all()
 
         # 如果没有配置，返回默认配置
         if not configs:
@@ -5696,9 +5234,7 @@ def get_verification_config():
             ]
             return jsonify({"success": True, "configs": default_configs})
 
-        return jsonify(
-            {"success": True, "configs": [config.to_dict() for config in configs]}
-        )
+        return jsonify({"success": True, "configs": [config.to_dict() for config in configs]})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -5708,9 +5244,7 @@ def get_verification_config():
 def get_admin_verification_config():
     """获取管理员验证字段配置（包括禁用的）"""
     try:
-        configs = VerificationConfig.query.order_by(
-            VerificationConfig.field_order
-        ).all()
+        configs = VerificationConfig.query.order_by(VerificationConfig.field_order).all()
 
         # 如果没有配置，创建默认配置
         if not configs:
@@ -5750,13 +5284,9 @@ def get_admin_verification_config():
                 db.session.add(config)
             db.session.commit()
 
-            configs = VerificationConfig.query.order_by(
-                VerificationConfig.field_order
-            ).all()
+            configs = VerificationConfig.query.order_by(VerificationConfig.field_order).all()
 
-        return jsonify(
-            {"success": True, "configs": [config.to_dict() for config in configs]}
-        )
+        return jsonify({"success": True, "configs": [config.to_dict() for config in configs]})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -5804,16 +5334,10 @@ def get_system_config():
 
         for config in configs:
             if config.config_type == "boolean":
-                config_dict[config.config_key] = (
-                    config.config_value.lower() == "true"
-                    if config.config_value
-                    else False
-                )
+                config_dict[config.config_key] = config.config_value.lower() == "true" if config.config_value else False
             elif config.config_type == "number":
                 try:
-                    config_dict[config.config_key] = (
-                        float(config.config_value) if config.config_value else 0
-                    )
+                    config_dict[config.config_key] = float(config.config_value) if config.config_value else 0
                 except ValueError:
                     config_dict[config.config_key] = 0
             else:
@@ -7151,63 +6675,43 @@ def batch_delete_students():
                 for session in sessions:
                     exams = Exam.query.filter_by(session_id=session.id).all()
                     for exam in exams:
-                        Answer.query.filter_by(exam_id=exam.id).delete(
-                            synchronize_session=False
-                        )
+                        Answer.query.filter_by(exam_id=exam.id).delete(synchronize_session=False)
 
                 instances = ExamInstance.query.filter_by(student_id=student_id).all()
                 for instance in instances:
-                    Answer.query.filter_by(exam_instance_id=instance.id).delete(
-                        synchronize_session=False
-                    )
+                    Answer.query.filter_by(exam_instance_id=instance.id).delete(synchronize_session=False)
 
                 # 2. 删除学生答案记录
                 student_exams = StudentExam.query.filter_by(student_id=student_id).all()
                 for student_exam in student_exams:
-                    StudentAnswer.query.filter_by(
-                        student_exam_id=student_exam.id
-                    ).delete(synchronize_session=False)
+                    StudentAnswer.query.filter_by(student_exam_id=student_exam.id).delete(synchronize_session=False)
 
                 # 3. 删除考试题目关联记录
                 for session in sessions:
                     exams = Exam.query.filter_by(session_id=session.id).all()
                     for exam in exams:
-                        ExamQuestion.query.filter_by(exam_id=exam.id).delete(
-                            synchronize_session=False
-                        )
+                        ExamQuestion.query.filter_by(exam_id=exam.id).delete(synchronize_session=False)
 
                 # 4. 删除学生考试记录
-                StudentExamRecord.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
-                StudentExam.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
+                StudentExamRecord.query.filter_by(student_id=student_id).delete(synchronize_session=False)
+                StudentExam.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
                 # 5. 删除考试记录
                 for session in sessions:
-                    Exam.query.filter_by(session_id=session.id).delete(
-                        synchronize_session=False
-                    )
+                    Exam.query.filter_by(session_id=session.id).delete(synchronize_session=False)
 
                 # 6. 删除考试实例
-                ExamInstance.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
+                ExamInstance.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
                 # 7. 删除考试会话
-                ExamSession.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
+                ExamSession.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
                 # 8. 删除学生记录
                 db.session.delete(student)
                 deleted_count += 1
 
             except Exception as e:
-                failed_deletions.append(
-                    f"学生 {student.name} (ID: {student.id}): {str(e)}"
-                )
+                failed_deletions.append(f"学生 {student.name} (ID: {student.id}): {str(e)}")
                 continue
 
         # 提交所有更改
@@ -7215,13 +6719,9 @@ def batch_delete_students():
 
         if failed_deletions:
             message = f"成功删除 {deleted_count} 个学生，{len(failed_deletions)} 个失败"
-            return jsonify(
-                {"success": True, "message": message, "details": failed_deletions}
-            )
+            return jsonify({"success": True, "message": message, "details": failed_deletions})
         else:
-            return jsonify(
-                {"success": True, "message": f"成功删除 {deleted_count} 个学生"}
-            )
+            return jsonify({"success": True, "message": f"成功删除 {deleted_count} 个学生"})
 
     except Exception as e:
         db.session.rollback()
@@ -7253,63 +6753,43 @@ def delete_all_students():
                 for session in sessions:
                     exams = Exam.query.filter_by(session_id=session.id).all()
                     for exam in exams:
-                        Answer.query.filter_by(exam_id=exam.id).delete(
-                            synchronize_session=False
-                        )
+                        Answer.query.filter_by(exam_id=exam.id).delete(synchronize_session=False)
 
                 instances = ExamInstance.query.filter_by(student_id=student_id).all()
                 for instance in instances:
-                    Answer.query.filter_by(exam_instance_id=instance.id).delete(
-                        synchronize_session=False
-                    )
+                    Answer.query.filter_by(exam_instance_id=instance.id).delete(synchronize_session=False)
 
                 # 2. 删除学生答案记录
                 student_exams = StudentExam.query.filter_by(student_id=student_id).all()
                 for student_exam in student_exams:
-                    StudentAnswer.query.filter_by(
-                        student_exam_id=student_exam.id
-                    ).delete(synchronize_session=False)
+                    StudentAnswer.query.filter_by(student_exam_id=student_exam.id).delete(synchronize_session=False)
 
                 # 3. 删除考试题目关联记录
                 for session in sessions:
                     exams = Exam.query.filter_by(session_id=session.id).all()
                     for exam in exams:
-                        ExamQuestion.query.filter_by(exam_id=exam.id).delete(
-                            synchronize_session=False
-                        )
+                        ExamQuestion.query.filter_by(exam_id=exam.id).delete(synchronize_session=False)
 
                 # 4. 删除学生考试记录
-                StudentExamRecord.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
-                StudentExam.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
+                StudentExamRecord.query.filter_by(student_id=student_id).delete(synchronize_session=False)
+                StudentExam.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
                 # 5. 删除考试记录
                 for session in sessions:
-                    Exam.query.filter_by(session_id=session.id).delete(
-                        synchronize_session=False
-                    )
+                    Exam.query.filter_by(session_id=session.id).delete(synchronize_session=False)
 
                 # 6. 删除考试实例
-                ExamInstance.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
+                ExamInstance.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
                 # 7. 删除考试会话
-                ExamSession.query.filter_by(student_id=student_id).delete(
-                    synchronize_session=False
-                )
+                ExamSession.query.filter_by(student_id=student_id).delete(synchronize_session=False)
 
                 # 8. 删除学生记录
                 db.session.delete(student)
                 deleted_count += 1
 
             except Exception as e:
-                failed_deletions.append(
-                    f"学生 {student.name} (ID: {student.id}): {str(e)}"
-                )
+                failed_deletions.append(f"学生 {student.name} (ID: {student.id}): {str(e)}")
                 continue
 
         # 提交所有更改
@@ -7317,13 +6797,9 @@ def delete_all_students():
 
         if failed_deletions:
             message = f"成功删除 {deleted_count} 个学生，{len(failed_deletions)} 个失败"
-            return jsonify(
-                {"success": True, "message": message, "details": failed_deletions}
-            )
+            return jsonify({"success": True, "message": message, "details": failed_deletions})
         else:
-            return jsonify(
-                {"success": True, "message": f"成功删除所有 {deleted_count} 个学生"}
-            )
+            return jsonify({"success": True, "message": f"成功删除所有 {deleted_count} 个学生"})
 
     except Exception as e:
         db.session.rollback()
@@ -7356,11 +6832,7 @@ def get_student_answer_details(student_id):
                     # 从questions表获取题目信息
                     question = Question.query.get(answer.question_id)
                     if question:
-                        is_correct = (
-                            answer.is_correct
-                            if answer.is_correct is not None
-                            else False
-                        )
+                        is_correct = answer.is_correct if answer.is_correct is not None else False
                         questions_data.append(
                             {
                                 "question_text": question.content,
@@ -7391,11 +6863,7 @@ def get_student_answer_details(student_id):
                     "score": score,
                     "total_score": total_score,
                     "percentage": percentage,
-                    "completed_at": (
-                        instance.completed_at.isoformat()
-                        if instance.completed_at
-                        else None
-                    ),
+                    "completed_at": (instance.completed_at.isoformat() if instance.completed_at else None),
                     "time_spent_minutes": time_spent_minutes,
                     "questions": questions_data,
                 }
@@ -7420,11 +6888,7 @@ def get_student_answer_details(student_id):
                             question = Question.query.get(int(answer.question_id))
 
                         if question:
-                            is_correct = (
-                                answer.is_correct
-                                if answer.is_correct is not None
-                                else False
-                            )
+                            is_correct = answer.is_correct if answer.is_correct is not None else False
                             questions_data.append(
                                 {
                                     "question_text": question.content,
@@ -7440,9 +6904,7 @@ def get_student_answer_details(student_id):
                 # 计算分数
                 score = correct_count
                 total_score = total_questions
-                percentage = round(
-                    (score / total_score * 100) if total_score > 0 else 0, 1
-                )
+                percentage = round((score / total_score * 100) if total_score > 0 else 0, 1)
 
                 # 计算用时（如果有开始和结束时间）
                 time_spent_minutes = None
@@ -7464,17 +6926,13 @@ def get_student_answer_details(student_id):
                         "score": score,
                         "total_score": total_score,
                         "percentage": percentage,
-                        "completed_at": (
-                            exam.completed_at.isoformat() if exam.completed_at else None
-                        ),
+                        "completed_at": (exam.completed_at.isoformat() if exam.completed_at else None),
                         "time_spent_minutes": time_spent_minutes,
                         "questions": questions_data,
                     }
                 )
 
-        return jsonify(
-            {"success": True, "student_name": student.name, "answers": exam_records}
-        )
+        return jsonify({"success": True, "student_name": student.name, "answers": exam_records})
 
     except Exception as e:
         print(f"❌ 获取学生答题详情失败: {str(e)}")
@@ -7520,36 +6978,22 @@ def get_dashboard_stats():
             valid_durations = 0
             for exam in completed_exams:
                 if exam.completed_at and exam.created_at:
-                    duration = (
-                        exam.completed_at - exam.created_at
-                    ).total_seconds() / 60
+                    duration = (exam.completed_at - exam.created_at).total_seconds() / 60
                     if 0 < duration < 300:  # 合理的时间范围 (0-300分钟)
                         total_duration += duration
                         valid_durations += 1
-            avg_duration = (
-                round(total_duration / valid_durations) if valid_durations > 0 else 0
-            )
+            avg_duration = round(total_duration / valid_durations) if valid_durations > 0 else 0
         else:
             avg_duration = 0
 
         # 计算平均成绩
-        scored_exams = ExamInstance.query.filter(
-            ExamInstance.percentage.isnot(None)
-        ).all()
-        avg_score = (
-            round(sum(exam.percentage for exam in scored_exams) / len(scored_exams))
-            if scored_exams
-            else 0
-        )
+        scored_exams = ExamInstance.query.filter(ExamInstance.percentage.isnot(None)).all()
+        avg_score = round(sum(exam.percentage for exam in scored_exams) / len(scored_exams)) if scored_exams else 0
 
         # 计算通过率 (假设60分及格)
         if scored_exams:
             passed_exams = [exam for exam in scored_exams if exam.percentage >= 60]
-            pass_rate = (
-                round((len(passed_exams) / len(scored_exams)) * 100)
-                if scored_exams
-                else 0
-            )
+            pass_rate = round((len(passed_exams) / len(scored_exams)) * 100) if scored_exams else 0
         else:
             pass_rate = 0
 
@@ -7672,19 +7116,9 @@ def get_dashboard_charts_data():
                     {
                         "student_name": student.name,
                         "exam_name": instance.name,
-                        "score": (
-                            f"{instance.percentage:.1f}%"
-                            if instance.percentage
-                            else "-"
-                        ),
-                        "status": (
-                            "已完成" if instance.status == "completed" else "进行中"
-                        ),
-                        "completed_at": (
-                            instance.completed_at.isoformat()
-                            if instance.completed_at
-                            else None
-                        ),
+                        "score": (f"{instance.percentage:.1f}%" if instance.percentage else "-"),
+                        "status": ("已完成" if instance.status == "completed" else "进行中"),
+                        "completed_at": (instance.completed_at.isoformat() if instance.completed_at else None),
                         "time_spent": time_spent or "-",
                     }
                 )
@@ -7736,11 +7170,7 @@ def get_dashboard_charts_data():
                                 "exam_name": exam_name,
                                 "score": score_text,
                                 "status": "已完成",
-                                "completed_at": (
-                                    exam.completed_at.isoformat()
-                                    if exam.completed_at
-                                    else None
-                                ),
+                                "completed_at": (exam.completed_at.isoformat() if exam.completed_at else None),
                                 "time_spent": time_spent_text,
                             }
                         )
@@ -7804,12 +7234,8 @@ def get_all_student_answers():
                     "question_text": answer.question_text,
                     "student_answer": answer.answer_text or "未作答",
                     "correct_answer": answer.correct_answer,
-                    "is_correct": (
-                        answer.is_correct if answer.is_correct is not None else False
-                    ),
-                    "submitted_at": (
-                        answer.submitted_at.isoformat() if answer.submitted_at else None
-                    ),
+                    "is_correct": (answer.is_correct if answer.is_correct is not None else False),
+                    "submitted_at": (answer.submitted_at.isoformat() if answer.submitted_at else None),
                 }
             )
 
@@ -7842,22 +7268,12 @@ def get_all_student_answers():
                 answers_data.append(
                     {
                         "student_name": answer.student_name or "未知学生",
-                        "exam_name": (
-                            f"考试 #{answer.exam_id}" if answer.exam_id else "未知考试"
-                        ),
+                        "exam_name": (f"考试 #{answer.exam_id}" if answer.exam_id else "未知考试"),
                         "question_text": answer.question_text,
                         "student_answer": answer.answer_text or "未作答",
                         "correct_answer": answer.correct_answer,
-                        "is_correct": (
-                            answer.is_correct
-                            if answer.is_correct is not None
-                            else False
-                        ),
-                        "submitted_at": (
-                            answer.submitted_at.isoformat()
-                            if answer.submitted_at
-                            else None
-                        ),
+                        "is_correct": (answer.is_correct if answer.is_correct is not None else False),
+                        "submitted_at": (answer.submitted_at.isoformat() if answer.submitted_at else None),
                     }
                 )
 
@@ -7872,9 +7288,7 @@ def get_all_student_answers():
             "has_next": page < pages,
         }
 
-        return jsonify(
-            {"success": True, "answers": answers_data, "pagination": pagination}
-        )
+        return jsonify({"success": True, "answers": answers_data, "pagination": pagination})
 
     except Exception as e:
         print(f"❌ 获取学生答题记录失败: {str(e)}")
@@ -7899,9 +7313,7 @@ def get_admin_all_student_answers_summary():
 
             if instances:
                 total_percentage = sum(i.percentage or 0 for i in instances)
-                instance_avg_score = (
-                    total_percentage / instance_count if instance_count > 0 else 0
-                )
+                instance_avg_score = total_percentage / instance_count if instance_count > 0 else 0
 
             # 旧版Exam
             sessions = ExamSession.query.filter_by(student_id=student.id).all()
@@ -7924,15 +7336,12 @@ def get_admin_all_student_answers_summary():
                             except:
                                 pass
 
-                exam_avg_score = (
-                    sum(total_scores) / len(total_scores) if total_scores else 0
-                )
+                exam_avg_score = sum(total_scores) / len(total_scores) if total_scores else 0
 
             # 计算总体统计
             total_exams = instance_count + exam_count
             overall_avg = (
-                ((instance_avg_score * instance_count) + (exam_avg_score * exam_count))
-                / total_exams
+                ((instance_avg_score * instance_count) + (exam_avg_score * exam_count)) / total_exams
                 if total_exams > 0
                 else 0
             )
@@ -7940,22 +7349,16 @@ def get_admin_all_student_answers_summary():
             # 获取最近一次考试时间
             last_exam_time = None
             if instances:
-                last_instance = max(
-                    instances, key=lambda x: x.completed_at or x.created_at
-                )
+                last_instance = max(instances, key=lambda x: x.completed_at or x.created_at)
                 last_exam_time = last_instance.completed_at or last_instance.created_at
 
             if sessions and exam_count > 0:
                 last_session = max(sessions, key=lambda x: x.created_at)
                 session_exams = Exam.query.filter_by(session_id=last_session.id).all()
                 if session_exams:
-                    last_exam = max(
-                        session_exams, key=lambda x: x.completed_at or x.created_at
-                    )
+                    last_exam = max(session_exams, key=lambda x: x.completed_at or x.created_at)
                     session_last_time = last_exam.completed_at or last_exam.created_at
-                    if not last_exam_time or (
-                        session_last_time and session_last_time > last_exam_time
-                    ):
+                    if not last_exam_time or (session_last_time and session_last_time > last_exam_time):
                         last_exam_time = session_last_time
 
             students_data.append(
@@ -7965,17 +7368,13 @@ def get_admin_all_student_answers_summary():
                     "student_id": student.id_number,
                     "total_exams": total_exams,
                     "avg_score": round(overall_avg, 1),
-                    "last_exam_at": (
-                        last_exam_time.isoformat() if last_exam_time else None
-                    ),
+                    "last_exam_at": (last_exam_time.isoformat() if last_exam_time else None),
                     "status": "活跃" if total_exams > 0 else "未参加",
                 }
             )
 
         # 按最近考试时间排序
-        students_data.sort(
-            key=lambda x: x["last_exam_at"] or "1970-01-01T00:00:00", reverse=True
-        )
+        students_data.sort(key=lambda x: x["last_exam_at"] or "1970-01-01T00:00:00", reverse=True)
 
         return jsonify({"success": True, "students": students_data})
 
@@ -8120,9 +7519,7 @@ def validate_provider_api(provider_name):
             provider = ApiProvider(provider_name)
         except ValueError:
             return (
-                jsonify(
-                    {"success": False, "message": f"不支持的API提供商: {provider_name}"}
-                ),
+                jsonify({"success": False, "message": f"不支持的API提供商: {provider_name}"}),
                 400,
             )
 
@@ -8163,15 +7560,11 @@ def save_provider_config(provider_name):
             provider = ApiProvider(provider_name)
         except ValueError:
             return (
-                jsonify(
-                    {"success": False, "message": f"不支持的API提供商: {provider_name}"}
-                ),
+                jsonify({"success": False, "message": f"不支持的API提供商: {provider_name}"}),
                 400,
             )
 
-        print(
-            f"🔧 尝试保存 {provider_name} 配置: API密钥={api_key[:10]}..., 模型={model}"
-        )
+        print(f"🔧 尝试保存 {provider_name} 配置: API密钥={api_key[:10]}..., 模型={model}")
 
         api_manager = ApiManager()
         success = api_manager.save_provider_config(provider, api_key, model)
@@ -8179,14 +7572,10 @@ def save_provider_config(provider_name):
         print(f"📊 保存结果: {success}")
 
         if success:
-            return jsonify(
-                {"success": True, "message": f"{provider_name.title()} API配置保存成功"}
-            )
+            return jsonify({"success": True, "message": f"{provider_name.title()} API配置保存成功"})
         else:
             return (
-                jsonify(
-                    {"success": False, "message": "保存配置失败，请检查API密钥是否有效"}
-                ),
+                jsonify({"success": False, "message": "保存配置失败，请检查API密钥是否有效"}),
                 400,
             )
 
@@ -8206,9 +7595,7 @@ def activate_provider(provider_name):
             provider = ApiProvider(provider_name)
         except ValueError:
             return (
-                jsonify(
-                    {"success": False, "message": f"不支持的API提供商: {provider_name}"}
-                ),
+                jsonify({"success": False, "message": f"不支持的API提供商: {provider_name}"}),
                 400,
             )
 
@@ -8216,9 +7603,7 @@ def activate_provider(provider_name):
         success = api_manager.activate_provider(provider)
 
         if success:
-            return jsonify(
-                {"success": True, "message": f"已成功激活 {provider_name.title()} API"}
-            )
+            return jsonify({"success": True, "message": f"已成功激活 {provider_name.title()} API"})
         else:
             return (
                 jsonify(
@@ -8248,16 +7633,12 @@ def get_provider_details(provider_name):
             provider = ApiProvider(provider_name)
         except ValueError:
             return (
-                jsonify(
-                    {"success": False, "message": f"不支持的API提供商: {provider_name}"}
-                ),
+                jsonify({"success": False, "message": f"不支持的API提供商: {provider_name}"}),
                 400,
             )
 
         # 从数据库获取配置
-        provider_config = ApiProviderModel.query.filter_by(
-            provider_name=provider_name
-        ).first()
+        provider_config = ApiProviderModel.query.filter_by(provider_name=provider_name).first()
 
         if not provider_config:
             return (
@@ -8322,12 +7703,8 @@ def test_scoring():
         }
 
         test_mc_answer = "B"
-        mc_score, mc_max_score = scoring._score_multiple_choice(
-            test_mc_question, test_mc_answer, 2.0
-        )
-        print(
-            f"📋 选择题测试结果: {mc_score}/{mc_max_score} = {mc_score/mc_max_score*100:.1f}%"
-        )
+        mc_score, mc_max_score = scoring._score_multiple_choice(test_mc_question, test_mc_answer, 2.0)
+        print(f"📋 选择题测试结果: {mc_score}/{mc_max_score} = {mc_score/mc_max_score*100:.1f}%")
 
         return jsonify(
             {
@@ -8355,24 +7732,13 @@ def rescore_answers():
         data = request.get_json()
         student_id = data.get("student_id")  # 可选，指定学生
 
-        print(
-            f"🔄 开始重新评分答案{f'（学生ID: {student_id}）' if student_id else '（所有学生）'}..."
-        )
+        print(f"🔄 开始重新评分答案{f'（学生ID: {student_id}）' if student_id else '（所有学生）'}...")
 
         # 获取需要重新评分的答案
         if student_id:
             # 通过exam_instance和exam关联查找答案
-            exam_instance_answers = (
-                Answer.query.join(ExamInstance)
-                .filter(ExamInstance.student_id == student_id)
-                .all()
-            )
-            exam_answers = (
-                Answer.query.join(Exam)
-                .join(ExamSession)
-                .filter(ExamSession.student_id == student_id)
-                .all()
-            )
+            exam_instance_answers = Answer.query.join(ExamInstance).filter(ExamInstance.student_id == student_id).all()
+            exam_answers = Answer.query.join(Exam).join(ExamSession).filter(ExamSession.student_id == student_id).all()
             answers = exam_instance_answers + exam_answers
         else:
             answers = Answer.query.all()
@@ -8407,9 +7773,7 @@ def rescore_answers():
                         question.to_dict(), answer.answer_text, question.points
                     )
                 else:
-                    print(
-                        f"⚠️  跳过答案 {answer.id}：未知题目类型 {question.question_type}"
-                    )
+                    print(f"⚠️  跳过答案 {answer.id}：未知题目类型 {question.question_type}")
                     continue
 
                 # 更新答案
@@ -8417,9 +7781,7 @@ def rescore_answers():
                 answer.is_correct = score >= max_score * 0.8  # 80%以上算正确
 
                 if old_score != score:
-                    print(
-                        f"📝 题目 {question.id} ({question.question_type}): {old_score} → {score}/{max_score}"
-                    )
+                    print(f"📝 题目 {question.id} ({question.question_type}): {old_score} → {score}/{max_score}")
                     rescored_count += 1
 
             except Exception as e:
@@ -8471,11 +7833,7 @@ def debug_export():
                             "template_id": instance.template_id,
                             "question_id": answer.question_id,
                             "score": answer.score,
-                            "answer_text": (
-                                answer.answer_text[:50] + "..."
-                                if answer.answer_text
-                                else None
-                            ),
+                            "answer_text": (answer.answer_text[:50] + "..." if answer.answer_text else None),
                         }
                     )
 
@@ -8493,11 +7851,7 @@ def debug_export():
                                 "config_id": exam.config_id,
                                 "question_id": answer.question_id,
                                 "score": answer.score,
-                                "answer_text": (
-                                    answer.answer_text[:50] + "..."
-                                    if answer.answer_text
-                                    else None
-                                ),
+                                "answer_text": (answer.answer_text[:50] + "..." if answer.answer_text else None),
                             }
                         )
 
@@ -8509,10 +7863,7 @@ def debug_export():
 
         # 查找所有考试实例
         instances = ExamInstance.query.filter_by(student_id=1).all()
-        instance_info = [
-            {"id": i.id, "template_id": i.template_id, "status": i.status}
-            for i in instances
-        ]
+        instance_info = [{"id": i.id, "template_id": i.template_id, "status": i.status} for i in instances]
 
         return jsonify(
             {
@@ -8650,9 +8001,7 @@ def upload_file():
         # 返回访问URL
         file_url = f"/static/uploads/{filename}"
 
-        return jsonify(
-            {"success": True, "file_url": file_url, "message": "文件上传成功"}
-        )
+        return jsonify({"success": True, "file_url": file_url, "message": "文件上传成功"})
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
@@ -8725,9 +8074,7 @@ def ensure_default_system_config():
 
     try:
         for config_data in default_configs:
-            existing = SystemConfig.query.filter_by(
-                config_key=config_data["config_key"]
-            ).first()
+            existing = SystemConfig.query.filter_by(config_key=config_data["config_key"]).first()
             if not existing:
                 config = SystemConfig(**config_data)
                 db.session.add(config)
@@ -8752,15 +8099,11 @@ def check_expired_exam_instances():
                 if instance.started_at and instance.template:
                     # 计算过期时间
                     time_limit_minutes = instance.template.time_limit or 75
-                    expiry_time = instance.started_at + timedelta(
-                        minutes=time_limit_minutes
-                    )
+                    expiry_time = instance.started_at + timedelta(minutes=time_limit_minutes)
 
                     # 检查是否过期
                     if current_time >= expiry_time:
-                        print(
-                            f"⏰ 考试实例 {instance.id} ({instance.name}) 已过期，自动结束"
-                        )
+                        print(f"⏰ 考试实例 {instance.id} ({instance.name}) 已过期，自动结束")
 
                         # 更新状态为过期
                         instance.status = "expired"
@@ -8770,13 +8113,8 @@ def check_expired_exam_instances():
                         if instance.score is None:
                             try:
                                 # 获取已回答的答案
-                                answers = Answer.query.filter_by(
-                                    exam_instance_id=instance.id
-                                ).all()
-                                answer_dict = {
-                                    str(answer.question_id): answer.answer_text
-                                    for answer in answers
-                                }
+                                answers = Answer.query.filter_by(exam_instance_id=instance.id).all()
+                                answer_dict = {str(answer.question_id): answer.answer_text for answer in answers}
 
                                 # 获取考试题目
                                 if instance.questions:
@@ -8786,19 +8124,13 @@ def check_expired_exam_instances():
                                         question = Question.query.get(q_data["id"])
                                         if question:
                                             question_dict = question.to_dict()
-                                            question_dict["order"] = q_data.get(
-                                                "order", 0
-                                            )
-                                            question_dict["points"] = q_data.get(
-                                                "points", 1.0
-                                            )
+                                            question_dict["order"] = q_data.get("order", 0)
+                                            question_dict["points"] = q_data.get("points", 1.0)
                                             questions.append(question_dict)
 
                                     # 计算分数
                                     scorer = get_scoring_system()
-                                    results = scorer.calculate_scores_for_instance(
-                                        instance.id, questions, answer_dict
-                                    )
+                                    results = scorer.calculate_scores_for_instance(instance.id, questions, answer_dict)
 
                                     # 更新分数
                                     instance.score = results["total_score"]
@@ -8860,11 +8192,7 @@ def get_student_answers_for_records():
         for answer in new_answers:
             try:
                 # 获取考试实例信息
-                exam_instance = (
-                    ExamInstance.query.get(answer.exam_instance_id)
-                    if answer.exam_instance_id
-                    else None
-                )
+                exam_instance = ExamInstance.query.get(answer.exam_instance_id) if answer.exam_instance_id else None
 
                 # 获取学生信息
                 student = None
@@ -8883,11 +8211,7 @@ def get_student_answers_for_records():
                     try:
                         question = Question.query.get(int(answer.question_id))
                         if question:
-                            question_text = (
-                                question.content
-                                or question.question_text
-                                or question_text
-                            )
+                            question_text = question.content or question.question_text or question_text
                             correct_answer = question.correct_answer or "-"
                     except:
                         pass
@@ -8910,16 +8234,10 @@ def get_student_answers_for_records():
                         "exam_name": exam_name,
                         "question_id": answer.question_id,
                         "question_text": question_text,
-                        "question_type": (
-                            question.question_type if question else "unknown"
-                        ),
+                        "question_type": (question.question_type if question else "unknown"),
                         "student_answer": answer.answer_text or "未作答",
                         "correct_answer": correct_answer,
-                        "is_correct": (
-                            answer.is_correct
-                            if answer.is_correct is not None
-                            else False
-                        ),
+                        "is_correct": (answer.is_correct if answer.is_correct is not None else False),
                         "score": answer.score or 0,
                         "submitted_at": (
                             answer.submitted_at.isoformat()
@@ -8940,9 +8258,7 @@ def get_student_answers_for_records():
                 continue
 
         # 2. 获取旧系统的记录（ExamSession -> Exam -> Answer）
-        old_answers = Answer.query.filter(
-            Answer.exam_id.isnot(None), Answer.exam_instance_id.is_(None)
-        ).all()
+        old_answers = Answer.query.filter(Answer.exam_id.isnot(None), Answer.exam_instance_id.is_(None)).all()
 
         for answer in old_answers:
             try:
@@ -8964,11 +8280,7 @@ def get_student_answers_for_records():
                     try:
                         question = Question.query.get(int(answer.question_id))
                         if question:
-                            question_text = (
-                                question.content
-                                or question.question_text
-                                or question_text
-                            )
+                            question_text = question.content or question.question_text or question_text
                             correct_answer = question.correct_answer or "-"
                     except:
                         pass
@@ -8977,9 +8289,7 @@ def get_student_answers_for_records():
                 exam_name = "Unknown Exam"
                 if exam:
                     # 尝试获取当前默认配置的名称
-                    default_config = ExamConfig.query.filter_by(
-                        is_default=True, is_active=True
-                    ).first()
+                    default_config = ExamConfig.query.filter_by(is_default=True, is_active=True).first()
                     if default_config:
                         exam_name = default_config.name
                     else:
@@ -8993,16 +8303,10 @@ def get_student_answers_for_records():
                         "exam_name": exam_name,
                         "question_id": answer.question_id,
                         "question_text": question_text,
-                        "question_type": (
-                            question.question_type if question else "unknown"
-                        ),
+                        "question_type": (question.question_type if question else "unknown"),
                         "student_answer": answer.answer_text or "未作答",
                         "correct_answer": correct_answer,
-                        "is_correct": (
-                            answer.is_correct
-                            if answer.is_correct is not None
-                            else False
-                        ),
+                        "is_correct": (answer.is_correct if answer.is_correct is not None else False),
                         "score": answer.score or 0,
                         "submitted_at": (
                             answer.submitted_at.isoformat()
@@ -9023,9 +8327,7 @@ def get_student_answers_for_records():
                 continue
 
         # 按提交时间排序
-        all_answers_data.sort(
-            key=lambda x: x["submitted_at"] or "1970-01-01T00:00:00", reverse=True
-        )
+        all_answers_data.sort(key=lambda x: x["submitted_at"] or "1970-01-01T00:00:00", reverse=True)
 
         # 手动分页
         total_records = len(all_answers_data)
@@ -9035,9 +8337,7 @@ def get_student_answers_for_records():
 
         total_pages = (total_records + per_page - 1) // per_page
 
-        print(
-            f"📊 找到总共 {total_records} 条答题记录（新系统: {len(new_answers)}, 旧系统: {len(old_answers)}）"
-        )
+        print(f"📊 找到总共 {total_records} 条答题记录（新系统: {len(new_answers)}, 旧系统: {len(old_answers)}）")
         print(f"✅ 成功处理 {len(paginated_data)} 条答题记录")
 
         return jsonify(
@@ -9073,23 +8373,15 @@ def get_student_records_data():
 
         # 获取学生数据
         students_query = Student.query
-        paginated_students = students_query.paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        paginated_students = students_query.paginate(page=page, per_page=per_page, error_out=False)
 
         students_data = []
         for student in paginated_students.items:
             # 计算新系统的考试统计
             exam_instances = ExamInstance.query.filter_by(student_id=student.id).all()
             new_exams_count = len(exam_instances)
-            new_total_score = sum(
-                instance.percentage or 0 for instance in exam_instances
-            )
-            new_last_exam = (
-                max(exam_instances, key=lambda x: x.started_at or datetime.min)
-                if exam_instances
-                else None
-            )
+            new_total_score = sum(instance.percentage or 0 for instance in exam_instances)
+            new_last_exam = max(exam_instances, key=lambda x: x.started_at or datetime.min) if exam_instances else None
 
             # 计算旧系统的考试统计
             old_exam_sessions = ExamSession.query.filter_by(student_id=student.id).all()
@@ -9114,32 +8406,20 @@ def get_student_records_data():
                             answers = Answer.query.filter_by(exam_id=exam.id).all()
                             if answers:
                                 total_questions = len(answers)
-                                correct_count = len(
-                                    [a for a in answers if a.is_correct]
-                                )
-                                exam_percentage = (
-                                    (correct_count / total_questions * 100)
-                                    if total_questions > 0
-                                    else 0
-                                )
+                                correct_count = len([a for a in answers if a.is_correct])
+                                exam_percentage = (correct_count / total_questions * 100) if total_questions > 0 else 0
                     else:
                         # 如果没有分数数据，使用答案统计
                         answers = Answer.query.filter_by(exam_id=exam.id).all()
                         if answers:
                             total_questions = len(answers)
                             correct_count = len([a for a in answers if a.is_correct])
-                            exam_percentage = (
-                                (correct_count / total_questions * 100)
-                                if total_questions > 0
-                                else 0
-                            )
+                            exam_percentage = (correct_count / total_questions * 100) if total_questions > 0 else 0
 
                     old_total_score += exam_percentage
 
                     # 更新最后考试时间
-                    if exam.started_at and (
-                        not old_last_exam or exam.started_at > old_last_exam
-                    ):
+                    if exam.started_at and (not old_last_exam or exam.started_at > old_last_exam):
                         old_last_exam = exam.started_at
 
             # 合并统计
@@ -9216,9 +8496,7 @@ def get_student_records_statistics_data():
 
         # 计算平均分（新旧系统合并）
         # 新系统的分数
-        new_exam_instances = ExamInstance.query.filter(
-            ExamInstance.percentage.isnot(None)
-        ).all()
+        new_exam_instances = ExamInstance.query.filter(ExamInstance.percentage.isnot(None)).all()
         new_total_score = sum(instance.percentage for instance in new_exam_instances)
         new_exam_count = len(new_exam_instances)
 
@@ -9232,11 +8510,7 @@ def get_student_records_statistics_data():
             if answers:
                 total_exam_questions = len(answers)
                 correct_count = len([a for a in answers if a.is_correct])
-                exam_percentage = (
-                    (correct_count / total_exam_questions * 100)
-                    if total_exam_questions > 0
-                    else 0
-                )
+                exam_percentage = (correct_count / total_exam_questions * 100) if total_exam_questions > 0 else 0
                 old_total_score += exam_percentage
                 old_exam_count += 1
 
@@ -9249,22 +8523,14 @@ def get_student_records_statistics_data():
 
         # 活跃学生数（有考试记录的学生）
         # 新系统活跃学生
-        new_active_students = (
-            db.session.query(Student.id).join(ExamInstance).distinct().count()
-        )
+        new_active_students = db.session.query(Student.id).join(ExamInstance).distinct().count()
 
         # 旧系统活跃学生
-        old_active_students = (
-            db.session.query(Student.id).join(ExamSession).distinct().count()
-        )
+        old_active_students = db.session.query(Student.id).join(ExamSession).distinct().count()
 
         # 合并活跃学生（去重）
-        new_student_ids = set(
-            db.session.query(Student.id).join(ExamInstance).distinct().all()
-        )
-        old_student_ids = set(
-            db.session.query(Student.id).join(ExamSession).distinct().all()
-        )
+        new_student_ids = set(db.session.query(Student.id).join(ExamInstance).distinct().all())
+        old_student_ids = set(db.session.query(Student.id).join(ExamSession).distinct().all())
         active_students = len(new_student_ids.union(old_student_ids))
 
         return jsonify(
@@ -9378,17 +8644,13 @@ def ensure_default_api_providers():
                     "anthropic-version": "2023-06-01",
                 }
             ),
-            "request_template": json.dumps(
-                {"model": "{model}", "max_tokens": 2000, "messages": "{messages}"}
-            ),
+            "request_template": json.dumps({"model": "{model}", "max_tokens": 2000, "messages": "{messages}"}),
         },
     ]
 
     try:
         for provider_data in default_providers:
-            existing = ApiProvider.query.filter_by(
-                provider_name=provider_data["provider_name"]
-            ).first()
+            existing = ApiProvider.query.filter_by(provider_name=provider_data["provider_name"]).first()
             if not existing:
                 new_provider = ApiProvider(**provider_data)
                 db.session.add(new_provider)

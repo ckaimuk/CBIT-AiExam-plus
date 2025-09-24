@@ -39,10 +39,10 @@ jobs:
     - name: Lint with flake8
       run: |
         pip install flake8
-        # 停止构建如果有Python语法错误或未定义的名称
+        # 只检查严重的语法错误，避免构建失败
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # 其他警告不影响构建，但会显示
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        # 其他警告只显示不影响构建
+        flake8 . --count --exit-zero --max-complexity=15 --max-line-length=120 --extend-ignore=E203,W503,E501,F541,F401,F811,F841,E722,E402,E712,F402,F601 --statistics
     
     - name: Test database initialization
       env:
