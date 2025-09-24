@@ -9,7 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=run.py
 ENV FLASK_ENV=production
-ENV SECRET_KEY=prod-secret-key-2024-cbit-autoexam
+# SECRET_KEY 应该在运行时通过环境变量设置
+# ENV SECRET_KEY 将在运行时设置
 ENV DATABASE_URL=sqlite:///instance/exam.db
 
 # 安装系统依赖
