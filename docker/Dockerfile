@@ -9,7 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=run.py
 ENV FLASK_ENV=production
-ENV DATABASE_URL=sqlite:///instance/exam.db
+ENV DEPLOYMENT=server
+ENV DATABASE_URL=sqlite:////app/instance/exam.db
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y \
