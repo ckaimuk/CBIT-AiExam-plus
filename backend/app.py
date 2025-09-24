@@ -62,9 +62,30 @@ app = Flask(
 
 # 配置
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
-# 使用绝对路径确保连接正确的数据库
-db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "instance", "exam.db")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", f"sqlite:///{db_path}")
+
+# 数据库配置 - 支持多种环境
+def get_database_uri():
+    """获取数据库URI，支持环境变量覆盖"""
+    # 优先使用环境变量
+    if os.getenv("DATABASE_URL"):
+        return os.getenv("DATABASE_URL")
+    
+    # 根据不同环境确定数据库路径
+    if os.getenv("FLASK_ENV") == "production" or os.getenv("DEPLOYMENT") == "server":
+        # 生产环境：使用当前工作目录下的instance目录
+        instance_dir = os.path.join(os.getcwd(), "instance")
+    else:
+        # 开发环境：使用项目根目录下的instance目录
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        instance_dir = os.path.join(project_root, "instance")
+    
+    # 确保instance目录存在
+    os.makedirs(instance_dir, exist_ok=True)
+    
+    db_path = os.path.join(instance_dir, "exam.db")
+    return f"sqlite:///{db_path}"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # 自动重新加载模板
 app.jinja_env.auto_reload = True  # 自动重新加载Jinja环境

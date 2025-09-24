@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-本地运行脚本
+服务器部署脚本
+用于在服务器环境下正确启动应用
 """
 
 import os
 import sys
-
 from dotenv import load_dotenv
 
 # 加载环境变量
 load_dotenv()
 
-# 设置必要的环境变量
-os.environ["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key")
-# 只在没有设置DATABASE_URL时设置默认值
-if not os.getenv("DATABASE_URL"):
-    os.environ["DATABASE_URL"] = f'sqlite:///{os.path.join(os.path.dirname(__file__), "instance", "exam.db")}'
-os.environ["FLASK_ENV"] = os.getenv("FLASK_ENV", "development")
-os.environ["FLASK_DEBUG"] = os.getenv("FLASK_DEBUG", "True")
+# 设置服务器环境变量
+os.environ["FLASK_ENV"] = "production"
+os.environ["DEPLOYMENT"] = "server"
+os.environ["SECRET_KEY"] = os.getenv("SECRET_KEY", "your-production-secret-key")
+os.environ["FLASK_DEBUG"] = "False"
 
-# 添加项目根目录和backend目录到Python路径
+# 如果没有设置DATABASE_URL，使用当前目录下的instance
+if not os.getenv("DATABASE_URL"):
+    instance_dir = os.path.join(os.getcwd(), "instance")
+    os.makedirs(instance_dir, exist_ok=True)
+    db_path = os.path.join(instance_dir, "exam.db")
+    os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
+
+# 添加项目路径
 project_root = os.path.dirname(__file__)
 backend_dir = os.path.join(project_root, "backend")
 sys.path.insert(0, project_root)
@@ -29,8 +34,8 @@ sys.path.insert(0, backend_dir)
 # 导入并运行应用
 try:
     from backend.app import app, db
-
     print("✅ Flask应用导入成功")
+    print(f"🗄️  数据库路径: {os.getenv('DATABASE_URL')}")
 except ImportError as e:
     print(f"❌ 导入Flask应用失败: {e}")
     sys.exit(1)
@@ -43,14 +48,14 @@ if __name__ == "__main__":
             print("✅ 数据库初始化完成")
 
         # 运行应用
-        print("🚀 启动智能考试系统...")
-        print("🌐 访问地址: http://localhost:8080")
-        print("📋 管理后台: http://localhost:8080/admin/dashboard")
+        print("🚀 启动智能考试系统 (生产环境)...")
+        print("🌐 访问地址: http://0.0.0.0:8080")
+        print("📋 管理后台: http://0.0.0.0:8080/admin/dashboard")
         print("🔧 要停止服务器，请按 Ctrl+C")
         print("-" * 50)
 
         # 启动Flask应用
-        app.run(debug=True, host="0.0.0.0", port=8080, threaded=True)
+        app.run(debug=False, host="0.0.0.0", port=8080, threaded=True)
 
     except Exception as e:
         print(f"❌ 启动失败: {e}")
