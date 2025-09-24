@@ -9,8 +9,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=run.py
 ENV FLASK_ENV=production
-# SECRET_KEY 应该在运行时通过环境变量设置
-# ENV SECRET_KEY 将在运行时设置
 ENV DATABASE_URL=sqlite:///instance/exam.db
 
 # 安装系统依赖
@@ -30,18 +28,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制应用代码
 COPY . .
 
-# 创建必要的目录并设置最高权限
+# 创建必要的目录
 RUN mkdir -p instance && \
     mkdir -p frontend/static/uploads && \
     mkdir -p static/uploads && \
-    mkdir -p logs && \
-    chmod 777 instance && \
-    chmod 777 frontend/static/uploads && \
-    chmod 777 static/uploads && \
-    chmod 777 logs
-
-# 确保数据库文件有最高权限（如果存在）
-RUN if [ -f instance/exam.db ]; then chmod 777 instance/exam.db; fi
+    mkdir -p logs
 
 # 设置脚本权限
 RUN chmod +x run.py && chmod +x docker_run.py
@@ -53,5 +44,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || curl -f http://localhost:8080/ || exit 1
 
-# 启动命令 - 使用gunicorn在生产环境
+# 启动命令
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "docker_run:app"]
