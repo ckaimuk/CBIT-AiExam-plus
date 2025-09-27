@@ -95,7 +95,35 @@ success "服务已启动"
 # 验证升级
 log "验证升级结果..."
 sleep 10
-docker ps | grep cbit && success "容器运行正常" || warn "请检查容器状态"
+
+# 检查容器状态
+if docker ps | grep cbit >/dev/null; then
+    success "容器运行正常"
+    
+    # 验证数据库连接
+    log "验证数据库连接..."
+    sleep 5
+    
+    # 尝试访问API检查数据库
+    if curl -s http://localhost:8080/api/system-config >/dev/null 2>&1; then
+        success "应用API响应正常"
+        
+        # 检查数据库题目数量（如果可能）
+        log "检查数据库完整性..."
+        if [ -f "instance/exam.db" ]; then
+            QUESTION_COUNT=$(sqlite3 instance/exam.db "SELECT COUNT(*) FROM questions;" 2>/dev/null || echo "0")
+            if [ "$QUESTION_COUNT" -gt "0" ]; then
+                success "数据库包含 $QUESTION_COUNT 道题目"
+            else
+                warn "数据库中暂无题目，请检查数据导入"
+            fi
+        fi
+    else
+        warn "应用可能还在启动中，请稍后手动验证"
+    fi
+else
+    warn "容器启动可能有问题，请检查日志"
+fi
 
 # 清理旧备份 (保留5个)
 log "清理旧备份..."

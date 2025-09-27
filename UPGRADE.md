@@ -54,6 +54,29 @@ docker stop $(docker ps -q --filter "name=cbit")
 docker rm -f $(docker ps -aq --filter "name=cbit")
 ```
 
+**数据库连接失败：**
+```bash
+# 检查数据库文件是否存在
+ls -la instance/exam.db
+
+# 验证数据库完整性
+sqlite3 instance/exam.db "SELECT COUNT(*) FROM questions;"
+
+# 重新运行迁移脚本
+python3 database/migrate_quantity_control.py
+python3 database/normalize_tags.py
+```
+
+**应用无法访问题目：**
+```bash
+# 停止应用并重新启动
+docker-compose down
+docker-compose up -d --force-recreate
+
+# 等待启动完成后测试API
+curl http://localhost:8080/api/system-config
+```
+
 **快速回滚：**
 ```bash
 cd /www/wwwroot/cbit-autoexam
