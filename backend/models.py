@@ -271,7 +271,7 @@ class ExamConfig(db.Model):
     # 新增：支持精确题目选择
     question_selection_mode = db.Column(db.String(20), default="filter")  # 'filter' 或 'manual'
     passing_score = db.Column(db.Float, default=60.0)  # 及格分数
-    
+
     # 新增：支持详细数量分配配置
     enable_quantity_control = db.Column(db.Boolean, default=False)  # 是否启用数量精确控制
     quantity_distribution = db.Column(db.Text)  # JSON格式存储详细数量分配：{学科-难度-题型: 数量}
@@ -285,7 +285,7 @@ class ExamConfig(db.Model):
     def to_dict(self):
         """转换为字典格式"""
         import json
-        
+
         return {
             "id": self.id,
             "name": self.name,
