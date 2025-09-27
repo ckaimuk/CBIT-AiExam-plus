@@ -2081,6 +2081,10 @@ def create_exam_config():
         if data.get("is_default"):
             ExamConfig.query.filter_by(is_default=True).update({"is_default": False})
 
+        # 处理数量分配配置
+        import json
+        quantity_distribution = data.get("quantity_distribution", {})
+        
         config = ExamConfig(
             name=data["name"],
             description=data.get("description", ""),
@@ -2094,6 +2098,8 @@ def create_exam_config():
             show_results=data.get("show_results", True),
             question_selection_mode=question_selection_mode,
             passing_score=data.get("passing_score", 60.0),
+            enable_quantity_control=data.get("enable_quantity_control", False),
+            quantity_distribution=json.dumps(quantity_distribution, ensure_ascii=False) if quantity_distribution else None,
         )
 
         db.session.add(config)
@@ -2164,6 +2170,12 @@ def update_exam_config(config_id):
             config.question_selection_mode = data["question_selection_mode"]
         if "passing_score" in data:
             config.passing_score = data["passing_score"]
+        if "enable_quantity_control" in data:
+            config.enable_quantity_control = data["enable_quantity_control"]
+        if "quantity_distribution" in data:
+            import json
+            quantity_distribution = data["quantity_distribution"]
+            config.quantity_distribution = json.dumps(quantity_distribution, ensure_ascii=False) if quantity_distribution else None
 
         # 如果更新了题目选择模式或题目列表，更新关联的题目
         if "question_selection_mode" in data or "question_ids" in data:
@@ -3462,12 +3474,31 @@ def generate_questions_from_config(config):
 
 def generate_questions_by_filter(config):
     """根据筛选条件生成题目"""
+    import json
+    import random
+    
+    # 检查是否启用了精确数量控制
+    if config.enable_quantity_control and config.quantity_distribution:
+        try:
+            quantity_distribution = json.loads(config.quantity_distribution)
+            return _generate_questions_with_quantity_control(config, quantity_distribution)
+        except (json.JSONDecodeError, Exception) as e:
+            print(f"数量控制配置解析失败，回退到传统筛选: {e}")
+    
+    # 传统的筛选模式
+    return _generate_questions_traditional_filter(config)
+
+
+def _generate_questions_traditional_filter(config):
+    """传统筛选模式生成题目"""
+    import random
+    
     # 解析筛选条件
     subjects = [s.strip() for s in config.subject_filter.split(",")] if config.subject_filter else []
     difficulties = [d.strip() for d in config.difficulty_filter.split(",")] if config.difficulty_filter else []
     types = [t.strip() for t in config.type_filter.split(",")] if config.type_filter else []
 
-    print(f"筛选条件 - 学科: {subjects}, 难度: {difficulties}, 题型: {types}")
+    print(f"传统筛选条件 - 学科: {subjects}, 难度: {difficulties}, 题型: {types}")
 
     # 构建查询条件
     query = Question.query.filter_by(is_active=True)
@@ -3480,8 +3511,6 @@ def generate_questions_by_filter(config):
         query = query.filter(Question.question_type.in_(types))
 
     # 随机选择题目
-    import random
-
     available_questions = query.all()
     if len(available_questions) < config.total_questions:
         # 如果题目不够，补充其他题目
@@ -3490,8 +3519,93 @@ def generate_questions_by_filter(config):
 
     # 随机选择指定数量的题目
     selected_questions = random.sample(available_questions, min(config.total_questions, len(available_questions)))
-    print(f"筛选模式：选择了 {len(selected_questions)} 道题目")
+    print(f"传统筛选模式：选择了 {len(selected_questions)} 道题目")
 
+    return selected_questions
+
+
+def _generate_questions_with_quantity_control(config, quantity_distribution):
+    """使用精确数量控制生成题目"""
+    import random
+    selected_questions = []
+    total_selected = 0
+    
+    print(f"🎯 启用精确数量控制，配置: {quantity_distribution}")
+    
+    # 按照配置逐个类别选择题目
+    for distribution_key, required_count in quantity_distribution.items():
+        if required_count <= 0:
+            continue
+            
+        # 解析分布键：格式为 "学科-难度-题型"
+        try:
+            parts = distribution_key.split('-')
+            if len(parts) != 3:
+                print(f"⚠️  跳过无效的分布键: {distribution_key}")
+                continue
+                
+            subject, difficulty, question_type = parts
+            print(f"🔍 选择 {subject}-{difficulty}-{question_type}: {required_count}题")
+            
+            # 构建查询
+            query = Question.query.filter_by(is_active=True)
+            query = query.filter(Question.subject == subject)
+            query = query.filter(Question.difficulty == difficulty)  
+            query = query.filter(Question.question_type == question_type)
+            
+            available_questions = query.all()
+            available_count = len(available_questions)
+            
+            print(f"   📊 可用题目: {available_count}题")
+            
+            if available_count == 0:
+                print(f"   ⚠️  该类别没有可用题目，跳过")
+                continue
+                
+            # 选择题目
+            actual_count = min(required_count, available_count)
+            if actual_count < required_count:
+                print(f"   ⚠️  题目不足，要求{required_count}题，实际{actual_count}题")
+                
+            category_questions = random.sample(available_questions, actual_count)
+            selected_questions.extend(category_questions)
+            total_selected += actual_count
+            
+            print(f"   ✅ 已选择: {actual_count}题")
+            
+        except Exception as e:
+            print(f"   ❌ 处理类别 {distribution_key} 时出错: {e}")
+            continue
+    
+    # 检查总数是否达到要求
+    if total_selected < config.total_questions:
+        shortage = config.total_questions - total_selected
+        print(f"🔄 题目不足，还需要{shortage}题，从其他题目中补充...")
+        
+        # 获取所有已选题目的ID，避免重复
+        selected_ids = {q.id for q in selected_questions}
+        
+        # 从剩余题目中补充
+        remaining_query = Question.query.filter_by(is_active=True)
+        if selected_ids:
+            remaining_query = remaining_query.filter(~Question.id.in_(selected_ids))
+        
+        remaining_questions = remaining_query.all()
+        if remaining_questions:
+            additional_count = min(shortage, len(remaining_questions))
+            additional_questions = random.sample(remaining_questions, additional_count)
+            selected_questions.extend(additional_questions)
+            total_selected += additional_count
+            print(f"   ✅ 补充了{additional_count}题")
+    
+    elif total_selected > config.total_questions:
+        # 如果选择过多，随机减少
+        excess = total_selected - config.total_questions
+        print(f"🔄 题目过多，随机移除{excess}题...")
+        selected_questions = random.sample(selected_questions, config.total_questions)
+        total_selected = config.total_questions
+    
+    print(f"✅ 精确数量控制模式：最终选择了 {total_selected} 道题目")
     return selected_questions
 
 

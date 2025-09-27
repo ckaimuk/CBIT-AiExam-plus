@@ -443,6 +443,57 @@ data-i18n-placeholder="exam.config.config_description_placeholder" placeholder="
 <!-- 筛选模式 -->
 <div id="filterMode" class="space-y-6">
 
+<!-- 精确数量控制开关 -->
+<div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+<div class="flex items-center justify-between mb-3">
+<div>
+<h5 class="font-medium text-blue-900" data-i18n="exam.config.quantity_control">精确数量控制</h5>
+<p class="text-sm text-blue-700" data-i18n="exam.config.quantity_control_desc">启用后可为每个学科、难度、题型组合指定生成数量</p>
+</div>
+<label class="toggle-switch">
+<input type="checkbox" id="enableQuantityControl" onchange="toggleQuantityControl()">
+<span class="slider"></span>
+</label>
+</div>
+
+<!-- 数量配置界面 -->
+<div id="quantityConfigSection" class="hidden mt-4">
+<div class="bg-white rounded-lg p-4 border border-blue-200">
+<h6 class="font-medium text-gray-900 mb-3" data-i18n="exam.config.quantity_distribution">数量分配配置</h6>
+<div id="quantityDistributionContainer">
+<p class="text-sm text-gray-600 mb-3" data-i18n="exam.config.quantity_help">请先选择下方的学科、难度、题型筛选条件，然后点击"添加数量配置"按钮</p>
+<div id="quantityConfigList" class="space-y-2 mb-3">
+<!-- 动态生成的数量配置项 -->
+</div>
+<div class="flex space-x-2">
+<button type="button" id="addQuantityConfigBtn" class="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+<i class="ri-add-line mr-1"></i>
+<span data-i18n="exam.config.add_quantity_config">添加数量配置</span>
+</button>
+<button type="button" id="autoGenerateConfigBtn" class="px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+<i class="ri-magic-line mr-1"></i>
+<span data-i18n="exam.config.auto_generate_config">智能分配</span>
+</button>
+<button type="button" id="clearQuantityConfigBtn" class="px-3 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
+<i class="ri-close-line mr-1"></i>
+<span data-i18n="exam.config.clear_config">清空配置</span>
+</button>
+</div>
+<div class="mt-3 p-3 bg-gray-50 rounded border">
+<div class="flex items-center justify-between text-sm">
+<span data-i18n="exam.config.total_configured">已配置总数:</span>
+<span id="totalConfiguredCount" class="font-semibold text-blue-600">0 题</span>
+</div>
+<div class="flex items-center justify-between text-sm mt-1">
+<span data-i18n="exam.config.target_total">目标总数:</span>
+<span id="targetTotalCount" class="font-semibold text-gray-600">5 题</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
 <div>
 <label class="block text-sm font-medium text-gray-700 mb-3" data-i18n="exam.config.subject_filter">学科筛选</label>
 <div class="grid grid-cols-2 gap-3">
@@ -797,6 +848,7 @@ let editingConfigId = null;
 let selectedQuestions = new Set();
 let availableQuestions = [];
 let questionCart = new Map(); // 购物车：存储题目ID -> 题目对象的映射
+let quantityDistribution = {}; // 精确数量控制配置：{学科-难度-题型: 数量}
 
 // 消息显示函数
 function showErrorMessage(message) {
@@ -1079,6 +1131,15 @@ document.getElementById('randomSelectBtn').addEventListener('click', randomSelec
 document.getElementById('addToCartBtn').addEventListener('click', addSelectedToCart);
 document.getElementById('clearCartBtn').addEventListener('click', clearCart);
 document.getElementById('confirmCartBtn').addEventListener('click', confirmCartSelection);
+
+// 精确数量控制相关事件监听器
+document.getElementById('addQuantityConfigBtn').addEventListener('click', addQuantityConfig);
+document.getElementById('autoGenerateConfigBtn').addEventListener('click', autoGenerateQuantityConfig);
+document.getElementById('clearQuantityConfigBtn').addEventListener('click', clearQuantityConfig);
+
+// 题目数量输入框变化监听
+document.getElementById('configQuestions').addEventListener('input', updateTargetTotalCount);
+
 // 语言切换按钮已由 i18n.js 全局处理，无需再次绑定
 
 // 筛选条件变化监听器
@@ -1630,6 +1691,11 @@ document.getElementById('configIsActive').checked = true;
 document.getElementById('configShowResults').checked = true;
 document.getElementById('questionSelectionMode').value = 'filter';
 
+// 重置精确数量控制
+document.getElementById('enableQuantityControl').checked = false;
+quantityDistribution = {};
+toggleQuantityControl();
+
 // 重置题目选择
 selectedQuestions.clear();
 updateSelectedCount();
@@ -1662,6 +1728,12 @@ document.getElementById('configIsDefault').checked = config.is_default;
 document.getElementById('configIsActive').checked = config.is_active;
 document.getElementById('configShowResults').checked = config.show_results !== false;
 document.getElementById('questionSelectionMode').value = config.question_selection_mode || 'filter';
+
+// 加载精确数量控制配置
+document.getElementById('enableQuantityControl').checked = config.enable_quantity_control || false;
+quantityDistribution = config.quantity_distribution || {};
+toggleQuantityControl();
+updateQuantityConfigDisplay();
 
 // 重置题目选择
 selectedQuestions.clear();
@@ -2049,6 +2121,22 @@ if (questionSelectionMode === 'manual' && selectedQuestions.size === 0) {
     return;
 }
 
+// 验证精确数量控制配置
+if (document.getElementById('enableQuantityControl').checked) {
+    const totalConfigured = Object.values(quantityDistribution).reduce((sum, count) => sum + count, 0);
+    const targetTotal = parseInt(document.getElementById('configQuestions').value);
+    
+    if (Object.keys(quantityDistribution).length === 0) {
+        showErrorMessage('启用精确数量控制后必须添加至少一个数量配置');
+        return;
+    }
+    
+    if (totalConfigured !== targetTotal) {
+        showErrorMessage(`精确数量控制配置总数（${totalConfigured}题）与目标总数（${targetTotal}题）不匹配，请调整配置`);
+        return;
+    }
+}
+
 const subjects = Array.from(document.querySelectorAll('.subject-filter:checked')).map(cb => cb.value);
 const difficulties = Array.from(document.querySelectorAll('.difficulty-filter:checked')).map(cb => cb.value);
 const types = Array.from(document.querySelectorAll('.type-filter:checked')).map(cb => cb.value);
@@ -2065,7 +2153,9 @@ is_default: document.getElementById('configIsDefault').checked,
 is_active: document.getElementById('configIsActive').checked,
 show_results: document.getElementById('configShowResults').checked,
 question_selection_mode: questionSelectionMode,
-passing_score: parseFloat(document.getElementById('configPassingScore').value) || 60.0
+passing_score: parseFloat(document.getElementById('configPassingScore').value) || 60.0,
+enable_quantity_control: document.getElementById('enableQuantityControl').checked,
+quantity_distribution: quantityDistribution
 };
 
 // 如果是手动选择模式，添加选中的题目ID
@@ -2227,8 +2317,209 @@ if (msg) {
 msg.style.opacity = '0';
 msg.style.transform = 'translateX(100%)';
 setTimeout(() => msg.remove(), 300);
-}
 }, 5000);
+}
+
+// ==================== 精确数量控制功能 ====================
+
+// 切换精确数量控制
+function toggleQuantityControl() {
+    const isEnabled = document.getElementById('enableQuantityControl').checked;
+    const quantitySection = document.getElementById('quantityConfigSection');
+    
+    if (isEnabled) {
+        quantitySection.classList.remove('hidden');
+        updateTargetTotalCount();
+    } else {
+        quantitySection.classList.add('hidden');
+        quantityDistribution = {};
+        updateQuantityConfigDisplay();
+    }
+}
+
+// 添加数量配置
+function addQuantityConfig() {
+    // 获取当前选中的筛选条件
+    const selectedSubjects = Array.from(document.querySelectorAll('.subject-filter:checked')).map(cb => cb.value);
+    const selectedDifficulties = Array.from(document.querySelectorAll('.difficulty-filter:checked')).map(cb => cb.value);
+    const selectedTypes = Array.from(document.querySelectorAll('.type-filter:checked')).map(cb => cb.value);
+    
+    if (selectedSubjects.length === 0 || selectedDifficulties.length === 0 || selectedTypes.length === 0) {
+        showErrorMessage('请先选择学科、难度和题型筛选条件');
+        return;
+    }
+    
+    // 生成所有组合
+    const combinations = [];
+    selectedSubjects.forEach(subject => {
+        selectedDifficulties.forEach(difficulty => {
+            selectedTypes.forEach(type => {
+                const key = `${subject}-${difficulty}-${type}`;
+                if (!quantityDistribution[key]) {
+                    combinations.push({ key, subject, difficulty, type });
+                }
+            });
+        });
+    });
+    
+    if (combinations.length === 0) {
+        showErrorMessage('所选条件的组合已经存在，请选择其他条件或修改现有配置');
+        return;
+    }
+    
+    // 为每个组合添加配置（默认1题）
+    combinations.forEach(combo => {
+        quantityDistribution[combo.key] = 1;
+    });
+    
+    updateQuantityConfigDisplay();
+    showSuccessMessage(`已添加 ${combinations.length} 个数量配置`);
+}
+
+// 智能分配数量
+function autoGenerateQuantityConfig() {
+    const totalQuestions = parseInt(document.getElementById('configQuestions').value) || 5;
+    const configCount = Object.keys(quantityDistribution).length;
+    
+    if (configCount === 0) {
+        showErrorMessage('请先添加数量配置');
+        return;
+    }
+    
+    // 平均分配，余数给前几个配置
+    const baseCount = Math.floor(totalQuestions / configCount);
+    const remainder = totalQuestions % configCount;
+    
+    let index = 0;
+    for (const key in quantityDistribution) {
+        quantityDistribution[key] = baseCount + (index < remainder ? 1 : 0);
+        index++;
+    }
+    
+    updateQuantityConfigDisplay();
+    showSuccessMessage(`已智能分配总计 ${totalQuestions} 题到 ${configCount} 个配置`);
+}
+
+// 清空数量配置
+function clearQuantityConfig() {
+    if (Object.keys(quantityDistribution).length === 0) {
+        showErrorMessage('没有配置需要清空');
+        return;
+    }
+    
+    if (confirm('确定要清空所有数量配置吗？')) {
+        quantityDistribution = {};
+        updateQuantityConfigDisplay();
+        showSuccessMessage('已清空所有数量配置');
+    }
+}
+
+// 更新数量配置显示
+function updateQuantityConfigDisplay() {
+    const container = document.getElementById('quantityConfigList');
+    const totalConfiguredElement = document.getElementById('totalConfiguredCount');
+    
+    container.innerHTML = '';
+    let totalConfigured = 0;
+    
+    if (Object.keys(quantityDistribution).length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-500 text-center py-2">暂无数量配置</p>';
+    } else {
+        Object.entries(quantityDistribution).forEach(([key, count]) => {
+            const [subject, difficulty, type] = key.split('-');
+            const configItem = document.createElement('div');
+            configItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded border';
+            
+            configItem.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-700">${subject}</span>
+                    <span class="text-xs text-gray-500">·</span>
+                    <span class="text-sm text-gray-600">${getDifficultyDisplayName(difficulty)}</span>
+                    <span class="text-xs text-gray-500">·</span>
+                    <span class="text-sm text-gray-600">${getTypeDisplayName(type)}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="number" min="0" max="50" value="${count}" 
+                           class="w-16 px-2 py-1 text-sm border border-gray-300 rounded text-center"
+                           onchange="updateQuantityCount('${key}', this.value)">
+                    <span class="text-xs text-gray-500">题</span>
+                    <button type="button" onclick="removeQuantityConfig('${key}')" 
+                            class="p-1 text-red-500 hover:text-red-700 transition-colors">
+                        <i class="ri-close-line text-sm"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(configItem);
+            totalConfigured += count;
+        });
+    }
+    
+    totalConfiguredElement.textContent = `${totalConfigured} 题`;
+    
+    // 更新配置计数的颜色
+    const targetCount = parseInt(document.getElementById('configQuestions').value) || 5;
+    if (totalConfigured === targetCount) {
+        totalConfiguredElement.className = 'font-semibold text-green-600';
+    } else if (totalConfigured > targetCount) {
+        totalConfiguredElement.className = 'font-semibold text-red-600';
+    } else {
+        totalConfiguredElement.className = 'font-semibold text-blue-600';
+    }
+}
+
+// 更新单个配置的数量
+function updateQuantityCount(key, newValue) {
+    const count = parseInt(newValue) || 0;
+    if (count <= 0) {
+        delete quantityDistribution[key];
+    } else {
+        quantityDistribution[key] = count;
+    }
+    updateQuantityConfigDisplay();
+}
+
+// 移除单个数量配置
+function removeQuantityConfig(key) {
+    delete quantityDistribution[key];
+    updateQuantityConfigDisplay();
+}
+
+// 更新目标总数显示
+function updateTargetTotalCount() {
+    const targetCount = parseInt(document.getElementById('configQuestions').value) || 5;
+    const targetElement = document.getElementById('targetTotalCount');
+    if (targetElement) {
+        targetElement.textContent = `${targetCount} 题`;
+    }
+    // 同时更新已配置数量的颜色
+    updateQuantityConfigDisplay();
+}
+
+// 获取难度显示名称
+function getDifficultyDisplayName(difficulty) {
+    const difficultyMap = {
+        'high_school': '高中水平',
+        'undergraduate_basic': '本科基础', 
+        'undergraduate_advanced': '本科高级',
+        'gre_level': 'GRE难度',
+        'graduate_study': '研究生水平',
+        'doctoral_research': '博士研究'
+    };
+    return difficultyMap[difficulty] || difficulty;
+}
+
+// 获取题型显示名称  
+function getTypeDisplayName(type) {
+    const typeMap = {
+        'multiple_choice': '选择题',
+        'short_answer': '简答题',
+        'programming': '编程题',
+        'true_false': '判断题',
+        'fill_blank': '填空题',
+        'essay': '论述题'
+    };
+    return typeMap[type] || type;
 }
 </script>
 </body>
