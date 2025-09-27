@@ -78,6 +78,9 @@ log "运行数据库迁移..."
 [ -f "database/normalize_tags.py" ] && {
     python3 database/normalize_tags.py || error "标签规范化失败"
 }
+[ -f "database/fix_filter_tags.py" ] && {
+    python3 database/fix_filter_tags.py || error "筛选标签修复失败"
+}
 success "数据库迁移完成"
 
 # 启动服务
