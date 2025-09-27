@@ -70,24 +70,22 @@ def get_database_uri():
     # 优先使用环境变量
     if os.getenv("DATABASE_URL"):
         db_url = os.getenv("DATABASE_URL")
-        # 如果是相对路径，转换为绝对路径
-        if db_url.startswith("sqlite:///") and not db_url.startswith("sqlite:////"):
-            relative_path = db_url[10:]  # 移除 'sqlite:///' 前缀
-            if not os.path.isabs(relative_path):
-                # 相对于项目根目录
-                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                absolute_path = os.path.join(project_root, relative_path)
-                return f"sqlite:///{absolute_path}"
+        print(f"🗄️ 使用环境变量数据库路径: {db_url}")
         return db_url
 
-    # 始终使用项目根目录下的instance目录，确保一致性
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    instance_dir = os.path.join(project_root, "instance")
+    # 默认使用 /data/app.db (容器环境) 或 instance/exam.db (开发环境)
+    if os.path.exists("/data"):
+        # 容器环境，使用 /data/app.db
+        db_path = "/data/app.db"
+        os.makedirs("/data", exist_ok=True)
+        os.chmod("/data", 0o777)  # 确保权限
+    else:
+        # 开发环境，使用项目根目录下的instance目录
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        instance_dir = os.path.join(project_root, "instance")
+        os.makedirs(instance_dir, exist_ok=True)
+        db_path = os.path.join(instance_dir, "exam.db")
 
-    # 确保instance目录存在
-    os.makedirs(instance_dir, exist_ok=True)
-
-    db_path = os.path.join(instance_dir, "exam.db")
     print(f"🗄️ 数据库路径: {db_path}")
     return f"sqlite:///{db_path}"
 

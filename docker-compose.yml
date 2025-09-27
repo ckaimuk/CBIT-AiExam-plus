@@ -11,9 +11,9 @@ services:
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=prod-secret-key-2024-cbit-autoexam
-      - DATABASE_URL=sqlite:///instance/exam.db
+      - DATABASE_URL=sqlite:////data/app.db
     volumes:
-      - ./instance:/app/instance
+      - /srv/yourapp/data:/data
       - ./frontend/static/uploads:/app/frontend/static/uploads
       - ./static/uploads:/app/static/uploads
     restart: unless-stopped

@@ -14,7 +14,7 @@ load_dotenv()
 
 # 设置必要的环境变量
 os.environ["SECRET_KEY"] = os.getenv("SECRET_KEY", "prod-secret-key-2024-cbit-autoexam")
-os.environ["DATABASE_URL"] = os.getenv("DATABASE_URL", "sqlite:///instance/exam.db")
+os.environ["DATABASE_URL"] = os.getenv("DATABASE_URL", "sqlite:////data/app.db")
 os.environ["FLASK_ENV"] = os.getenv("FLASK_ENV", "production")
 
 # 添加backend目录到Python路径

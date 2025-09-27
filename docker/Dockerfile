@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=run.py
 ENV FLASK_ENV=production
 ENV DEPLOYMENT=server
-ENV DATABASE_URL=sqlite:////app/instance/exam.db
+ENV DATABASE_URL=sqlite:////data/app.db
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y \
@@ -30,10 +30,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # 创建必要的目录
-RUN mkdir -p instance && \
+RUN mkdir -p /data && \
     mkdir -p frontend/static/uploads && \
     mkdir -p static/uploads && \
-    mkdir -p logs
+    mkdir -p logs && \
+    chmod -R 777 /data
 
 # 设置脚本权限
 RUN chmod +x run.py && chmod +x docker_run.py

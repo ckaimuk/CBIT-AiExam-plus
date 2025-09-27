@@ -245,7 +245,7 @@ class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring
 <option value="数学">数学</option>
 <option value="统计学">统计学</option>
 <option value="计算机科学">计算机科学</option>
-<option value="工程">工程</option>
+<option value="工程学">工程学</option>
 </select>
 
                 <select id="difficultyFilter" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
@@ -253,21 +253,14 @@ class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring
                     
                     <!-- 基础教育 -->
                     <optgroup label="━━━ 基础教育 ━━━">
-                        <option value="High School Level">高中水平</option>
-                        <option value="本科基础">本科基础</option>
-                        <option value="Undergraduate Basic">本科基础 (Undergraduate Basic)</option>
-                        <option value="Undergraduate Advanced">本科高级</option>
-                    </optgroup>
-                    
-                    <!-- 标准化考试 -->
-                    <optgroup label="━━━ 标准化考试 ━━━">
-                        <option value="GRE Level">GRE水平</option>
-                        <option value="GRE难度">GRE难度</option>
+                        <option value="high_school">高中水平</option>
+                        <option value="undergraduate_basic">本科基础</option>
+                        <option value="undergraduate_advanced">本科高级</option>
                     </optgroup>
                     
                     <!-- 学术研究 -->
                     <optgroup label="━━━ 学术研究 ━━━">
-                        <option value="Graduate Study Level">研究生水平</option>
+                        <option value="graduate">研究生水平</option>
                     </optgroup>
                 </select>
 
@@ -346,7 +339,7 @@ class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring
 <option value="数学">数学</option>
 <option value="统计学">统计学</option>
 <option value="计算机科学">计算机科学</option>
-<option value="工程">工程</option>
+<option value="工程学">工程学</option>
 </select>
 </div>
 
@@ -362,21 +355,14 @@ class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring
                         
                         <!-- 基础教育 -->
                         <optgroup label="━━━ 基础教育 ━━━">
-                            <option value="High School Level">高中水平</option>
-                            <option value="本科基础">本科基础</option>
-                            <option value="Undergraduate Basic">本科基础 (Undergraduate Basic)</option>
-                            <option value="Undergraduate Advanced">本科高级</option>
-                        </optgroup>
-                        
-                        <!-- 标准化考试 -->
-                        <optgroup label="━━━ 标准化考试 ━━━">
-                            <option value="GRE Level">GRE水平</option>
-                            <option value="GRE难度">GRE难度</option>
+                            <option value="high_school">高中水平</option>
+                            <option value="undergraduate_basic">本科基础</option>
+                            <option value="undergraduate_advanced">本科高级</option>
                         </optgroup>
                         
                         <!-- 学术研究 -->
                         <optgroup label="━━━ 学术研究 ━━━">
-                            <option value="Graduate Study Level">研究生水平</option>
+                            <option value="graduate">研究生水平</option>
                         </optgroup>
                     </select>
                 </div>
@@ -1789,13 +1775,10 @@ if (window.i18n && window.i18n.initialized) {
 
 function getDifficultyColor(difficulty) {
 const colors = {
-'High School Level': 'bg-green-100 text-green-800',
-'本科基础': 'bg-blue-100 text-blue-800',
-'Undergraduate Basic': 'bg-blue-100 text-blue-800',
-'Undergraduate Advanced': 'bg-yellow-100 text-yellow-800',
-'GRE Level': 'bg-orange-100 text-orange-800',
-'GRE难度': 'bg-orange-100 text-orange-800',
-'Graduate Study Level': 'bg-red-100 text-red-800'
+'high_school': 'bg-green-100 text-green-800',
+'undergraduate_basic': 'bg-blue-100 text-blue-800',
+'undergraduate_advanced': 'bg-yellow-100 text-yellow-800',
+'graduate': 'bg-red-100 text-red-800'
 };
 return colors[difficulty] || 'bg-gray-100 text-gray-800';
 }
@@ -1803,17 +1786,20 @@ return colors[difficulty] || 'bg-gray-100 text-gray-800';
 function getDifficultyName(difficulty) {
 if (window.i18n && window.i18n.initialized) {
     const difficultyMap = {
-        'High School Level': window.i18n.translate('difficulty.high_school', '高中水平'),
-        '本科基础': window.i18n.translate('difficulty.undergraduate_basic_zh', '本科基础'),
-        'Undergraduate Basic': window.i18n.translate('difficulty.undergraduate_basic', '本科基础'),
-        'Undergraduate Advanced': window.i18n.translate('difficulty.undergraduate_advanced', '本科高级'),
-        'GRE Level': window.i18n.translate('difficulty.gre_level', 'GRE水平'),
-        'GRE难度': window.i18n.translate('difficulty.gre_difficulty', 'GRE难度'),
-        'Graduate Study Level': window.i18n.translate('difficulty.graduate', '研究生水平')
+        'high_school': window.i18n.translate('difficulty.high_school', '高中水平'),
+        'undergraduate_basic': window.i18n.translate('difficulty.undergraduate_basic', '本科基础'),
+        'undergraduate_advanced': window.i18n.translate('difficulty.undergraduate_advanced', '本科高级'),
+        'graduate': window.i18n.translate('difficulty.graduate', '研究生水平')
     };
     return difficultyMap[difficulty] || difficulty;
 } else {
-    return difficulty || '未知';
+    const difficultyNames = {
+        'high_school': '高中水平',
+        'undergraduate_basic': '本科基础',
+        'undergraduate_advanced': '本科高级',
+        'graduate': '研究生水平'
+    };
+    return difficultyNames[difficulty] || difficulty || '未知';
 }
 }
 

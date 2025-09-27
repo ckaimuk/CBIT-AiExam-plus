@@ -13,11 +13,11 @@ services:
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=cbit-prod-secret-key-2024-bt
-      - DATABASE_URL=sqlite:///instance/exam.db
+      - DATABASE_URL=sqlite:////data/app.db
       - TZ=Asia/Shanghai
     volumes:
       # 数据持久化
-      - ./instance:/app/instance:rw
+      - /srv/yourapp/data:/data:rw
       - ./static/uploads:/app/static/uploads:rw
       - ./frontend/static/uploads:/app/frontend/static/uploads:rw
       # 日志目录
