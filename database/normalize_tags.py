@@ -4,9 +4,9 @@
 统一数据库中的所有标签，确保筛选功能正常工作
 """
 
-import sys
 import os
 import sqlite3
+import sys
 
 # 添加后端路径
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "backend"))
