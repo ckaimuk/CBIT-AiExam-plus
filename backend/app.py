@@ -69,21 +69,26 @@ def get_database_uri():
     """获取数据库URI，支持环境变量覆盖"""
     # 优先使用环境变量
     if os.getenv("DATABASE_URL"):
-        return os.getenv("DATABASE_URL")
+        db_url = os.getenv("DATABASE_URL")
+        # 如果是相对路径，转换为绝对路径
+        if db_url.startswith("sqlite:///") and not db_url.startswith("sqlite:////"):
+            relative_path = db_url[10:]  # 移除 'sqlite:///' 前缀
+            if not os.path.isabs(relative_path):
+                # 相对于项目根目录
+                project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                absolute_path = os.path.join(project_root, relative_path)
+                return f"sqlite:///{absolute_path}"
+        return db_url
 
-    # 根据不同环境确定数据库路径
-    if os.getenv("FLASK_ENV") == "production" or os.getenv("DEPLOYMENT") == "server":
-        # 生产环境：使用当前工作目录下的instance目录
-        instance_dir = os.path.join(os.getcwd(), "instance")
-    else:
-        # 开发环境：使用项目根目录下的instance目录
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        instance_dir = os.path.join(project_root, "instance")
-
+    # 始终使用项目根目录下的instance目录，确保一致性
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    instance_dir = os.path.join(project_root, "instance")
+    
     # 确保instance目录存在
     os.makedirs(instance_dir, exist_ok=True)
 
     db_path = os.path.join(instance_dir, "exam.db")
+    print(f"🗄️ 数据库路径: {db_path}")
     return f"sqlite:///{db_path}"
 
 
