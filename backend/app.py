@@ -83,7 +83,7 @@ def get_database_uri():
     # 始终使用项目根目录下的instance目录，确保一致性
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     instance_dir = os.path.join(project_root, "instance")
-    
+
     # 确保instance目录存在
     os.makedirs(instance_dir, exist_ok=True)
 
