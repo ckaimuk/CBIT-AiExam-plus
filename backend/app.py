@@ -465,52 +465,45 @@ def generate_exam():
             exam_config = ExamConfig.query.filter_by(is_default=True, is_active=True).first()
 
         if not exam_config:
-            # 如果没有配置，使用默认值
-            total_questions = 5
-            time_limit = 75
-            subject_filter = None
-            difficulty_filter = None
-            type_filter = None
+            # 如果没有配置，创建临时默认配置
+            from types import SimpleNamespace
+            exam_config = SimpleNamespace()
+            exam_config.total_questions = 5
+            exam_config.time_limit = 75
+            exam_config.subject_filter = None
+            exam_config.difficulty_filter = None
+            exam_config.type_filter = None
+            exam_config.question_selection_mode = "filter"
+            exam_config.enable_quantity_control = False
+            exam_config.quantity_distribution = None
+            
+            # 使用传统筛选方式
+            selected_questions = _generate_questions_traditional_filter(exam_config)
         else:
-            total_questions = exam_config.total_questions
-            time_limit = exam_config.time_limit
-            subject_filter = exam_config.subject_filter.split(",") if exam_config.subject_filter else None
-            difficulty_filter = exam_config.difficulty_filter.split(",") if exam_config.difficulty_filter else None
-            type_filter = exam_config.type_filter.split(",") if exam_config.type_filter else None
+            # 使用配置的题目生成逻辑
+            selected_questions = generate_questions_from_config(exam_config)
 
-        # 从题库中抽取题目
-        query = Question.query.filter_by(is_active=True)
+        total_questions = exam_config.total_questions
+        time_limit = exam_config.time_limit
 
-        # 应用筛选条件
-        if subject_filter:
-            query = query.filter(Question.subject.in_(subject_filter))
-        if difficulty_filter:
-            query = query.filter(Question.difficulty.in_(difficulty_filter))
-        if type_filter:
-            query = query.filter(Question.question_type.in_(type_filter))
-
-        # 随机抽取题目
-        available_questions = query.all()
-        if len(available_questions) < total_questions:
+        # 检查题目数量
+        if len(selected_questions) < total_questions:
             return (
                 jsonify(
                     {
                         "success": False,
-                        "message": f"题库中可用题目不足，需要{total_questions}题，但只有{len(available_questions)}题",
+                        "message": f"题库中可用题目不足，需要{total_questions}题，但只有{len(selected_questions)}题",
                     }
                 ),
                 400,
             )
 
-        # 随机选择题目
-        import random
-
-        selected_questions = random.sample(available_questions, total_questions)
+        print(f"✅ 成功生成 {len(selected_questions)} 道题目")
 
         # 创建考试记录
         exam = Exam(
             session_id=session_id,
-            config_id=exam_config.id if exam_config else None,
+            config_id=exam_config.id if hasattr(exam_config, 'id') else None,
             questions=json.dumps([], ensure_ascii=False),  # 题目将通过关联表存储
             time_limit=time_limit,
             status="active",
@@ -8157,15 +8150,33 @@ def update_system_config():
 
 @app.route("/static/uploads/<path:filename>")
 def uploaded_files(filename):
-    """静态文件服务"""
+    """静态文件服务 - 支持新的数据库路径结构"""
     import os
 
-    # 使用绝对路径确保文件能被找到
-    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    upload_dir = os.path.join(current_dir, "static", "uploads")
-    print(f"尝试从目录提供文件: {upload_dir}")
+    # 支持多种上传目录路径
+    upload_dirs = [
+        # 容器环境 - 数据目录
+        "/data/uploads",
+        # 容器环境 - 应用目录
+        "/app/static/uploads",
+        # 开发环境
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "uploads")
+    ]
+    
     print(f"请求的文件: {filename}")
-    return send_from_directory(upload_dir, filename)
+    
+    # 尝试从各个目录找到文件
+    for upload_dir in upload_dirs:
+        if os.path.exists(upload_dir):
+            file_path = os.path.join(upload_dir, filename)
+            if os.path.exists(file_path):
+                print(f"从目录提供文件: {upload_dir}")
+                return send_from_directory(upload_dir, filename)
+    
+    # 如果都找不到，使用默认目录
+    default_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "uploads")
+    print(f"使用默认目录: {default_dir}")
+    return send_from_directory(default_dir, filename)
 
 
 @app.route("/api/admin/upload-file", methods=["POST"])
@@ -8199,15 +8210,37 @@ def upload_file():
         import uuid
 
         filename = f"{file_type}_{uuid.uuid4().hex}.{file_ext}"
-        upload_dir = "static/uploads"
-
-        import os
-
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
+        
+        # 优先使用数据目录，支持新的数据库路径结构
+        upload_dirs = [
+            "/data/uploads",  # 容器环境 - 数据目录
+            "/app/static/uploads",  # 容器环境 - 应用目录  
+            "static/uploads"  # 开发环境
+        ]
+        
+        upload_dir = None
+        for dir_path in upload_dirs:
+            try:
+                if not os.path.exists(dir_path):
+                    os.makedirs(dir_path, exist_ok=True)
+                    os.chmod(dir_path, 0o777)  # 确保权限
+                upload_dir = dir_path
+                break
+            except:
+                continue
+        
+        if not upload_dir:
+            upload_dir = "static/uploads"
+            os.makedirs(upload_dir, exist_ok=True)
 
         file_path = os.path.join(upload_dir, filename)
         file.save(file_path)
+        
+        # 确保文件权限
+        try:
+            os.chmod(file_path, 0o666)
+        except:
+            pass
 
         # 返回访问URL
         file_url = f"/static/uploads/{filename}"
