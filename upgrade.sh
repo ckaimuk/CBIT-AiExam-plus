@@ -50,11 +50,20 @@ log "停止服务并清理容器..."
 docker ps -q --filter "name=cbit" | xargs -r docker stop 2>/dev/null || true
 docker ps -aq --filter "name=cbit" | xargs -r docker rm -f 2>/dev/null || true
 
-# 停止docker-compose
-if [ -f "docker-compose.yml" ]; then
-    docker-compose down --remove-orphans 2>/dev/null || warn "停止docker-compose失败"
-elif [ -f "docker-compose.bt.yml" ]; then
-    docker-compose -f docker-compose.bt.yml down --remove-orphans 2>/dev/null || warn "停止docker-compose失败"
+# 停止docker-compose - 智能检测配置文件
+COMPOSE_FILE=""
+if [ -f "docker-compose.bt.yml" ]; then
+    COMPOSE_FILE="docker-compose.bt.yml"
+    log "使用宝塔版本: docker-compose.bt.yml"
+elif [ -f "docker-compose.yml" ]; then
+    COMPOSE_FILE="docker-compose.yml"
+    log "使用标准版本: docker-compose.yml"
+fi
+
+if [ -n "$COMPOSE_FILE" ]; then
+    docker-compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || warn "停止docker-compose失败"
+else
+    warn "未找到docker-compose配置文件"
 fi
 
 # 清理Docker资源
@@ -85,8 +94,20 @@ success "数据库迁移完成"
 
 # 启动服务
 log "启动服务..."
-COMPOSE_FILE="docker-compose.yml"
-[ -f "docker-compose.bt.yml" ] && COMPOSE_FILE="docker-compose.bt.yml"
+
+# 智能检测docker-compose文件（重用之前的检测结果）
+if [ -z "$COMPOSE_FILE" ]; then
+    if [ -f "docker-compose.bt.yml" ]; then
+        COMPOSE_FILE="docker-compose.bt.yml"
+        log "使用宝塔版本: docker-compose.bt.yml"
+    elif [ -f "docker-compose.yml" ]; then
+        COMPOSE_FILE="docker-compose.yml"
+        log "使用标准版本: docker-compose.yml"
+    else
+        error "未找到docker-compose配置文件"
+        exit 1
+    fi
+fi
 
 # 强制重新创建容器
 docker-compose -f "$COMPOSE_FILE" up -d --force-recreate --remove-orphans || {

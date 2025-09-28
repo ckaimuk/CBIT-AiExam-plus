@@ -68,8 +68,19 @@ fi
 
 # 2. 停止服务
 log "停止现有服务..."
-COMPOSE_FILE="docker-compose.yml"
-[ -f "docker-compose.bt.yml" ] && COMPOSE_FILE="docker-compose.bt.yml"
+
+# 智能检测docker-compose文件
+COMPOSE_FILE=""
+if [ -f "docker-compose.bt.yml" ]; then
+    COMPOSE_FILE="docker-compose.bt.yml"
+    log "使用宝塔版本: docker-compose.bt.yml"
+elif [ -f "docker-compose.yml" ]; then
+    COMPOSE_FILE="docker-compose.yml"
+    log "使用标准版本: docker-compose.yml"
+else
+    error "未找到docker-compose配置文件"
+    exit 1
+fi
 
 if docker-compose -f "$COMPOSE_FILE" ps | grep -q Up; then
     docker-compose -f "$COMPOSE_FILE" down

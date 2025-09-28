@@ -81,8 +81,19 @@ fi
 # 2. 停止服务 (保持数据)
 if [ "$CONTAINER_RUNNING" = true ]; then
     log "停止应用服务..."
-    COMPOSE_FILE="docker-compose.yml"
-    [ -f "docker-compose.bt.yml" ] && COMPOSE_FILE="docker-compose.bt.yml"
+    
+    # 智能检测docker-compose文件
+    COMPOSE_FILE=""
+    if [ -f "docker-compose.bt.yml" ]; then
+        COMPOSE_FILE="docker-compose.bt.yml"
+        log "使用宝塔版本: docker-compose.bt.yml"
+    elif [ -f "docker-compose.yml" ]; then
+        COMPOSE_FILE="docker-compose.yml"
+        log "使用标准版本: docker-compose.yml"
+    else
+        error "未找到docker-compose配置文件"
+        exit 1
+    fi
     
     docker-compose -f "$COMPOSE_FILE" stop
     success "服务已停止"
@@ -142,8 +153,19 @@ fi
 
 # 5. 重新构建镜像 (仅代码层)
 log "重新构建应用镜像..."
-COMPOSE_FILE="docker-compose.yml"
-[ -f "docker-compose.bt.yml" ] && COMPOSE_FILE="docker-compose.bt.yml"
+
+# 智能检测docker-compose文件
+COMPOSE_FILE=""
+if [ -f "docker-compose.bt.yml" ]; then
+    COMPOSE_FILE="docker-compose.bt.yml"
+    log "使用宝塔版本: docker-compose.bt.yml"
+elif [ -f "docker-compose.yml" ]; then
+    COMPOSE_FILE="docker-compose.yml"
+    log "使用标准版本: docker-compose.yml"
+else
+    error "未找到docker-compose配置文件"
+    exit 1
+fi
 
 # 构建新镜像
 docker-compose -f "$COMPOSE_FILE" build --no-cache || {
