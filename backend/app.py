@@ -467,6 +467,7 @@ def generate_exam():
         if not exam_config:
             # 如果没有配置，创建临时默认配置
             from types import SimpleNamespace
+
             exam_config = SimpleNamespace()
             exam_config.total_questions = 5
             exam_config.time_limit = 75
@@ -476,7 +477,7 @@ def generate_exam():
             exam_config.question_selection_mode = "filter"
             exam_config.enable_quantity_control = False
             exam_config.quantity_distribution = None
-            
+
             # 使用传统筛选方式
             selected_questions = _generate_questions_traditional_filter(exam_config)
         else:
@@ -503,7 +504,7 @@ def generate_exam():
         # 创建考试记录
         exam = Exam(
             session_id=session_id,
-            config_id=exam_config.id if hasattr(exam_config, 'id') else None,
+            config_id=exam_config.id if hasattr(exam_config, "id") else None,
             questions=json.dumps([], ensure_ascii=False),  # 题目将通过关联表存储
             time_limit=time_limit,
             status="active",
@@ -8160,11 +8161,11 @@ def uploaded_files(filename):
         # 容器环境 - 应用目录
         "/app/static/uploads",
         # 开发环境
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "uploads")
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "uploads"),
     ]
-    
+
     print(f"请求的文件: {filename}")
-    
+
     # 尝试从各个目录找到文件
     for upload_dir in upload_dirs:
         if os.path.exists(upload_dir):
@@ -8172,7 +8173,7 @@ def uploaded_files(filename):
             if os.path.exists(file_path):
                 print(f"从目录提供文件: {upload_dir}")
                 return send_from_directory(upload_dir, filename)
-    
+
     # 如果都找不到，使用默认目录
     default_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "uploads")
     print(f"使用默认目录: {default_dir}")
@@ -8210,14 +8211,14 @@ def upload_file():
         import uuid
 
         filename = f"{file_type}_{uuid.uuid4().hex}.{file_ext}"
-        
+
         # 优先使用数据目录，支持新的数据库路径结构
         upload_dirs = [
             "/data/uploads",  # 容器环境 - 数据目录
-            "/app/static/uploads",  # 容器环境 - 应用目录  
-            "static/uploads"  # 开发环境
+            "/app/static/uploads",  # 容器环境 - 应用目录
+            "static/uploads",  # 开发环境
         ]
-        
+
         upload_dir = None
         for dir_path in upload_dirs:
             try:
@@ -8228,14 +8229,14 @@ def upload_file():
                 break
             except:
                 continue
-        
+
         if not upload_dir:
             upload_dir = "static/uploads"
             os.makedirs(upload_dir, exist_ok=True)
 
         file_path = os.path.join(upload_dir, filename)
         file.save(file_path)
-        
+
         # 确保文件权限
         try:
             os.chmod(file_path, 0o666)
